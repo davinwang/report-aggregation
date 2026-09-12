@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="6" fill="#c8161d"/>
+  <!-- up candle (CN convention: red = up) -->
+  <rect x="7" y="12" width="4" height="12" rx="1" fill="#ffffff"/>
+  <rect x="8.5" y="8" width="1" height="4" fill="#ffffff"/>
+  <rect x="8.5" y="24" width="1" height="3" fill="#ffffff"/>
+  <!-- taller up candle -->
+  <rect x="14" y="7" width="4" height="17" rx="1" fill="#ffffff"/>
+  <rect x="15.5" y="4" width="1" height="3" fill="#ffffff"/>
+  <rect x="15.5" y="24" width="1" height="4" fill="#ffffff"/>
+  <!-- down candle (subdued) -->
+  <rect x="21" y="14" width="4" height="10" rx="1" fill="#ffd7d9"/>
+  <rect x="22.5" y="10" width="1" height="4" fill="#ffd7d9"/>
+  <rect x="22.5" y="24" width="1" height="3" fill="#ffd7d9"/>
+</svg>

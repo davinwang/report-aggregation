@@ -1,0 +1,6 @@
+# Alembic migration versions live here.
+# Generate the initial migration after installing deps:
+#   cd backend
+#   alembic revision --autogenerate -m "init schema"
+#   alembic upgrade head
+# (For quick dev you can instead run: python -m app.core.db --create-all)

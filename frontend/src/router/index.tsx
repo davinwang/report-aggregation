@@ -1,0 +1,79 @@
+// Route tree (React Router v6). Login is disabled — a hardcoded admin identity is
+// always active, so no auth guards are needed. Phase-1 pages are implemented;
+// later-phase routes render ComingSoon placeholders so navigation stays complete.
+import { lazy, Suspense, type ReactElement } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { Spin } from "antd";
+import AppLayout from "@/layouts/AppLayout";
+import ComingSoon from "@/features/common/ComingSoon";
+import NotFound from "@/features/common/NotFound";
+
+// Lazy Phase-1 pages (code-split).
+const MarketPage = lazy(() => import("@/features/market/MarketPage"));
+const ResearchPage = lazy(() => import("@/features/research/ResearchPage"));
+const TechnicalPage = lazy(() => import("@/features/technical/TechnicalPage"));
+const FinancialsPage = lazy(() => import("@/features/financials/FinancialsPage"));
+const StockDetailPage = lazy(() => import("@/features/stock/StockDetailPage"));
+const OverviewPage = lazy(() => import("@/features/overview/OverviewPage"));
+
+function Fallback(): ReactElement {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        justifyContent: "center",
+        alignItems: "center",
+        height: "60vh",
+      }}
+    >
+      <Spin size="large" />
+      <span style={{ color: "#999" }}>加载中…</span>
+    </div>
+  );
+}
+
+export default function AppRoutes(): ReactElement {
+  return (
+    <Suspense fallback={<Fallback />}>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route index element={<Navigate to="/market" replace />} />
+          <Route path="/" element={<Navigate to="/market" replace />} />
+          {/* Legacy /login now just returns to the dashboard (login removed). */}
+          <Route path="/login" element={<Navigate to="/market" replace />} />
+
+          {/* Phase 1 — implemented */}
+          <Route path="/market" element={<MarketPage />} />
+          <Route path="/overview" element={<OverviewPage />} />
+          <Route path="/research" element={<ResearchPage />} />
+          <Route path="/technical" element={<TechnicalPage />} />
+          <Route path="/technical/:code" element={<TechnicalPage />} />
+          <Route path="/financials" element={<FinancialsPage />} />
+          <Route path="/financials/:code" element={<FinancialsPage />} />
+          <Route path="/stock/:code" element={<StockDetailPage />} />
+
+          {/* Phase 2 — placeholders (navigation already wired) */}
+          <Route path="/signals" element={<ComingSoon title="可操作信号" />} />
+          <Route path="/accuracy" element={<ComingSoon title="研报准确率" />} />
+          <Route path="/weekly" element={<ComingSoon title="周统计" />} />
+          <Route path="/market-overview" element={<ComingSoon title="全市场速览" />} />
+          <Route path="/basis" element={<ComingSoon title="股指期货基差" />} />
+          <Route path="/options" element={<ComingSoon title="股指期权" />} />
+          <Route path="/flow" element={<ComingSoon title="资金流向" />} />
+          <Route path="/linkage" element={<ComingSoon title="板块联动" />} />
+          <Route path="/contrib" element={<ComingSoon title="上传研报" />} />
+          <Route path="/contrib/review" element={<ComingSoon title="研报审核" />} />
+          <Route path="/ops" element={<ComingSoon title="运营数据" description="采集量 / 新鲜度 / 错误率" />} />
+          <Route path="/admin" element={<ComingSoon title="管理设置" description="universe / 调度 / 接口开关" />} />
+
+          {/* Phase 3 — AI, flag-gated (stub) */}
+          <Route path="/chat" element={<ComingSoon title="AI助手" phase={3} description="LLM 问答（后置）" />} />
+
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </Suspense>
+  );
+}

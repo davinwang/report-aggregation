@@ -1,0 +1,36 @@
+# ── Global ──
+.git/
+.gitignore
+.dockerignore
+*.md
+!backend/README.md
+*.txt
+!backend/requirements.txt
+*.png
+*.log
+docker_build_log.txt
+
+# ── Python ──
+.conda/
+backend/.conda/
+backend/.venv/
+backend/.env
+**/__pycache__/
+**/*.pyc
+
+# ── Node (critical — deep paths exceed Windows MAX_PATH) ──
+frontend/node_modules/
+frontend/dist/
+frontend/.cache/
+
+# ── Data ──
+data/
+
+# ── Scripts / IDE ──
+scripts/
+.vscode/
+.idea/
+
+# ── Deploy (only the entrypoint is needed by the backend Dockerfile) ──
+deploy/
+!deploy/backend/docker-entrypoint.sh

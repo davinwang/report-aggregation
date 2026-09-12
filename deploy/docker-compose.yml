@@ -1,0 +1,63 @@
+# Deployment stack: frontend (nginx serving the built SPA + reverse proxy),
+# backend (FastAPI + ingestion scheduler). SQLite is the only database; the
+# pickle-based in-process cache replaces Redis.
+#
+# Usage (from the repo root):
+#   cd deploy && docker compose up -d --build
+#     Frontend UI:  http://localhost:8080
+#     API docs:     http://localhost:8000/docs
+#     Deep health:  http://localhost:8080/health/deep
+#
+# First-time data seed (ingests AkShare feeds into SQLite; the in-app
+# scheduler then keeps them fresh on SCHEDULER_CRON):
+#   docker compose exec backend python -m app.ingestion.pipeline --feed security_master
+#   docker compose exec backend python -m app.ingestion.pipeline --all --universe hs300
+#
+# The backend creates the schema + default users (admin/admin123, analyst/analyst123)
+# on boot. All settings below can be overridden via a root .env file or the shell
+# environment (JWT_SECRET, FRONTEND_PORT, BACKEND_PORT, ...). Set AUTH_ENABLED=true
+# to require JWT login.
+
+name: srp
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/backend/Dockerfile
+    image: srp-backend:latest
+    container_name: srp-backend
+    environment:
+      ENV: production
+      PORT: "8000"
+      DATABASE_URL: sqlite:////srv/data/srp.sqlite3
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      UNIVERSE: ${UNIVERSE:-hs300}
+      SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-true}
+      AUTH_ENABLED: ${AUTH_ENABLED:-false}
+      FEATURE_AI: ${FEATURE_AI:-false}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ../data:/srv/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/api/health', timeout=5)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/frontend/Dockerfile
+    image: srp-frontend:latest
+    container_name: srp-frontend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

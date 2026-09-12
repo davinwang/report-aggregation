@@ -1,0 +1,288 @@
+﻿docker :  Image srp-backend:latest Building 
+所在位置 行:1 字符: 49
++ ... aggreation; docker compose -f deploy/docker-compose.yml build backend ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( Image srp-backend:latest Building :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+#1 [internal] load local bake definitions
+#1 reading from stdin 565B 0.2s done
+#1 DONE 0.2s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 30B 0.1s
+#2 transferring dockerfile: 1.06kB 0.2s done
+#2 DONE 0.3s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim
+#3 DONE 2.8s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B 0.0s done
+#4 DONE 0.1s
+
+#5 [internal] load build context
+#5 DONE 0.0s
+
+#6 [1/9] FROM docker.io/library/python:3.12-slim@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea
+#6 resolve docker.io/library/python:3.12-slim@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea 0.1s done
+#6 DONE 0.1s
+
+#5 [internal] load build context
+#5 transferring context: 4.78kB 0.1s done
+#5 DONE 0.1s
+
+#7 [2/9] WORKDIR /srv/backend
+#7 CACHED
+
+#8 [3/9] COPY backend/pyproject.toml backend/README.md ./
+#8 CACHED
+
+#9 [4/9] COPY backend/app ./app
+#9 CACHED
+
+#10 [5/9] RUN pip install .
+#10 5.946 Processing /srv/backend
+#10 5.963   Installing build dependencies: started
+#10 64.70   Installing build dependencies: finished with status 'done'
+#10 64.70   Getting requirements to build wheel: started
+#10 67.01   Getting requirements to build wheel: finished with status 'done'
+#10 67.01   Preparing metadata (pyproject.toml): started
+#10 68.79   Preparing metadata (pyproject.toml): finished with status 'done'
+#10 78.01 Collecting fastapi<1.0,>=0.110 (from srp-backend==0.1.0)
+#10 78.88   Downloading fastapi-0.141.1-py3-none-any.whl.metadata (27 kB)
+#10 79.66 Collecting uvicorn>=0.27 (from uvicorn[standard]>=0.27->srp-backend==0.1.0)
+#10 79.92   Downloading uvicorn-0.52.4-py3-none-any.whl.metadata (6.6 kB)
+#10 92.64 Collecting sqlalchemy<3.0,>=2.0 (from srp-backend==0.1.0)
+#10 92.91   Downloading sqlalchemy-2.0.52-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.6 kB)
+#10 94.13 Collecting alembic>=1.13 (from srp-backend==0.1.0)
+#10 94.39   Downloading alembic-1.20.0-py3-none-any.whl.metadata (7.3 kB)
+#10 102.3 Collecting pydantic<3.0,>=2.6 (from srp-backend==0.1.0)
+#10 102.5   Downloading pydantic-2.13.5-py3-none-any.whl.metadata (110 kB)
+#10 104.5 Collecting pydantic-settings>=2.2 (from srp-backend==0.1.0)
+#10 105.4   Downloading pydantic_settings-2.15.0-py3-none-any.whl.metadata (3.9 kB)
+#10 106.0 Collecting apscheduler<4.0,>=3.10 (from srp-backend==0.1.0)
+#10 106.4   Downloading apscheduler-3.11.3-py3-none-any.whl.metadata (6.5 kB)
+#10 109.9 Collecting akshare>=1.15.0 (from srp-backend==0.1.0)
+#10 110.2   Downloading akshare-1.18.94-py3-none-any.whl.metadata (14 kB)
+#10 120.5 Collecting pandas>=2.0 (from srp-backend==0.1.0)
+#10 121.1   Downloading pandas-3.0.5-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (79 kB)
+#10 138.8 Collecting numpy>=1.24 (from srp-backend==0.1.0)
+#10 139.0   Downloading numpy-2.5.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+#10 142.2 Collecting httpx>=0.27 (from srp-backend==0.1.0)
+#10 142.8   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+#10 144.6 Collecting cachetools>=5.3 (from srp-backend==0.1.0)
+#10 144.9   Downloading cachetools-7.1.8-py3-none-any.whl.metadata (5.5 kB)
+#10 146.8 Collecting python-dateutil>=2.8 (from srp-backend==0.1.0)
+#10 147.0   Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+#10 149.2 Collecting PyJWT>=2.8 (from srp-backend==0.1.0)
+#10 149.5   Downloading pyjwt-2.14.0-py3-none-any.whl.metadata (3.4 kB)
+#10 151.1 Collecting beautifulsoup4>=4.9.1 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 151.3   Downloading beautifulsoup4-4.15.0-py3-none-any.whl.metadata (3.8 kB)
+#10 164.6 Collecting lxml>=4.2.1 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 165.1   Downloading lxml-6.1.3-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (3.3 kB)
+#10 165.7 Collecting requests>=2.22.0 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 166.4   Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+#10 168.6 Collecting curl_cffi>=0.13.0 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 168.8   Downloading curl_cffi-0.16.3-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (17 kB)
+#10 170.4 Collecting html5lib>=1.0.1 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 170.6   Downloading html5lib-1.1-py2.py3-none-any.whl.metadata (16 kB)
+#10 171.8 Collecting xlrd>=1.2.0 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 172.1   Downloading xlrd-2.0.2-py2.py3-none-any.whl.metadata (3.5 kB)
+#10 172.8 Collecting urllib3>=1.25.8 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 173.1   Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+#10 175.0 Collecting tqdm>=4.43.0 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 175.3   Downloading tqdm-4.70.1-py3-none-any.whl.metadata (57 kB)
+#10 179.6 Collecting openpyxl>=3.0.3 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 180.0   Downloading openpyxl-3.1.5-py2.py3-none-any.whl.metadata (2.5 kB)
+#10 180.3 Collecting jsonpath>=0.82 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 180.5   Downloading jsonpath-0.82.2.tar.gz (10 kB)
+#10 181.1   Installing build dependencies: started
+#10 223.3   Installing build dependencies: finished with status 'done'
+#10 223.3   Getting requirements to build wheel: started
+#10 224.1   Getting requirements to build wheel: finished with status 'done'
+#10 224.1   Preparing metadata (pyproject.toml): started
+#10 225.0   Preparing metadata (pyproject.toml): finished with status 'done'
+#10 225.3 Collecting tabulate>=0.8.6 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 225.6   Downloading tabulate-0.10.0-py3-none-any.whl.metadata (40 kB)
+#10 227.7 Collecting decorator>=4.4.2 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 228.0   Downloading decorator-5.3.1-py3-none-any.whl.metadata (3.9 kB)
+#10 229.1 Collecting py-mini-racer>=0.6.0 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 229.4   Downloading py_mini_racer-0.6.0-py2.py3-none-manylinux1_x86_64.whl.metadata (8.7 kB)
+#10 230.0 Collecting akracer>=0.0.13 (from akshare>=1.15.0->srp-backend==0.1.0)
+#10 230.3   Downloading akracer-0.0.14-py3-none-any.whl.metadata (3.3 kB)
+#10 231.9 Collecting Mako (from alembic>=1.13->srp-backend==0.1.0)
+#10 232.2   Downloading mako-1.4.1-py3-none-any.whl.metadata (2.9 kB)
+#10 233.5 Collecting typing-extensions>=4.12 (from alembic>=1.13->srp-backend==0.1.0)
+#10 233.8   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+#10 234.6 Collecting tzlocal>=3.0 (from apscheduler<4.0,>=3.10->srp-backend==0.1.0)
+#10 234.8   Downloading tzlocal-5.4.4-py3-none-any.whl.metadata (7.7 kB)
+#10 236.7 Collecting starlette>=0.46.0 (from fastapi<1.0,>=0.110->srp-backend==0.1.0)
+#10 237.0   Downloading starlette-1.6.0-py3-none-any.whl.metadata (6.4 kB)
+#10 237.4 Collecting typing-inspection>=0.4.2 (from fastapi<1.0,>=0.110->srp-backend==0.1.0)
+#10 237.7   Downloading typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+#10 238.1 Collecting annotated-doc>=0.0.2 (from fastapi<1.0,>=0.110->srp-backend==0.1.0)
+#10 238.3   Downloading annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+#10 239.4 Collecting anyio (from httpx>=0.27->srp-backend==0.1.0)
+#10 239.6   Downloading anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+#10 240.6 Collecting certifi (from httpx>=0.27->srp-backend==0.1.0)
+#10 241.2   Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+#10 242.3 Collecting httpcore==1.* (from httpx>=0.27->srp-backend==0.1.0)
+#10 242.6   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+#10 244.7 Collecting idna (from httpx>=0.27->srp-backend==0.1.0)
+#10 245.3   Downloading idna-3.19-py3-none-any.whl.metadata (9.2 kB)
+#10 246.2 Collecting h11>=0.16 (from httpcore==1.*->httpx>=0.27->srp-backend==0.1.0)
+#10 247.4   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+#10 247.8 Collecting annotated-types>=0.6.0 (from pydantic<3.0,>=2.6->srp-backend==0.1.0)
+#10 248.5   Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+#10 284.6 Collecting pydantic-core==2.46.5 (from pydantic<3.0,>=2.6->srp-backend==0.1.0)
+#10 284.9   Downloading pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+#10 286.3 Collecting python-dotenv>=0.21.0 (from pydantic-settings>=2.2->srp-backend==0.1.0)
+#10 286.5   Downloading python_dotenv-1.2.3-py3-none-any.whl.metadata (29 kB)
+#10 287.8 Collecting six>=1.5 (from python-dateutil>=2.8->srp-backend==0.1.0)
+#10 288.1   Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+#10 295.3 Collecting greenlet>=1 (from sqlalchemy<3.0,>=2.0->srp-backend==0.1.0)
+#10 296.1   Downloading greenlet-3.5.5-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+#10 296.7 Collecting click>=7.0 (from uvicorn>=0.27->uvicorn[standard]>=0.27->srp-backend==0.1.0)
+#10 297.0   Downloading click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+#10 298.5 Collecting httptools>=0.8.0 (from uvicorn[standard]>=0.27->srp-backend==0.1.0)
+#10 298.8   Downloading httptools-0.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+#10 300.2 Collecting pyyaml>=5.1 (from uvicorn[standard]>=0.27->srp-backend==0.1.0)
+#10 300.4   Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+#10 302.4 Collecting uvloop>=0.15.1 (from uvicorn[standard]>=0.27->srp-backend==0.1.0)
+#10 302.7   Downloading uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.9 kB)
+#10 306.9 Collecting watchfiles>=0.20 (from uvicorn[standard]>=0.27->srp-backend==0.1.0)
+#10 307.2   Downloading watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+#10 313.0 Collecting websockets>=13.0 (from uvicorn[standard]>=0.27->srp-backend==0.1.0)
+#10 313.6   Downloading websockets-17.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+#10 314.5 Collecting soupsieve>=1.6.1 (from beautifulsoup4>=4.9.1->akshare>=1.15.0->srp-backend==0.1.0)
+#10 314.7   Downloading soupsieve-2.9.2-py3-none-any.whl.metadata (4.6 kB)
+#10 320.8 Collecting cffi>=2.0.0 (from curl_cffi>=0.13.0->akshare>=1.15.0->srp-backend==0.1.0)
+#10 321.1   Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+#10 326.4 Collecting webencodings (from html5lib>=1.0.1->akshare>=1.15.0->srp-backend==0.1.0)
+#10 327.0   Downloading webencodings-0.6.1-py3-none-any.whl.metadata (3.4 kB)
+#10 327.4 Collecting et-xmlfile (from openpyxl>=3.0.3->akshare>=1.15.0->srp-backend==0.1.0)
+#10 327.6   Downloading et_xmlfile-2.0.0-py3-none-any.whl.metadata (2.7 kB)
+#10 331.5 Collecting charset_normalizer<4,>=2 (from requests>=2.22.0->akshare>=1.15.0->srp-backend==0.1.0)
+#10 331.8   Downloading charset_normalizer-3.5.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (45 kB)
+#10 336.2 Collecting MarkupSafe>=2.0 (from Mako->alembic>=1.13->srp-backend==0.1.0)
+#10 336.4   Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+#10 336.9 Collecting pycparser (from cffi>=2.0.0->curl_cffi>=0.13.0->akshare>=1.15.0->srp-backend==0.1.0)
+#10 337.1   Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+#10 337.7 Downloading akshare-1.18.94-py3-none-any.whl (1.3 MB)
+#10 381.6    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 1.3/1.3 MB 31.1 kB/s eta 0:00:00
+#10 381.9 Downloading alembic-1.20.0-py3-none-any.whl (268 kB)
+#10 396.6 Downloading apscheduler-3.11.3-py3-none-any.whl (66 kB)
+#10 400.5 Downloading cachetools-7.1.8-py3-none-any.whl (16 kB)
+#10 401.5 Downloading fastapi-0.141.1-py3-none-any.whl (131 kB)
+#10 405.5 Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+#10 408.0 Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+#10 412.3 Downloading numpy-2.5.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
+#10 1230.2    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 16.7/16.7 MB 23.2 kB/s eta 0:00:00
+#10 1230.6 Downloading pandas-3.0.5-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (11.0 MB)
+#10 1755.6    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 11.0/11.0 MB 19.7 kB/s eta 0:00:00
+#10 1755.8 Downloading pydantic-2.13.5-py3-none-any.whl (472 kB)
+#10 1772.6 Downloading pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+#10 1891.3    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 2.1/2.1 MB 35.6 kB/s eta 0:00:00
+#10 1891.5 Downloading pydantic_settings-2.15.0-py3-none-any.whl (69 kB)
+#10 1893.4 Downloading pyjwt-2.14.0-py3-none-any.whl (32 kB)
+#10 1895.0 Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+#10 1901.0 Downloading sqlalchemy-2.0.52-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.4 MB)
+#10 2077.4    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 3.4/3.4 MB 23.1 kB/s eta 0:00:00
+#10 2077.7 Downloading uvicorn-0.52.4-py3-none-any.whl (79 kB)
+#10 2081.9 Downloading akracer-0.0.14-py3-none-any.whl (10.1 MB)
+#10 ...
+
+#7 [2/9] WORKDIR /srv/backend
+#7 CACHED
+
+#10 [5/9] RUN pip install .
+#10 2497.4    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 10.1/10.1 MB 14.5 kB/s eta 0:00:00
+#10 2498.3 Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+#10 2498.6 Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+#10 2500.4 Downloading beautifulsoup4-4.15.0-py3-none-any.whl (109 kB)
+#10 2507.4 Downloading click-8.5.0-py3-none-any.whl (125 kB)
+#10 2512.6 Downloading curl_cffi-0.16.3-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (13.5 MB)
+#10 3240.1    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 13.5/13.5 MB 18.4 kB/s eta 0:00:00
+#10 3240.3 Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+#10 3248.7 Downloading decorator-5.3.1-py3-none-any.whl (10 kB)
+#10 3249.5 Downloading greenlet-3.5.5-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (621 kB)
+#10 3268.4    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 621.4/621.4 kB 56.1 kB/s eta 0:00:00
+#10 3268.7 Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+#10 3270.1 Downloading html5lib-1.1-py2.py3-none-any.whl (112 kB)
+#10 3273.4 Downloading httptools-0.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (523 kB)
+#10 3295.4 Downloading lxml-6.1.3-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
+#10 3534.7    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 5.2/5.2 MB 28.9 kB/s eta 0:00:00
+#10 3534.9 Downloading openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+#10 3545.6 Downloading py_mini_racer-0.6.0-py2.py3-none-manylinux1_x86_64.whl (5.4 MB)
+#10 3807.9    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 5.4/5.4 MB 20.3 kB/s eta 0:00:00
+#10 3808.2 Downloading python_dotenv-1.2.3-py3-none-any.whl (22 kB)
+#10 3809.2 Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+#10 3852.1    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 807.9/807.9 kB 21.7 kB/s eta 0:00:00
+#10 3852.5 Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+#10 3854.3 Downloading idna-3.19-py3-none-any.whl (68 kB)
+#10 3856.3 Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+#10 3856.9 Downloading starlette-1.6.0-py3-none-any.whl (75 kB)
+#10 3860.7 Downloading anyio-4.15.1-py3-none-any.whl (132 kB)
+#10 3871.7 Downloading tabulate-0.10.0-py3-none-any.whl (39 kB)
+#10 3875.5 Downloading tqdm-4.70.1-py3-none-any.whl (80 kB)
+#10 3882.3 Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+#10 3887.7 Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+#10 3888.1 Downloading tzlocal-5.4.4-py3-none-any.whl (18 kB)
+#10 3890.4 Downloading urllib3-2.7.0-py3-none-any.whl (131 kB)
+#10 3895.6 Downloading uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.4 MB)
+#10 4103.4    鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣鈹佲攣 4.4/4.4 MB 16.7 kB/s eta 0:00:00
+#10 4103.7 Downloading watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB)
+#10 4124.6 Downloading websockets-17.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (224 kB)
+#10 4135.9 Downloading xlrd-2.0.2-py2.py3-none-any.whl (96 kB)
+#10 4139.4 Downloading mako-1.4.1-py3-none-any.whl (80 kB)
+#10 4141.9 Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+#10 4154.3 Downloading charset_normalizer-3.5.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (248 kB)
+#10 4163.2 Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+#10 4165.0 Downloading soupsieve-2.9.2-py3-none-any.whl (37 kB)
+#10 4166.5 Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+#10 4167.2 Downloading webencodings-0.6.1-py3-none-any.whl (8.7 kB)
+#10 4167.7 Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+#10 4169.6 Building wheels for collected packages: srp-backend, jsonpath
+#10 4169.7   Building wheel for srp-backend (pyproject.toml): started
+#10 4170.9   Building wheel for srp-backend (pyproject.toml): finished with status 'done'
+#10 4170.9   Created wheel for srp-backend: filename=srp_backend-0.1.0-py3-none-any.whl size=91357 sha256=423253c3dcdf74f068234943cfc8f8ebfe33e3773a6014d42ceb8a70fb552ebc
+#10 4170.9   Stored in directory: /tmp/pip-ephem-wheel-cache-2eieb02d/wheels/d1/b5/b4/2e5e7f39aafe5e7a8b0544614b10bd9604871271c07608ad4a
+#10 4170.9   Building wheel for jsonpath (pyproject.toml): started
+#10 4172.0   Building wheel for jsonpath (pyproject.toml): finished with status 'done'
+#10 4172.0   Created wheel for jsonpath: filename=jsonpath-0.82.2-py3-none-any.whl size=5667 sha256=b6d18c17d8700c45e6927449bcb084f019fd95f2225f41b8508c166a019f9c5e
+#10 4172.0   Stored in directory: /tmp/pip-ephem-wheel-cache-2eieb02d/wheels/73/76/e2/980a29341fe37a583ada29594ed529708d5e8e2c0f9d97c3cc
+#10 4172.0 Successfully built srp-backend jsonpath
+#10 4172.2 Installing collected packages: py-mini-racer, jsonpath, xlrd, websockets, webencodings, uvloop, urllib3, tzlocal, typing-extensions, tqdm, tabulate, soupsieve, six, pyyaml, python-dotenv, PyJWT, pycparser, numpy, MarkupSafe, lxml, idna, httptools, h11, greenlet, et-xmlfile, decorator, click, charset_normalizer, certifi, cachetools, annotated-types, annotated-doc, akracer, uvicorn, typing-inspection, sqlalchemy, requests, python-dateutil, pydantic-core, openpyxl, Mako, httpcore, html5lib, cffi, beautifulsoup4, apscheduler, anyio, watchfiles, starlette, pydantic, pandas, httpx, curl_cffi, alembic, pydantic-settings, fastapi, akshare, srp-backend
+#10 4193.7 Successfully installed Mako-1.4.1 MarkupSafe-3.0.3 PyJWT-2.14.0 akracer-0.0.14 akshare-1.18.94 alembic-1.20.0 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.15.1 apscheduler-3.11.3 beautifulsoup4-4.15.0 cachetools-7.1.8 certifi-2026.7.22 cffi-2.1.1 charset_normalizer-3.5.1 click-8.5.0 curl_cffi-0.16.3 decorator-5.3.1 et-xmlfile-2.0.0 fastapi-0.141.1 greenlet-3.5.5 h11-0.16.0 html5lib-1.1 httpcore-1.0.9 httptools-0.8.0 httpx-0.28.1 idna-3.19 jsonpath-0.82.2 lxml-6.1.3 numpy-2.5.3 openpyxl-3.1.5 pandas-3.0.5 py-mini-racer-0.6.0 pycparser-3.0 pydantic-2.13.5 pydantic-core-2.46.5 pydantic-settings-2.15.0 python-dateutil-2.9.0.post0 python-dotenv-1.2.3 pyyaml-6.0.3 requests-2.34.2 six-1.17.0 soupsieve-2.9.2 sqlalchemy-2.0.52 srp-backend-0.1.0 starlette-1.6.0 tabulate-0.10.0 tqdm-4.70.1 typing-extensions-4.16.0 typing-inspection-0.4.4 tzlocal-5.4.4 urllib3-2.7.0 uvicorn-0.52.4 uvloop-0.22.1 watchfiles-1.2.0 webencodings-0.6.1 websockets-17.1 xlrd-2.0.2
+#10 4193.7 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#10 DONE 4197.9s
+
+#11 [6/9] COPY backend/alembic ./alembic
+#11 DONE 0.2s
+
+#12 [7/9] COPY backend/alembic.ini ./
+#12 DONE 0.1s
+
+#13 [8/9] COPY deploy/backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+#13 DONE 0.1s
+
+#14 [9/9] RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh  && chmod +x /usr/local/bin/docker-entrypoint.sh
+#14 DONE 0.4s
+
+#15 exporting to image
+#15 exporting layers
+#15 exporting layers 20.2s done
+#15 exporting manifest sha256:c18e96923ec29f842ba867a630bac6e35b90e6a8e51fac9c535c871947299206 0.0s done
+#15 exporting config sha256:d7e564b1b1b93f494431c68c178d92c9c5cb3d1573a41fb7c1baa658e0061f45 0.0s done
+#15 exporting attestation manifest sha256:25a2725ee623e06062e9aef5782507acd1c911ce1e10de306924792b5ed199b5
+#15 exporting attestation manifest sha256:25a2725ee623e06062e9aef5782507acd1c911ce1e10de306924792b5ed199b5 0.1s done
+#15 exporting manifest list sha256:8e5b0fdba9cacef9fd98750c95c6bd449e286ae5d86636f3782d1b6e2d66bfc3 0.1s done
+#15 naming to docker.io/library/srp-backend:latest 0.0s done
+#15 unpacking to docker.io/library/srp-backend:latest
+#15 unpacking to docker.io/library/srp-backend:latest 8.8s done
+#15 DONE 29.3s
+
+#16 resolving provenance for metadata file
+#16 DONE 0.1s
+ Image srp-backend:latest Built 
