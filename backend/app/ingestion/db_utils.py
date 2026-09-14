@@ -64,15 +64,22 @@ def bulk_upsert(
             for obj in session.scalars(q).all():
                 existing[tuple(getattr(obj, f) for f in key_fields)] = obj
 
+    _SENTINEL = object()  # marks rows added in this batch (no persistent obj yet)
+
     touched = 0
     pending_new = 0
     for row in rows:
         k = _key_of(row, key_fields)
-        obj = existing.get(k)
-        if obj is None:
+        obj = existing.get(k, _SENTINEL)
+        if obj is _SENTINEL:
+            # Key not seen before (neither in DB nor earlier in this batch).
             session.add(model(**row))
             pending_new += 1
             touched += 1
+            existing[k] = None  # sentinel: added this batch, no persistent obj yet
+        elif obj is None:
+            # Duplicate within the same batch — skip (first occurrence already added).
+            continue
         else:
             changed = False
             for f in update_fields:
