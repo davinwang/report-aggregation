@@ -50,7 +50,7 @@ export const getResearchFacets = () =>
 export const getOrgs = () => getData<{ org: string; count: number }[]>("/api/research/orgs");
 
 // ---- quant / technical ----
-export const getSeries = (params: { code: string; indicators?: string; bars?: number; freq?: string; adjust?: string }) =>
+export const getSeries = (params: { code: string; indicators?: string; period?: string; freq?: string; adjust?: string }) =>
   getData<QuantSeries>("/api/quant/series", params as Record<string, unknown>);
 export const getMatrix = (params?: { limit?: number; scope?: string }) =>
   getData<Record<string, unknown>[]>("/api/quant/matrix", params);

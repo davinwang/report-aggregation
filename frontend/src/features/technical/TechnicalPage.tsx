@@ -38,12 +38,12 @@ export default function TechnicalPage() {
   const navigate = useNavigate();
   const code = codeParam || "sh000300";
   const [sub, setSub] = useState("vol");
-  const [bars, setBars] = useState(250);
+  const [period, setPeriod] = useState("1y");
   const [input, setInput] = useState("");
 
   const { data, isFetching, isError } = useQuery({
-    queryKey: ["quant", "series", code, bars],
-    queryFn: () => getSeries({ code, indicators: FETCH_INDICATORS, bars }),
+    queryKey: ["quant", "series", code, period],
+    queryFn: () => getSeries({ code, indicators: FETCH_INDICATORS, period }),
     staleTime: 30_000,
   });
 
@@ -71,10 +71,16 @@ export default function TechnicalPage() {
           />
           <Select value={sub} onChange={setSub} options={SUB_OPTIONS} style={{ width: 120 }} size="middle" />
           <Select
-            value={bars}
-            onChange={setBars}
+            value={period}
+            onChange={setPeriod}
             style={{ width: 120 }}
-            options={[120, 250, 500, 800].map((b) => ({ value: b, label: `${b} 根` }))}
+            options={[
+              { value: "6m", label: "6个月" },
+              { value: "1y", label: "1年" },
+              { value: "2y", label: "2年" },
+              { value: "3y", label: "3年" },
+              { value: "5y", label: "5年" },
+            ]}
           />
           <Typography.Text strong>{code}</Typography.Text>
         </Space>

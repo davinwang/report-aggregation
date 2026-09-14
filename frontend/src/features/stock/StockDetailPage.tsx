@@ -15,8 +15,8 @@ export default function StockDetailPage() {
   const { code = "" } = useParams();
   const detail = useQuery({ queryKey: ["stock", code], queryFn: () => getStockDetail(code), enabled: !!code });
   const series = useQuery({
-    queryKey: ["quant", "series", code, 160],
-    queryFn: () => getSeries({ code, indicators: "ma,boll,macd", bars: 160 }),
+    queryKey: ["quant", "series", code, "6m"],
+    queryFn: () => getSeries({ code, indicators: "ma,boll,macd", period: "6m" }),
     enabled: !!code,
     staleTime: 30_000,
   });
