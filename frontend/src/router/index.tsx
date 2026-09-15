@@ -22,6 +22,7 @@ const SignalsPage = lazy(() => import("@/features/signals/SignalsPage"));
 const AccuracyPage = lazy(() => import("@/features/accuracy/AccuracyPage"));
 const WeeklyPage = lazy(() => import("@/features/weekly/WeeklyPage"));
 const MarketOverviewPage = lazy(() => import("@/features/market/MarketOverviewPage"));
+const LinkagePage = lazy(() => import("@/features/linkage/LinkagePage"));
 
 function Fallback(): ReactElement {
   return (
@@ -67,7 +68,7 @@ export default function AppRoutes(): ReactElement {
           <Route path="/accuracy" element={<AccuracyPage />} />
           <Route path="/weekly" element={<WeeklyPage />} />
           <Route path="/market-overview" element={<MarketOverviewPage />} />
-          <Route path="/linkage" element={<ComingSoon title="板块联动" />} />
+          <Route path="/linkage" element={<LinkagePage />} />
 
           {/* Phase 2 — placeholders (navigation already wired) */}
           {/* 上传研报/审核 — deferred to Phase 3 (scope decision) */}
