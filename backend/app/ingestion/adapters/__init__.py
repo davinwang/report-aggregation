@@ -73,6 +73,37 @@ PER_SYMBOL_ORDER = [
     "financials_em",
 ]
 
+# Frequency-based schedule groups (Asia/Shanghai). Each group is one scheduled
+# job whose feed list is ordered so intra-group dependencies hold (e.g.
+# index_futures needs index_daily bars for the basis spot leg, and
+# security_master must exist before anything maps code → security_id).
+#   intraday          实时/盘中: 交易时段每10分钟 (市场看板/全市场速览/板块热力)
+#   daily_close       日频·收盘后: 工作日 16:30 (技术指标/基差/期权)
+#   daily_evening     日频·晚间: 工作日 19:00 (资金流向/研报库/信号/公告)
+#   weekly_master     周度主数据: 周一 (证券主档/行业成分)
+#   weekly_financials 周期·财报: 周六 (业绩/财务指标/三大报表)
+FEED_GROUPS: dict[str, list[str]] = {
+    "intraday": ["spot_snapshot", "industry_boards"],
+    "daily_close": ["index_daily", "index_futures", "index_options", "price_history"],
+    "daily_evening": [
+        "northbound",
+        "margin",
+        "lhb",
+        "ratings_daily",
+        "recommend_pool",
+        "research_reports",
+        "disclosures",
+    ],
+    "weekly_master": ["security_master", "industry_constituents"],
+    "weekly_financials": ["earnings", "fin_indicators", "financials_em"],
+}
+
+# feed name -> groups it belongs to (for /ops feeds listing).
+FEED_GROUP_OF: dict[str, list[str]] = {}
+for _group, _feeds in FEED_GROUPS.items():
+    for _feed in _feeds:
+        FEED_GROUP_OF.setdefault(_feed, []).append(_group)
+
 
 def get_adapter(name: str) -> BaseAdapter:
     if name not in REGISTRY:
@@ -85,5 +116,7 @@ __all__ = [
     "PER_SYMBOL_FEEDS",
     "BULK_ORDER",
     "PER_SYMBOL_ORDER",
+    "FEED_GROUPS",
+    "FEED_GROUP_OF",
     "get_adapter",
 ]

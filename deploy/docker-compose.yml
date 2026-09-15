@@ -8,9 +8,11 @@
 #     API docs:     http://localhost:19731/docs
 #     Deep health:  http://localhost:19732/health/deep
 #
-# First-time data seed (ingests AkShare feeds into SQLite; the in-app
-# scheduler then keeps them fresh on SCHEDULER_CRON):
-#   docker compose exec backend python -m app.ingestion.pipeline --feed security_master
+# First-time data: the backend auto-seeds an empty database on boot (INGEST_BOOTSTRAP,
+# runs every feed group once) and then keeps data fresh via frequency-based cron jobs:
+# intraday (盘中) / daily_close / daily_evening / weekly_master / weekly_financials —
+# each overridable via SCHEDULER_CRON_* below. Manual runs remain possible:
+#   docker compose exec backend python -m app.ingestion.pipeline --group daily_close
 #   docker compose exec backend python -m app.ingestion.pipeline --all --universe hs300
 #
 # The backend creates the schema + default users (admin/admin123, analyst/analyst123)
@@ -35,6 +37,13 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       UNIVERSE: ${UNIVERSE:-hs300}
       SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-true}
+      SCHEDULER_CRON_INTRADAY: "${SCHEDULER_CRON_INTRADAY:-*/10 9-11,13-15 * * mon-fri}"
+      SCHEDULER_CRON_DAILY_CLOSE: "${SCHEDULER_CRON_DAILY_CLOSE:-30 16 * * mon-fri}"
+      SCHEDULER_CRON_DAILY_EVENING: "${SCHEDULER_CRON_DAILY_EVENING:-0 19 * * mon-fri}"
+      SCHEDULER_CRON_WEEKLY_MASTER: "${SCHEDULER_CRON_WEEKLY_MASTER:-0 8 * * mon}"
+      SCHEDULER_CRON_WEEKLY_FINANCIALS: "${SCHEDULER_CRON_WEEKLY_FINANCIALS:-0 12 * * sat}"
+      INGEST_BOOTSTRAP: ${INGEST_BOOTSTRAP:-true}
+      INGEST_BOOTSTRAP_STALE_DAYS: ${INGEST_BOOTSTRAP_STALE_DAYS:-3}
       AUTH_ENABLED: ${AUTH_ENABLED:-false}
       FEATURE_AI: ${FEATURE_AI:-false}
     ports:

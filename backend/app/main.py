@@ -40,8 +40,9 @@ async def lifespan(app: FastAPI):
     # 2) bind the running loop so worker-thread ingestion can publish SSE events
     bus.set_loop(asyncio.get_running_loop())
 
-    # 3) scheduler
+    # 3) scheduler + startup bootstrap (seed empty DB / catch up stale data)
     scheduler.start_scheduler()
+    scheduler.bootstrap_on_startup()
 
     yield
 

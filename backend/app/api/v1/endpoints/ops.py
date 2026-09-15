@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
@@ -15,7 +15,7 @@ from app.api.common import envelope
 from app.core.db import get_db
 from app.core.security import require_admin
 from app.ingestion import scheduler
-from app.ingestion.adapters import REGISTRY
+from app.ingestion.adapters import FEED_GROUP_OF, REGISTRY
 from app.models.system import DataFreshness, IngestionLog
 
 router = APIRouter(prefix="/api/ops", tags=["ops"])
@@ -24,7 +24,8 @@ router = APIRouter(prefix="/api/ops", tags=["ops"])
 @router.get("/feeds")
 def feeds() -> dict:
     return envelope([
-        {"name": a.name, "description": a.description, "per_symbol": a.per_symbol}
+        {"name": a.name, "description": a.description, "per_symbol": a.per_symbol,
+         "groups": FEED_GROUP_OF.get(a.name, [])}
         for a in REGISTRY.values()
     ])
 
@@ -52,15 +53,22 @@ def ingestions(limit: int = Query(default=50, ge=1, le=500), db: Session = Depen
     } for r in rows])
 
 
+@router.get("/jobs")
+def jobs() -> dict:
+    """Scheduled ingestion jobs (id, cron trigger, next run time)."""
+    return envelope(scheduler.jobs_info())
+
+
 @router.post("/ingest")
 def trigger_ingest(
-    scope: str = Query(default="all", description="all|bulk|per_symbol|<feed_name>"),
+    scope: str = Query(default="all", description="frequency group | all|bulk|per_symbol | <feed_name>"),
     universe: Optional[str] = Query(default=None),
     _admin=Depends(require_admin),
 ) -> dict:
-    if scope in REGISTRY:  # single feed
-        scheduler.trigger_now(scope="all")  # scheduler runs full pipeline; single-feed via CLI
-        return envelope({"scheduled": True, "scope": scope,
-                         "note": "single-feed runs are queued via the full pipeline; use CLI for one feed"})
+    if scope not in scheduler.VALID_SCOPES:
+        raise HTTPException(status_code=400, detail={
+            "message": f"unknown scope '{scope}'",
+            "valid": sorted(scheduler.VALID_SCOPES),
+        })
     ok = scheduler.trigger_now(scope=scope, universe=universe)
     return envelope({"scheduled": ok, "scope": scope, "universe": universe})

@@ -68,7 +68,7 @@ def health_deep(db: Session = Depends(get_db)) -> dict:
         "database": {"ok": True, "counts": counts, "latest_trade_date": ltd.isoformat() if ltd else None},
         "dependencies": {"ok": ak_ver is not None, "akshare": ak_ver, "fastapi": True, "pandas": True},
         "scheduler": {"ok": scheduler.is_running(), "enabled": settings.scheduler_enabled,
-                      "cron": settings.scheduler_cron},
+                      "jobs": scheduler.jobs_info()},
         "sse": {"ok": True, "subscribers": bus.subscriber_count()},
         "market_data": {"ok": ltd is not None, "latest": ltd.isoformat() if ltd else None,
                         "weeks_behind": weeks_behind},

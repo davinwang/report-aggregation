@@ -19,7 +19,7 @@ from app.core.config import settings
 from app.core.db import init_db, session_scope
 from app.core.logging import configure_logging, get_logger
 from app.ingestion import throttle
-from app.ingestion.adapters import BULK_ORDER, PER_SYMBOL_ORDER, get_adapter
+from app.ingestion.adapters import BULK_ORDER, FEED_GROUPS, PER_SYMBOL_ORDER, get_adapter
 from app.ingestion.base import FeedResult
 from app.ingestion.universe import resolve_universe
 
@@ -80,6 +80,20 @@ def run_all(session: Session, universe: Optional[str] = None, trade_date: Option
     return results
 
 
+def run_group(session: Session, group: str, universe: Optional[str] = None) -> list[FeedResult]:
+    """Run one frequency group (see adapters.FEED_GROUPS) in its defined order."""
+    feeds = FEED_GROUPS.get(group)
+    if feeds is None:
+        raise ValueError(f"Unknown feed group '{group}'. Available: {', '.join(FEED_GROUPS)}")
+    logger.info("▶ run group '%s' (%d feeds)", group, len(feeds))
+    results: list[FeedResult] = []
+    for name in feeds:
+        results.append(run_feed(name, session, universe=universe))
+    ok = sum(1 for r in results if r.status in ("ok", "empty"))
+    logger.info("Group '%s' complete: %d/%d feeds ok", group, ok, len(results))
+    return results
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     configure_logging()
     p = argparse.ArgumentParser(description="股票研报聚合平台 ingestion pipeline")
@@ -87,6 +101,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument("--all", action="store_true", help="run bulk + per-symbol pipeline")
     p.add_argument("--bulk", action="store_true", help="run bulk feeds only")
     p.add_argument("--per-symbol", action="store_true", help="run per-symbol feeds only")
+    p.add_argument("--group", default=None, help="run one frequency group: " + "|".join(FEED_GROUPS))
     p.add_argument("--universe", default=None, help="hs300|zz500|hs300+zz500|all|<code,code>")
     p.add_argument("--date", default=None, help="trading date YYYY-MM-DD for date-keyed feeds")
     p.add_argument("--start", default=None, help="start YYYYMMDD for history feeds")
@@ -128,6 +143,8 @@ def main(argv: Optional[list[str]] = None) -> int:
             results = run_bulk(session, trade_date=trade_date)
         elif args.per_symbol:
             results = run_per_symbol(session, universe=args.universe, **extra)
+        elif args.group:
+            results = run_group(session, args.group, universe=args.universe)
         elif args.all:
             results = run_all(session, universe=args.universe, trade_date=trade_date)
         else:
