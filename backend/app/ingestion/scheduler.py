@@ -69,7 +69,7 @@ _JOB_SPECS: list[tuple[str, str, str, str, int]] = [
 VALID_SCOPES: set[str] = set(FEED_GROUPS) | set(LEGACY_SCOPES) | set(REGISTRY)
 
 
-def _execute(scope: str, universe: Optional[str] = None) -> None:
+def _execute(scope: str, universe: Optional[str] = None, prewarm: bool = True) -> None:
     """Run one ingestion scope in the caller's thread (used by all jobs).
 
     Valid scopes: a FEED_GROUPS key, 'all' | 'bulk' | 'per_symbol', or a single
@@ -97,10 +97,19 @@ def _execute(scope: str, universe: Optional[str] = None) -> None:
             else:  # single feed
                 run_feed(scope, session, universe=universe)
         logger.info("Ingestion finished (scope=%s) in %.1fs", scope, (datetime.now() - started).total_seconds())
+        if prewarm:
+            _prewarm_after_ingest()
     except Exception:  # noqa: BLE001
         logger.exception("Ingestion crashed (scope=%s)", scope)
     finally:
         _INGEST_LOCK.release()
+
+
+def _prewarm_after_ingest() -> None:
+    """Rebuild the hot read caches so the first page visit after a run is fast."""
+    from app.services.prewarm import prewarm_hot_caches  # lazy: keep import graph lean
+
+    prewarm_hot_caches()
 
 
 def _add_group_job(sched: BackgroundScheduler, job_id: str, group: str,
@@ -233,17 +242,17 @@ def _bootstrap_job() -> None:
     if n_quotes == 0:
         logger.info("Bootstrap: empty database detected → full seed (%s)", " → ".join(_BOOTSTRAP_GROUPS))
         for group in _BOOTSTRAP_GROUPS:
-            _execute(group)
+            _execute(group, prewarm=False)
         logger.info("Bootstrap: full seed finished")
-        return
-
-    stale_before = date.today() - timedelta(days=settings.ingest_bootstrap_stale_days)
-    if ltd is None or ltd < stale_before:
-        logger.info("Bootstrap: market data stale (latest trade date %s) → daily catch-up", ltd)
-        _execute("daily_close")
-        _execute("daily_evening")
     else:
-        logger.info("Bootstrap: data current (latest trade date %s); scheduled jobs will maintain it", ltd)
+        stale_before = date.today() - timedelta(days=settings.ingest_bootstrap_stale_days)
+        if ltd is None or ltd < stale_before:
+            logger.info("Bootstrap: market data stale (latest trade date %s) → daily catch-up", ltd)
+            _execute("daily_close", prewarm=False)
+            _execute("daily_evening", prewarm=False)
+        else:
+            logger.info("Bootstrap: data current (latest trade date %s); scheduled jobs will maintain it", ltd)
+    _prewarm_after_ingest()
 
 
 def is_running() -> bool:

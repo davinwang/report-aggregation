@@ -5,11 +5,12 @@ are computed in Python (services.indicators) over stored bars and returned EChar
 """
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Optional
 
 import pandas as pd
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import desc, func, select
+from sqlalchemy import bindparam, func, select, text
 from sqlalchemy.orm import Session
 
 from app.api.common import envelope
@@ -89,11 +90,7 @@ def matrix(
 
     codes: list[str] = list(db.scalars(select(Security.code).where(Security.type == "index")).all())
     if scope == "index+active":
-        recent = db.execute(
-            select(DailyQuote.code).where(DailyQuote.code.notin_(codes))
-            .group_by(DailyQuote.code).order_by(desc(func.max(DailyQuote.trade_date))).limit(limit)
-        ).scalars().all()
-        codes += list(recent)
+        codes += _recent_active_codes(db, exclude=codes, limit=limit)
     codes = codes[:limit]
 
     name_map = {s.code: s.name for s in db.scalars(select(Security).where(Security.code.in_(codes))).all()}
@@ -113,6 +110,36 @@ def matrix(
                      "ma20": ma20, "rsi12": rsi, **_state(close, ma20, dif, dea, rsi)})
     cache_set(cache_key, rows)
     return envelope(rows, freq=freq, count=len(rows))
+
+
+#: Recent-activity window for the 活跃个股 pick: sessions within N days of the
+#: latest stored date. The window keeps the pick on ix_daily_quote_date (a few
+#: thousand rows) instead of scanning the whole 258k-row code index — the
+#: dominant cold-read cost on the bind-mounted deployment DB (198ms -> ~4ms).
+RECENT_WINDOW_DAYS = 7
+
+#: ``INDEXED BY`` pins the plan to the date index (with_hint does not render for
+#: SQLite SELECTs); without it the planner scans the covering (code, trade_date)
+#: index in full before applying the window filter.
+_PICK_ACTIVE_SQL = text(
+    "SELECT code FROM daily_quote INDEXED BY ix_daily_quote_date "
+    "WHERE trade_date >= :since AND code NOT IN :exclude "
+    "GROUP BY code ORDER BY MAX(trade_date) DESC LIMIT :lim"
+).bindparams(bindparam("exclude", expanding=True))
+
+
+def _recent_active_codes(db: Session, exclude: list[str], limit: int) -> list[str]:
+    """Most recently traded stock codes (newest first), bounded to a recent window."""
+    ref = db.scalar(select(func.max(DailyQuote.trade_date)))
+    if ref is None:
+        return []
+    since = ref - timedelta(days=RECENT_WINDOW_DAYS)
+    rows = db.execute(
+        _PICK_ACTIVE_SQL,
+        # "" placeholder keeps NOT IN non-empty (an empty expanding IN matches nothing).
+        {"since": since, "exclude": exclude or [""], "lim": limit},
+    ).all()
+    return [c for (c,) in rows]
 
 
 def _last(frame: Optional[pd.DataFrame], col: str) -> Optional[float]:
