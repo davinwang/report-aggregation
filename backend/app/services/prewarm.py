@@ -36,9 +36,9 @@ def prewarm_hot_caches() -> None:
     """Best-effort precompute of the hot payloads; never raises into the caller.
 
     Each key is isolated: a failing key is logged and skipped so the rest still
-    warm. Every compute is re-checked against the cache so the log reports
-    honest numbers — a compute can succeed yet not stick when the DB stamp is
-    momentarily unavailable.
+    warm. Every compute is re-checked against the cache, and computes that fail
+    to stick (DB stamp unreadable right after container start) are retried once,
+    so the log reports honest numbers.
     """
     warmed = skipped = failed = 0
     try:
@@ -60,21 +60,29 @@ def prewarm_hot_caches() -> None:
                     partial(linkage_ep.matrix, window=window, db=db),
                 ))
 
-            for key, compute in jobs:
-                if cache_get(key) is not None:
-                    skipped += 1
-                    continue
-                try:
-                    compute()
-                except Exception:  # noqa: BLE001 - one bad key must not stop the rest
-                    failed += 1
-                    logger.exception("Prewarm failed for %s", key)
-                    continue
-                if cache_get(key) is None:
-                    failed += 1
-                    logger.warning("Prewarm of %s did not stick (DB stamp unavailable?)", key)
-                else:
-                    warmed += 1
+            pending = jobs
+            for attempt in (1, 2):
+                if not pending:
+                    break
+                retry: list[tuple[str, Callable[[], object]]] = []
+                for key, compute in pending:
+                    if attempt == 1 and cache_get(key) is not None:
+                        skipped += 1
+                        continue
+                    try:
+                        compute()
+                    except Exception:  # noqa: BLE001 - one bad key must not stop the rest
+                        failed += 1
+                        logger.exception("Prewarm failed for %s", key)
+                        continue
+                    if cache_get(key) is None:
+                        retry.append((key, compute))
+                    else:
+                        warmed += 1
+                pending = retry
+            for key, _compute in pending:
+                failed += 1
+                logger.warning("Prewarm of %s did not stick (DB stamp unreadable?)", key)
     except Exception:  # noqa: BLE001 - warming is opportunistic, never fatal
         logger.exception("Hot cache prewarm aborted")
         return

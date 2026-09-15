@@ -10,8 +10,9 @@ change counter, which moves on every committed write, so any write — scheduler
 run, API trigger or an out-of-process CLI backfill — invalidates the cache, and a
 page never serves results computed before the latest data landed. The counter is
 file *content*, immune to the mtime jitter Docker Desktop bind mounts can show for
-the same file; when the stamp is momentarily unreadable the entry is served as-is
-(availability first) rather than forcing a cold recompute. ``cache_clear``
+the same file; when the stamp stays unreadable after retries the entry is
+recomputed rather than served unvalidated, so a page never displays data whose
+freshness could not be confirmed. ``cache_clear``
 additionally wipes everything at the end of each in-process ingestion run.
 """
 from __future__ import annotations
@@ -49,17 +50,22 @@ _Entry = tuple[int, Any]
 
 
 _STAMP_WARN_TS = 0.0
+_STAMP_ATTEMPTS = 3
+_STAMP_RETRY_DELAY = 0.1
 
 
 def _db_stamp() -> int | None:
     """SQLite header's file-change counter — moves on every committed write.
 
-    ``None`` means the stamp is momentarily unreadable (e.g. a read hiccup over
-    the Windows Docker bind mount): callers treat it as "cannot validate" —
-    they keep the entry and serve it — rather than as "everything is stale".
+    ``None`` means the stamp stays unreadable after retries (read hiccups over
+    the Windows Docker bind mount are common right after container start):
+    callers treat it as "cannot validate" and recompute — a value whose
+    freshness cannot be checked is never served.
     """
     global _STAMP_WARN_TS
-    for _ in range(2):  # one immediate retry absorbs transient read hiccups
+    for attempt in range(_STAMP_ATTEMPTS):
+        if attempt:
+            time.sleep(_STAMP_RETRY_DELAY)  # ride out the post-start flaky window
         try:
             from app.core.db import engine  # local: keep cache imports lightweight
 
@@ -76,7 +82,7 @@ def _db_stamp() -> int | None:
     now = time.monotonic()
     if now - _STAMP_WARN_TS > 60:  # rate-limit: a broken mount must not spam logs
         _STAMP_WARN_TS = now
-        logger.warning("SQLite change counter unreadable; cache served without staleness check")
+        logger.warning("SQLite change counter unreadable; entries will be recomputed")
     return None
 
 
@@ -117,20 +123,19 @@ _load()
 
 
 def cache_get(key: str) -> Any | None:
-    """Return the cached value, or None when absent/stale (SQLite file changed).
+    """Return the cached value, or None when absent/stale/unvalidatable.
 
-    When the stamp is momentarily unreadable the entry is served as-is — the
-    next successful read re-validates it — so a stat hiccup cannot force a
-    cold recompute of a warm payload.
+    The stamp is read before taking the lock so stamp retries cannot serialize
+    readers. An unreadable stamp counts as a miss: the caller recomputes.
     """
+    current = _db_stamp()
     with _LOCK:
         entry: _Entry | None = _LOCAL.get(key)
         if entry is None:
             return None
         stamp, value = entry
-        current = _db_stamp()
         if current is None:
-            return value
+            return None  # cannot validate freshness; recompute instead of serving
         if current != stamp:
             _LOCAL.pop(key, None)  # data landed since this payload was computed
             return None
@@ -142,11 +147,13 @@ def cache_set(key: str, value: Any, ttl: int = _TTL_SECONDS) -> None:
 
     ``ttl`` is accepted for API compatibility; the effective lifetime is the
     cache-level TTL, and staleness is primarily governed by the counter check.
+    The store is skipped when the stamp stays unreadable — an unstampable entry
+    could never be validated later.
     """
+    stamp = _db_stamp()
+    if stamp is None:
+        return
     with _LOCK:
-        stamp = _db_stamp()
-        if stamp is None:
-            return  # an unstampable entry could never be validated later
         _LOCAL[key] = (stamp, value)
         _save()
 
