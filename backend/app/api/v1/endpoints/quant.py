@@ -80,9 +80,9 @@ def matrix(
     """Technical snapshot matrix across a bounded set of securities (全市场速览).
 
     Heavy aggregation (bars -> indicators for up to ``limit`` symbols). The ready
-    payload stays cached until new data lands (SQLite mtime check, plus a 30-min
-    safety TTL), so repeated page loads render instantly while data still comes
-    from the local DB.
+    payload stays cached until new data lands (DB change-counter check, plus a
+    30-min safety TTL), so repeated page loads render instantly while data still
+    comes from the local DB.
     """
     cache_key = f"quant.matrix:{scope}:{limit}"
     cached_rows = cache_get(cache_key)

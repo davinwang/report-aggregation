@@ -5,25 +5,25 @@
 - Thread-safe via ``threading.Lock``; atomic writes via temp-file + rename.
 
 Used for hot, expensive-to-compute read endpoints (全市场速览 matrix, 板块联动 beta).
-Data correctness still comes from the DB: entries remember the SQLite file's mtime
-and are dropped as soon as it changes, so any write — scheduler run, API trigger or
-an out-of-process CLI backfill — invalidates the cache, and a page never serves
-results computed before the latest data landed. The mtime comparison tolerates
-sub-millisecond reporting jitter and, when the stamp is momentarily unreadable,
-prefers serving the entry (availability) over a forced cold recompute.
-``cache_clear`` additionally wipes everything at the end of each in-process
-ingestion run.
+Data correctness still comes from the DB: entries remember the SQLite header's
+change counter, which moves on every committed write, so any write — scheduler
+run, API trigger or an out-of-process CLI backfill — invalidates the cache, and a
+page never serves results computed before the latest data landed. The counter is
+file *content*, immune to the mtime jitter Docker Desktop bind mounts can show for
+the same file; when the stamp is momentarily unreadable the entry is served as-is
+(availability first) rather than forcing a cold recompute. ``cache_clear``
+additionally wipes everything at the end of each in-process ingestion run.
 """
 from __future__ import annotations
 
 import os
 import pickle
+import struct
 import tempfile
 import threading
 import time
 from collections.abc import Callable
 from functools import wraps
-from pathlib import Path
 from typing import Any
 
 from cachetools import TTLCache
@@ -35,40 +35,48 @@ logger = get_logger(__name__)
 
 _CACHE_FILE = BACKEND_DIR.parent / "data" / "cache.pkl"
 _LOCK = threading.Lock()
-#: Safety bound only — stale entries are normally dropped by the DB mtime check
-#: below (daily data changes a few times per day, not every minute).
+#: Safety bound only — stale entries are normally dropped by the DB change-counter
+#: check below (daily data changes a few times per day, not every minute).
 _TTL_SECONDS = 30 * 60
-#: Staleness tolerance: Docker Desktop bind mounts can report the same file's
-#: mtime with sub-millisecond variations; that must not pop valid entries.
-_STAMP_EPSILON = 1e-3
+#: Byte offset of the SQLite header's file-change counter (uint32, big-endian).
+#: It increments on every committed write transaction — SQLite's own mechanism
+#: for cross-process change detection; unlike mtime it is file content, not
+#: filesystem metadata, so bind-mount timestamp jitter cannot affect it.
+_DB_COUNTER_OFFSET = 24
 _LOCAL: TTLCache = TTLCache(maxsize=512, ttl=_TTL_SECONDS)
-#: Entry shape: (sqlite mtime at compute time, cached value).
-_Entry = tuple[float, Any]
+#: Entry shape: (change counter at compute time, cached value).
+_Entry = tuple[int, Any]
 
 
 _STAMP_WARN_TS = 0.0
 
 
-def _db_stamp() -> float | None:
-    """Modification time of the SQLite file — moves on every committed write.
+def _db_stamp() -> int | None:
+    """SQLite header's file-change counter — moves on every committed write.
 
-    ``None`` means the stamp is momentarily unreadable (e.g. a stat hiccup over
+    ``None`` means the stamp is momentarily unreadable (e.g. a read hiccup over
     the Windows Docker bind mount): callers treat it as "cannot validate" —
     they keep the entry and serve it — rather than as "everything is stale".
     """
     global _STAMP_WARN_TS
-    for _ in range(2):  # one immediate retry absorbs transient stat hiccups
+    for _ in range(2):  # one immediate retry absorbs transient read hiccups
         try:
             from app.core.db import engine  # local: keep cache imports lightweight
 
             db_path = engine.url.database
-            return Path(db_path).stat().st_mtime if db_path else None
+            if not db_path:
+                return None
+            with open(db_path, "rb") as fh:
+                fh.seek(_DB_COUNTER_OFFSET)
+                raw = fh.read(4)
+            if len(raw) == 4:
+                return struct.unpack(">I", raw)[0]
         except Exception:  # noqa: BLE001 - stamp failures must not break reads
             continue
     now = time.monotonic()
     if now - _STAMP_WARN_TS > 60:  # rate-limit: a broken mount must not spam logs
         _STAMP_WARN_TS = now
-        logger.warning("SQLite mtime unreadable; cache served without staleness check")
+        logger.warning("SQLite change counter unreadable; cache served without staleness check")
     return None
 
 
@@ -81,8 +89,8 @@ def _load() -> None:
             data = pickle.load(f)
         if isinstance(data, dict):
             for k, v in data.items():
-                if isinstance(v, tuple) and len(v) == 2 and isinstance(v[0], float):
-                    _LOCAL[k] = v  # (stamp, value) entries only; older formats are skipped
+                if isinstance(v, tuple) and len(v) == 2 and isinstance(v[0], (int, float)):
+                    _LOCAL[k] = v  # (stamp, value) only; pre-counter float stamps drop on first check
         logger.info("Loaded %d cache entries from %s", len(_LOCAL), _CACHE_FILE)
     except Exception as exc:
         logger.warning("Failed to load cache from %s: %s", _CACHE_FILE, exc)
@@ -123,17 +131,17 @@ def cache_get(key: str) -> Any | None:
         current = _db_stamp()
         if current is None:
             return value
-        if abs(current - stamp) >= _STAMP_EPSILON:
+        if current != stamp:
             _LOCAL.pop(key, None)  # data landed since this payload was computed
             return None
         return value
 
 
 def cache_set(key: str, value: Any, ttl: int = _TTL_SECONDS) -> None:
-    """Store ``value`` for ``key``, stamped with the current DB mtime.
+    """Store ``value`` for ``key``, stamped with the current change counter.
 
     ``ttl`` is accepted for API compatibility; the effective lifetime is the
-    cache-level TTL, and staleness is primarily governed by the mtime check.
+    cache-level TTL, and staleness is primarily governed by the counter check.
     """
     with _LOCK:
         stamp = _db_stamp()
