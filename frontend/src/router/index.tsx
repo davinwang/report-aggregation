@@ -18,6 +18,7 @@ const OverviewPage = lazy(() => import("@/features/overview/OverviewPage"));
 const BasisPage = lazy(() => import("@/features/derivatives/BasisPage"));
 const OptionsPage = lazy(() => import("@/features/derivatives/OptionsPage"));
 const FlowPage = lazy(() => import("@/features/flow/FlowPage"));
+const SignalsPage = lazy(() => import("@/features/signals/SignalsPage"));
 
 function Fallback(): ReactElement {
   return (
@@ -59,15 +60,16 @@ export default function AppRoutes(): ReactElement {
           <Route path="/basis" element={<BasisPage />} />
           <Route path="/options" element={<OptionsPage />} />
           <Route path="/flow" element={<FlowPage />} />
+          <Route path="/signals" element={<SignalsPage />} />
 
           {/* Phase 2 — placeholders (navigation already wired) */}
-          <Route path="/signals" element={<ComingSoon title="可操作信号" />} />
           <Route path="/accuracy" element={<ComingSoon title="研报准确率" />} />
           <Route path="/weekly" element={<ComingSoon title="周统计" />} />
           <Route path="/market-overview" element={<ComingSoon title="全市场速览" />} />
           <Route path="/linkage" element={<ComingSoon title="板块联动" />} />
-          <Route path="/contrib" element={<ComingSoon title="上传研报" />} />
-          <Route path="/contrib/review" element={<ComingSoon title="研报审核" />} />
+          {/* 上传研报/审核 — deferred to Phase 3 (scope decision) */}
+          <Route path="/contrib" element={<ComingSoon title="上传研报" phase={3} />} />
+          <Route path="/contrib/review" element={<ComingSoon title="研报审核" phase={3} />} />
           <Route path="/ops" element={<ComingSoon title="运营数据" description="采集量 / 新鲜度 / 错误率" />} />
           <Route path="/admin" element={<ComingSoon title="管理设置" description="universe / 调度 / 接口开关" />} />
 

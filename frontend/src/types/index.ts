@@ -321,3 +321,26 @@ export interface FlowSummary {
   lhb_date: string | null;
   lhb_net_total: number | null;
 }
+
+// ---- Phase 2: 可操作信号 (actionable signals) ----
+export interface SignalRow {
+  id: number;
+  code: string;
+  name: string | null;
+  trade_date: string;
+  kind: "upgrade" | "downgrade" | "first" | "consensus" | string;
+  direction: string | null;
+  strength: string | null;
+  score: number | null;
+  reason: string | null;
+  industry_group: string | null;
+  sources?: unknown;
+}
+
+export interface SignalSummary {
+  ref: string | null;
+  days: number;
+  counts: Record<string, number>;
+  total?: number;
+  industries: { industry: string; count: number }[];
+}

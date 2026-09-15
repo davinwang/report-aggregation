@@ -67,20 +67,30 @@ INDUSTRY_SUB_GROUPS: dict[str, str] = {
     "公路铁路运输": "公用交运", "物流": "公用交运",
     # 周期资源
     "煤炭开采加工": "周期资源", "油气开采及服务": "周期资源",
-    "石油加工贸易": "周期资源", "工业金属": "周期资源", "贵金属": "周期资源",
-    "小金属": "周期资源", "金属新材料": "周期资源", "钢铁": "周期资源",
-    "化学原料": "周期资源", "化学制品": "周期资源", "化学纤维": "周期资源",
-    "农化制品": "周期资源", "橡胶制品": "周期资源", "塑料制品": "周期资源",
-    "非金属材料": "周期资源", "造纸": "周期资源",
+    "石油加工贸易": "周期资源", "炼化及贸易": "周期资源", "工业金属": "周期资源",
+    "贵金属": "周期资源", "小金属": "周期资源", "金属新材料": "周期资源",
+    "钢铁": "周期资源", "化学原料": "周期资源", "化学制品": "周期资源",
+    "化学纤维": "周期资源", "农化制品": "周期资源", "橡胶制品": "周期资源",
+    "塑料制品": "周期资源", "非金属材料": "周期资源", "造纸": "周期资源",
+    # 消费服务 (申万二级)
+    "乘用车": "消费服务", "商用车": "消费服务",
     # 综合
     "综合": "综合",
 }
+
+# 申万二级 names often carry a Roman-numeral suffix (e.g. 证券Ⅱ / 白酒Ⅱ).
+_INDUSTRY_SUFFIX = ("Ⅱ", "III", "II")
 
 
 def group_of(industry_sw: Optional[str]) -> str:
     if not industry_sw:
         return "未分类"
-    return INDUSTRY_SUB_GROUPS.get(industry_sw) or INDUSTRY_GROUPS.get(industry_sw, "综合")
+    key = industry_sw.strip()
+    for suf in _INDUSTRY_SUFFIX:
+        if key.endswith(suf):
+            key = key[: -len(suf)].strip()
+            break
+    return INDUSTRY_SUB_GROUPS.get(key) or INDUSTRY_GROUPS.get(key, "综合")
 
 
 class Security(Base, TimestampMixin):

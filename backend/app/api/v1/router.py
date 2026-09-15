@@ -15,12 +15,13 @@ from app.api.v1.endpoints import (
     ops,
     quant,
     research,
+    signals,
     stock,
     stream,
 )
 
 api_router = APIRouter()
-for module in (health, meta, market, research, quant, financials, stock, derivatives, flow, stream, ops, auth, chat):
+for module in (health, meta, market, research, quant, financials, stock, derivatives, flow, signals, stream, ops, auth, chat):
     api_router.include_router(module.router)
 
 __all__ = ["api_router"]

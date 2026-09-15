@@ -14,6 +14,8 @@ import type {
   QuantSeries,
   ReportBrief,
   SecurityMeta,
+  SignalRow,
+  SignalSummary,
   StockDetail,
 } from "@/types";
 
@@ -96,6 +98,23 @@ export const getLhb = (params?: { date?: string; direction?: "buy" | "sell"; pag
     rows: r.data,
     meta: r.meta as Paged<LhbRow>["meta"] & { trade_date?: string | null; stats?: { net_total?: number | null } },
   }));
+
+// ---- signals (可操作信号) ----
+export const getSignals = (params?: {
+  action?: string;
+  industry?: string;
+  days?: number;
+  date?: string;
+  page?: number;
+  size?: number;
+}) =>
+  getEnvelope<SignalRow[]>("/api/signals", params as Record<string, unknown>).then((r) => ({
+    rows: r.data,
+    meta: r.meta as Paged<SignalRow>["meta"] & { ref?: string | null; days?: number },
+  }));
+export const getSignalSummary = (days = 30) => getData<SignalSummary>("/api/signals/summary", { days });
+export const refreshSignals = (lookbackDays = 180) =>
+  http.post("/api/signals/refresh", null, { params: { lookback_days: lookbackDays } }).then((r) => r.data);
 
 // ---- health / ops ----
 export const getHealthDeep = () => http.get<HealthDeep>("/health/deep").then((r) => r.data);
