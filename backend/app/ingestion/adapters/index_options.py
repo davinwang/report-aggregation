@@ -4,9 +4,10 @@ The AkShare frame is a *live snapshot* of the current session with columns
 ``instrument`` / ``position`` (持仓量) / ``volume`` / ``lastprice`` / ``updown``, where the
 strike and call/put flag are embedded in the instrument code (``IO2612-C-3900``).
 
-Stored under the newest trade date already in the DB (``index_daily``) so weekend /
-holiday runs still stamp the correct trading session. 涨跌 is preserved by
-reconstructing ``pre_settle = lastprice − updown`` (the model has no updown column).
+Stored under the newest session with an *index* bar (``index_daily`` runs right before
+this feed) so weekend / holiday runs still stamp the correct trading session. 涨跌 is
+preserved by reconstructing ``pre_settle = lastprice − updown`` (the model has no
+updown column).
 """
 from __future__ import annotations
 
@@ -79,7 +80,14 @@ class IndexOptionsAdapter(BaseAdapter):
     def persist(self, session: Session, rows: list[dict[str, Any]], **kwargs) -> int:
         if not rows:
             return 0
-        trade_date = options_svc.latest_trade_date(session) or date.today()
+        # Anchor on the index session, not on MAX(daily_quote.trade_date): partial
+        # same-day stock bars (Sina writes them for the in-progress session) would
+        # otherwise file the snapshot under a session with no option data.
+        trade_date = (
+            options_svc.index_session_date(session)
+            or options_svc.latest_trade_date(session)
+            or date.today()
+        )
         for r in rows:
             r["trade_date"] = trade_date
         codes = list({r["contract_code"] for r in rows})

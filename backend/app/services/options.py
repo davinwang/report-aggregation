@@ -8,6 +8,11 @@ the instrument code, so everything is parsed here.
 The T-board pivots the flat contract list into one row per strike with call columns on
 the left and put columns on the right (the reference platform's T型报价), plus PCR
 (put/call ratio) totals by 持仓量 and 成交量.
+
+Date anchoring: reads anchor to ``option_quote``'s own newest snapshot date, never to
+the global ``MAX(daily_quote.trade_date)`` — Sina's daily feed writes partial same-day
+stock bars for the in-progress session, which advance the global max past the option
+snapshot and would resolve the board to a date with no option rows (empty page).
 """
 from __future__ import annotations
 
@@ -19,6 +24,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.market import DailyQuote, OptionQuote
+from app.models.security import Security
 
 # CFFEX equity-index option underlyings -> (variety, underlying sina code)
 UNDERLYINGS: dict[str, tuple[str, str]] = {
@@ -64,21 +70,59 @@ def latest_trade_date(session: Session) -> Optional[date]:
     return session.scalar(select(func.max(DailyQuote.trade_date)))
 
 
+def latest_option_date(session: Session) -> Optional[date]:
+    """Newest trade date that actually has option quotes stored."""
+    return session.scalar(select(func.max(OptionQuote.trade_date)))
+
+
+def index_session_date(session: Session) -> Optional[date]:
+    """Newest session with an index bar — the anchor for stamping option snapshots.
+
+    Index bars only move once a session has closed (``index_daily`` runs in the same
+    group right before ``index_options``), so this is the last completed session —
+    unlike ``latest_trade_date``, which partial same-day *stock* bars can push ahead.
+    """
+    return session.scalar(
+        select(func.max(DailyQuote.trade_date))
+        .join(Security, Security.id == DailyQuote.security_id)
+        .where(Security.type == "index")
+    )
+
+
+def snapshot_date(session: Session) -> Optional[date]:
+    """Read anchor: newest stored option snapshot, else the newest daily bar.
+
+    Falls back to ``latest_trade_date`` only so the response still carries a date
+    when ``option_quote`` is empty (fresh deployment, collections never ran).
+    """
+    return latest_option_date(session) or latest_trade_date(session)
+
+
 # ----------------------------- read helpers (API) -----------------------------
 def _spot(session: Session, under_code: str, ref: Optional[date] = None) -> Optional[float]:
-    ref = ref or latest_trade_date(session)
+    """Newest index close *up to* the snapshot date.
+
+    The index feed can lag one session behind the option snapshot (and vice versa);
+    exact-date matching blanked the spot / ATM marker in that window.
+    """
+    ref = ref or snapshot_date(session)
     if ref is None:
         return None
     return session.scalar(
         select(DailyQuote.close)
-        .where(DailyQuote.code == under_code, DailyQuote.trade_date == ref)
+        .where(
+            DailyQuote.code == under_code,
+            DailyQuote.trade_date <= ref,
+            DailyQuote.close.is_not(None),
+        )
+        .order_by(DailyQuote.trade_date.desc())
         .limit(1)
     )
 
 
 def available_months(session: Session, underlying: str, ref: Optional[date] = None) -> list[str]:
     """Contract months present in the DB for an underlying, newest first."""
-    ref = ref or latest_trade_date(session)
+    ref = ref or snapshot_date(session)
     if ref is None:
         return []
     rows = session.scalars(
@@ -91,7 +135,7 @@ def available_months(session: Session, underlying: str, ref: Optional[date] = No
 
 def board(session: Session, underlying: str, month: Optional[str] = None, ref: Optional[date] = None) -> dict:
     """T型报价: one row per strike with call/put legs + PCR totals."""
-    ref = ref or latest_trade_date(session)
+    ref = ref or snapshot_date(session)
     months = available_months(session, underlying, ref)
     if month and month in months:
         chosen = month
