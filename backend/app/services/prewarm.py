@@ -8,6 +8,9 @@ first visits fast — data still comes from the local DB, the cache only mirrors
 """
 from __future__ import annotations
 
+from collections.abc import Callable
+from functools import partial
+
 from app.api.v1.endpoints import linkage as linkage_ep
 from app.api.v1.endpoints import quant as quant_ep
 from app.core.cache import cache_get
@@ -30,19 +33,50 @@ _LINKAGE_MATRIX_WINDOWS: tuple[int, ...] = (120,)
 
 
 def prewarm_hot_caches() -> None:
-    """Best-effort precompute of the hot payloads; never raises into the caller."""
+    """Best-effort precompute of the hot payloads; never raises into the caller.
+
+    Each key is isolated: a failing key is logged and skipped so the rest still
+    warm. Every compute is re-checked against the cache so the log reports
+    honest numbers — a compute can succeed yet not stick when the DB stamp is
+    momentarily unavailable.
+    """
+    warmed = skipped = failed = 0
     try:
         with session_scope() as db:
+            jobs: list[tuple[str, Callable[[], object]]] = []
             for scope, limit in _MATRIX_KEYS:
-                if cache_get(f"quant.matrix:{scope}:{limit}") is None:
-                    quant_ep.matrix(freq="daily", limit=limit, scope=scope, db=db)
+                jobs.append((
+                    f"quant.matrix:{scope}:{limit}",
+                    partial(quant_ep.matrix, freq="daily", limit=limit, scope=scope, db=db),
+                ))
             for benchmark, window, limit in _BETA_KEYS:
-                if cache_get(f"linkage.beta:{benchmark}:{window}:{limit}") is None:
-                    linkage_ep.beta(window=window, benchmark=benchmark, limit=limit, db=db)
+                jobs.append((
+                    f"linkage.beta:{benchmark}:{window}:{limit}",
+                    partial(linkage_ep.beta, window=window, benchmark=benchmark, limit=limit, db=db),
+                ))
             for window in _LINKAGE_MATRIX_WINDOWS:
-                if cache_get(f"linkage.matrix:{window}") is None:
-                    linkage_ep.matrix(window=window, db=db)
-        logger.info("Hot read caches prewarmed (%d matrix, %d beta, %d linkage)",
-                    len(_MATRIX_KEYS), len(_BETA_KEYS), len(_LINKAGE_MATRIX_WINDOWS))
+                jobs.append((
+                    f"linkage.matrix:{window}",
+                    partial(linkage_ep.matrix, window=window, db=db),
+                ))
+
+            for key, compute in jobs:
+                if cache_get(key) is not None:
+                    skipped += 1
+                    continue
+                try:
+                    compute()
+                except Exception:  # noqa: BLE001 - one bad key must not stop the rest
+                    failed += 1
+                    logger.exception("Prewarm failed for %s", key)
+                    continue
+                if cache_get(key) is None:
+                    failed += 1
+                    logger.warning("Prewarm of %s did not stick (DB stamp unavailable?)", key)
+                else:
+                    warmed += 1
     except Exception:  # noqa: BLE001 - warming is opportunistic, never fatal
-        logger.exception("Hot cache prewarm failed")
+        logger.exception("Hot cache prewarm aborted")
+        return
+    logger.info("Hot read caches prewarmed (%d warmed, %d already warm, %d failed)",
+                warmed, skipped, failed)

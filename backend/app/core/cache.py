@@ -8,8 +8,11 @@ Used for hot, expensive-to-compute read endpoints (全市场速览 matrix, 板�
 Data correctness still comes from the DB: entries remember the SQLite file's mtime
 and are dropped as soon as it changes, so any write — scheduler run, API trigger or
 an out-of-process CLI backfill — invalidates the cache, and a page never serves
-results computed before the latest data landed. ``cache_clear`` additionally wipes
-everything at the end of each in-process ingestion run.
+results computed before the latest data landed. The mtime comparison tolerates
+sub-millisecond reporting jitter and, when the stamp is momentarily unreadable,
+prefers serving the entry (availability) over a forced cold recompute.
+``cache_clear`` additionally wipes everything at the end of each in-process
+ingestion run.
 """
 from __future__ import annotations
 
@@ -17,6 +20,7 @@ import os
 import pickle
 import tempfile
 import threading
+import time
 from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
@@ -34,20 +38,38 @@ _LOCK = threading.Lock()
 #: Safety bound only — stale entries are normally dropped by the DB mtime check
 #: below (daily data changes a few times per day, not every minute).
 _TTL_SECONDS = 30 * 60
+#: Staleness tolerance: Docker Desktop bind mounts can report the same file's
+#: mtime with sub-millisecond variations; that must not pop valid entries.
+_STAMP_EPSILON = 1e-3
 _LOCAL: TTLCache = TTLCache(maxsize=512, ttl=_TTL_SECONDS)
 #: Entry shape: (sqlite mtime at compute time, cached value).
 _Entry = tuple[float, Any]
 
 
-def _db_stamp() -> float:
-    """Modification time of the SQLite file — moves on every committed write."""
-    try:
-        from app.core.db import engine  # local: keep cache imports lightweight
+_STAMP_WARN_TS = 0.0
 
-        db_path = engine.url.database
-        return Path(db_path).stat().st_mtime if db_path else 0.0
-    except Exception:  # noqa: BLE001 - stamp failures must not break reads
-        return 0.0
+
+def _db_stamp() -> float | None:
+    """Modification time of the SQLite file — moves on every committed write.
+
+    ``None`` means the stamp is momentarily unreadable (e.g. a stat hiccup over
+    the Windows Docker bind mount): callers treat it as "cannot validate" —
+    they keep the entry and serve it — rather than as "everything is stale".
+    """
+    global _STAMP_WARN_TS
+    for _ in range(2):  # one immediate retry absorbs transient stat hiccups
+        try:
+            from app.core.db import engine  # local: keep cache imports lightweight
+
+            db_path = engine.url.database
+            return Path(db_path).stat().st_mtime if db_path else None
+        except Exception:  # noqa: BLE001 - stamp failures must not break reads
+            continue
+    now = time.monotonic()
+    if now - _STAMP_WARN_TS > 60:  # rate-limit: a broken mount must not spam logs
+        _STAMP_WARN_TS = now
+        logger.warning("SQLite mtime unreadable; cache served without staleness check")
+    return None
 
 
 def _load() -> None:
@@ -87,13 +109,21 @@ _load()
 
 
 def cache_get(key: str) -> Any | None:
-    """Return the cached value, or None when absent/stale (SQLite file changed)."""
+    """Return the cached value, or None when absent/stale (SQLite file changed).
+
+    When the stamp is momentarily unreadable the entry is served as-is — the
+    next successful read re-validates it — so a stat hiccup cannot force a
+    cold recompute of a warm payload.
+    """
     with _LOCK:
         entry: _Entry | None = _LOCAL.get(key)
         if entry is None:
             return None
         stamp, value = entry
-        if stamp != _db_stamp():
+        current = _db_stamp()
+        if current is None:
+            return value
+        if abs(current - stamp) >= _STAMP_EPSILON:
             _LOCAL.pop(key, None)  # data landed since this payload was computed
             return None
         return value
@@ -106,7 +136,10 @@ def cache_set(key: str, value: Any, ttl: int = _TTL_SECONDS) -> None:
     cache-level TTL, and staleness is primarily governed by the mtime check.
     """
     with _LOCK:
-        _LOCAL[key] = (_db_stamp(), value)
+        stamp = _db_stamp()
+        if stamp is None:
+            return  # an unstampable entry could never be validated later
+        _LOCAL[key] = (stamp, value)
         _save()
 
 
