@@ -1,6 +1,9 @@
 # FastAPI backend — python:3.12-slim, deps from requirements.txt.
 # Schema + default users are created at boot by the app lifespan (init_db).
-FROM python:3.12-slim
+# Base image pulls through the DaoCloud CN mirror (see deploy/frontend/Dockerfile);
+# override with --build-arg DOCKER_REGISTRY=docker.io for plain Docker Hub.
+ARG DOCKER_REGISTRY=docker.m.daocloud.io
+FROM ${DOCKER_REGISTRY}/library/python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
