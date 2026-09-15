@@ -217,10 +217,12 @@ def bootstrap_on_startup() -> None:
 def _bootstrap_job() -> None:
     from sqlalchemy import func, select
 
+    from app.core.db import init_db
     from app.models.market import DailyQuote
     from app.services.aggregation import latest_trade_date
 
     try:
+        init_db()  # idempotent: guarantees the schema exists even standalone
         with session_scope() as session:
             n_quotes = session.scalar(select(func.count()).select_from(DailyQuote)) or 0
             ltd = latest_trade_date(session)
