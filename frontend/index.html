@@ -8,6 +8,15 @@
     <title>股票研报聚合平台</title>
   </head>
   <body>
+    <script>
+      // Pre-paint theme: apply persisted mode before React mounts to avoid a flash.
+      try {
+        var ui = JSON.parse(localStorage.getItem("srp.ui") || "{}");
+        var dark = (ui.mode || "light") === "dark";
+        document.body.dataset.theme = dark ? "dark" : "light";
+        document.body.style.background = dark ? "#000" : "#e9ebef";
+      } catch (e) {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

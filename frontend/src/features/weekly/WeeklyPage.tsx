@@ -11,6 +11,8 @@ import PageContainer from "@/components/PageContainer";
 import ProvenanceTag from "@/components/ProvenanceTag";
 import StatCard from "@/components/StatCard";
 import { msg } from "@/utils/message";
+import { useUIStore } from "@/stores/uiStore";
+import { BRAND, mixColor } from "@/styles/theme";
 
 export default function WeeklyPage() {
   const queryClient = useQueryClient();
@@ -40,33 +42,33 @@ export default function WeeklyPage() {
   const groups = matrix?.groups ?? [];
   const maxCell = Math.max(1, ...(matrix?.orgs ?? []).flatMap((o) => Object.values(o.by_group)));
 
-  const cell = (v: number | undefined) =>
-    !v ? (
-      <span className="muted">-</span>
-    ) : (
-      <span
-        style={{
-          display: "inline-block",
-          minWidth: 26,
-          padding: "0 4px",
-          borderRadius: 3,
-          background: `rgba(200,22,29,${(0.06 + 0.5 * (v / maxCell)).toFixed(3)})`,
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {v}
-      </span>
-    );
+  // Amber heat scale for the org×industry count matrix: monochrome on purpose —
+  // counts carry no up/down direction, so red/green would conflict with 红涨绿跌.
+  const mode = useUIStore((s) => s.mode);
+  const cellBase = mode === "dark" ? "#10141b" : "#ffffff";
+  const cellTint = (v: number) => {
+    const mixT = 0.12 + 0.76 * (v / maxCell);
+    return { bg: mixColor(cellBase, BRAND, mixT), strong: mixT > 0.6 };
+  };
 
   const matrixColumns: ColumnsType<WeeklyMatrixRow> = [
     { title: "机构", dataIndex: "org", width: 160, fixed: "left", render: (v: string) => <Typography.Text strong>{v}</Typography.Text> },
-    { title: "合计", dataIndex: "total", width: 72, align: "right", render: (v: number) => <b>{v}</b> },
+    { title: "合计", dataIndex: "total", width: 72, align: "right", render: (v: number) => <b className="num">{v}</b> },
     ...groups.map((g) => ({
       title: g,
       key: g,
       width: 84,
       align: "right" as const,
-      render: (_: unknown, r: WeeklyMatrixRow) => cell(r.by_group?.[g]),
+      render: (_: unknown, r: WeeklyMatrixRow) => {
+        const v = r.by_group?.[g];
+        return v ? <span className="num">{v}</span> : <span className="muted">·</span>;
+      },
+      onCell: (r: WeeklyMatrixRow) => {
+        const v = r.by_group?.[g];
+        if (!v) return {};
+        const { bg, strong } = cellTint(v);
+        return { style: { background: bg, ...(strong ? { color: "#fff" } : {}) } };
+      },
     })),
   ];
 
@@ -94,6 +96,18 @@ export default function WeeklyPage() {
       title={`机构 × 行业矩阵 ${matrix?.week_key ? `· 周截至 ${matrix.week_key}` : ""}`}
       extra={
         <Space wrap>
+          <span className="muted" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+            少
+            <span
+              style={{
+                width: 48,
+                height: 8,
+                borderRadius: 1,
+                background: `linear-gradient(90deg, ${mixColor(cellBase, BRAND, 0.12)}, ${mixColor(cellBase, BRAND, 0.88)})`,
+              }}
+            />
+            多
+          </span>
           <Select
             size="small"
             value={matrix?.week_key ?? undefined}

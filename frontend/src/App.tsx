@@ -1,6 +1,6 @@
 // App root: wires providers — TanStack Query, Ant Design ConfigProvider (themed by
 // uiStore, zh_CN locale), dayjs locale, and BrowserRouter around the route tree.
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { ConfigProvider, App as AntdApp } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -14,6 +14,12 @@ import { AntdMessageBridge } from "@/utils/message";
 export default function App() {
   const mode = useUIStore((s) => s.mode);
   const themeConfig = mode === "dark" ? darkTheme : lightTheme;
+
+  // Expose mode to CSS so global utility styles (scrollbars, ticker, muted text)
+  // can follow the active terminal theme.
+  useEffect(() => {
+    document.body.dataset.theme = mode;
+  }, [mode]);
 
   // Single QueryClient for the app lifetime; staleTime tuned to daily-data freshness.
   const queryClient = useMemo(

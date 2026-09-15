@@ -15,9 +15,9 @@ export function useEchartsTheme() {
         tooltip: {
           trigger: "axis",
           axisPointer: { type: "cross" },
-          backgroundColor: mode === "dark" ? "#1f232b" : "rgba(255,255,255,0.95)",
+          backgroundColor: mode === "dark" ? "#141a23" : "rgba(255,255,255,0.96)",
           borderColor: p.splitLine.lineStyle.color,
-          textStyle: { color: mode === "dark" ? "#e6e6e6" : "#333", fontSize: 12 },
+          textStyle: { color: mode === "dark" ? "#d7dce3" : "#333", fontSize: 11 },
         },
         legend: { textStyle: { color: p.textStyle.color }, inactiveColor: "#bbb" },
         grid: { left: 56, right: 24, top: 32, bottom: 48, containLabel: true },

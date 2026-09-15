@@ -1,8 +1,7 @@
-// Application shell: Header (logo, search, period/sector, refresh, theme, user) +
-// grouped Sidebar + Content (Outlet). Mirrors the reference platform's chrome, minus
-// the removed 报告生成 / 质控审核 entries.
+// Application shell — Bloomberg-terminal chrome: black header with amber brand
+// strip + command search, scrolling ticker tape, dense dark sidebar + content.
 import { useMemo } from "react";
-import { Layout, Menu, Button, Space, Tooltip, Typography, Badge, Tag, theme as antdTheme } from "antd";
+import { Layout, Menu, Button, Space, Tooltip, Badge } from "antd";
 import type { MenuProps } from "antd";
 import {
   DashboardOutlined,
@@ -23,17 +22,19 @@ import {
   ControlOutlined,
   SettingOutlined,
   ReloadOutlined,
-  BulbFilled,
-  UserOutlined,
+  MoonOutlined,
+  SunOutlined,
 } from "@ant-design/icons";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import PeriodSelector from "@/components/PeriodSelector";
 import SectorFilter from "@/components/SectorFilter";
 import SecuritySearch from "@/components/SecuritySearch";
+import TickerTape from "@/components/TickerTape";
 import { useSSE } from "@/hooks/useSSE";
 import { useUIStore } from "@/stores/uiStore";
 import { useAuthStore } from "@/stores/authStore";
+import { MONO_FONT } from "@/styles/theme";
 
 const { Header, Sider, Content } = Layout;
 
@@ -107,7 +108,6 @@ export default function AppLayout() {
   const queryClient = useQueryClient();
   const { mode, toggleMode, collapsed, setCollapsed } = useUIStore();
   const user = useAuthStore((s) => s.user);
-  const { token } = antdTheme.useToken();
 
   // Live channel: refresh cached queries whenever an ingestion run finishes.
   const { status } = useSSE((evt) => {
@@ -129,66 +129,105 @@ export default function AppLayout() {
           display: "flex",
           alignItems: "center",
           gap: 12,
-          padding: "0 16px",
-          background: token.colorBgContainer,
-          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+          padding: "0 14px",
+          background: "var(--srp-bg)",
+          borderBottom: "2px solid var(--srp-brand)",
           position: "sticky",
           top: 0,
           zIndex: 20,
         }}
       >
         <div
-          style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer", flex: "none" }}
           onClick={() => navigate("/market")}
         >
-          <BulbFilled style={{ color: token.colorPrimary, fontSize: 20 }} />
-          <Typography.Text strong style={{ fontSize: 16, whiteSpace: "nowrap" }}>
-            股票研报聚合平台
-          </Typography.Text>
+          <div
+            style={{
+              width: 22,
+              height: 22,
+              background: "var(--srp-brand)",
+              color: "#000",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: MONO_FONT,
+              fontWeight: 700,
+              fontSize: 13,
+            }}
+          >
+            S
+          </div>
+          <div style={{ lineHeight: 1.15 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", color: "var(--srp-text)" }}>
+              股票研报聚合平台
+            </div>
+            <div
+              className="num"
+              style={{ fontSize: 9, letterSpacing: "0.22em", color: "var(--srp-brand)", whiteSpace: "nowrap" }}
+            >
+              SRP TERMINAL
+            </div>
+          </div>
         </div>
 
         <SecuritySearch />
 
         <div style={{ flex: 1 }} />
 
-        <Space size={8}>
+        <Space size={6}>
           <PeriodSelector />
           <SectorFilter />
           <Tooltip title="刷新数据 (重新拉取)">
             <Button size="small" icon={<ReloadOutlined />} onClick={() => queryClient.invalidateQueries()} />
           </Tooltip>
           <Tooltip title={`SSE: ${status}`}>
-            <Badge status={status === "open" ? "processing" : status === "error" ? "error" : "default"} text="实时" />
+            <Badge
+              status={status === "open" ? "processing" : status === "error" ? "error" : "default"}
+              text={
+                <span className="num" style={{ fontSize: 10, letterSpacing: "0.12em" }}>
+                  LIVE
+                </span>
+              }
+            />
           </Tooltip>
           <Tooltip title="切换主题">
-            <Button size="small" onClick={toggleMode}>
-              {mode === "light" ? "🌙" : "☀️"}
-            </Button>
+            <Button size="small" icon={mode === "light" ? <MoonOutlined /> : <SunOutlined />} onClick={toggleMode} />
           </Tooltip>
-          <Tag icon={<UserOutlined />} color="red" style={{ marginInlineEnd: 0 }}>
+          <span
+            className="num"
+            style={{
+              fontSize: 11,
+              color: "var(--srp-brand)",
+              border: "1px solid var(--srp-brand)",
+              padding: "1px 8px",
+              whiteSpace: "nowrap",
+            }}
+          >
             {user?.username ?? "admin"}
-          </Tag>
+          </span>
         </Space>
       </Header>
 
+      <TickerTape />
+
       <Layout>
         <Sider
-          width={200}
+          width={208}
           collapsible
           collapsed={collapsed}
           onCollapse={setCollapsed}
           theme={mode === "dark" ? "dark" : "light"}
-          style={{ background: token.colorBgContainer, borderRight: `1px solid ${token.colorBorderSecondary}` }}
+          style={{ borderRight: "1px solid var(--srp-border)" }}
         >
           <Menu
             mode="inline"
             selectedKeys={[selectedKey]}
             items={MENU}
             onClick={({ key }) => navigate(key)}
-            style={{ borderInlineEnd: "none", height: "100%", overflowY: "auto" }}
+            style={{ borderInlineEnd: "none", height: "100%", overflowY: "auto", background: "transparent" }}
           />
         </Sider>
-        <Content style={{ background: token.colorBgLayout, minHeight: 280 }}>
+        <Content style={{ background: "var(--srp-bg)", minHeight: 280 }}>
           <Outlet />
         </Content>
       </Layout>

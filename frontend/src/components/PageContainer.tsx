@@ -1,6 +1,6 @@
-// Page shell: header (title + description + actions) above content.
+// Page shell: terminal-style header (amber-bar title + description + actions) above content.
 import type { ReactNode } from "react";
-import { Space, Typography } from "antd";
+import { Space } from "antd";
 
 interface Props {
   title: ReactNode;
@@ -17,18 +17,20 @@ export default function PageContainer({ title, description, extra, children }: P
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          marginBottom: 14,
+          marginBottom: 12,
           gap: 12,
           flexWrap: "wrap",
         }}
       >
         <div>
-          <Typography.Title level={4} style={{ margin: 0 }}>
-            {title}
-          </Typography.Title>
+          <div className="page-title">{title}</div>
           {description && <div className="muted" style={{ marginTop: 4 }}>{description}</div>}
         </div>
-        {extra && <Space wrap>{extra}</Space>}
+        {extra && (
+          <Space wrap size={6}>
+            {extra}
+          </Space>
+        )}
       </div>
       {children}
     </div>

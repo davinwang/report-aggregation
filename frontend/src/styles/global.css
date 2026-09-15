@@ -1,6 +1,26 @@
+/* Terminal design tokens — dark by default, light via body[data-theme="light"]. */
 :root {
   --srp-up: #e4393c;
   --srp-down: #2fa84f;
+  --srp-brand: #fa8000;
+  --srp-link: #3fb6ff;
+  --srp-bg: #000000;
+  --srp-panel: #0b0e13;
+  --srp-border: #1b212c;
+  --srp-text: #d7dce3;
+  --srp-muted: #8a919e;
+  --srp-mono: "JetBrains Mono", "SFMono-Regular", "Roboto Mono", Consolas,
+    "Liberation Mono", monospace;
+}
+
+body[data-theme="light"] {
+  --srp-brand: #d9730a;
+  --srp-link: #0b6bcb;
+  --srp-bg: #e9ebef;
+  --srp-panel: #ffffff;
+  --srp-border: #e3e6eb;
+  --srp-text: #1f2329;
+  --srp-muted: #6b7280;
 }
 
 * {
@@ -17,6 +37,12 @@ body,
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--srp-bg);
+  color: var(--srp-text);
+}
+
+::selection {
+  background: rgba(250, 128, 0, 0.32);
 }
 
 .up {
@@ -29,36 +55,142 @@ body {
   color: #999;
 }
 
+/* Monospace tabular numerals for quotes / metrics (terminal convention). */
+.num,
+.mono {
+  font-family: var(--srp-mono);
+  font-variant-numeric: tabular-nums;
+}
+
 .page-container {
-  padding: 16px;
+  padding: 12px 14px;
 }
 
 .section-title {
   font-weight: 600;
-  font-size: 15px;
-  margin: 0 0 12px;
+  font-size: 13px;
+  margin: 0 0 10px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .muted {
-  color: #999;
-  font-size: 12px;
+  color: var(--srp-muted);
+  font-size: 11px;
 }
 
 .grid-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
 }
 
-/* thin scrollbars for dense tables */
-.ant-table-body::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
+/* Page title with amber accent bar (terminal section marker). */
+.page-title {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.3;
 }
-.ant-table-body::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
+.page-title::before {
+  content: "";
+  width: 3px;
+  height: 14px;
+  background: var(--srp-brand);
+  flex: none;
+}
+
+/* Compact uppercase stat label. */
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--srp-muted);
+  margin-bottom: 4px;
+}
+
+/* ---- antd terminal tightening ---- */
+.ant-card .ant-card-head {
+  min-height: 34px;
+  border-bottom: 1px solid var(--srp-border);
+}
+.ant-card .ant-card-head .ant-card-head-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 7px 0;
+}
+.ant-card .ant-card-head .ant-card-extra {
+  padding: 5px 0;
+}
+.ant-table-thead > tr > th {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.ant-table {
+  font-variant-numeric: tabular-nums;
+}
+.ant-menu-item-group-title {
+  font-size: 11px !important;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.ant-statistic .ant-statistic-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ant-statistic .ant-statistic-content {
+  font-family: var(--srp-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Thin scrollbars, themed. */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a313d;
   border-radius: 4px;
+}
+body[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ---- Bloomberg-style ticker tape ---- */
+.ticker-tape {
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
+}
+.ticker-track {
+  display: inline-flex;
+  align-items: baseline;
+  animation: srp-ticker var(--ticker-duration, 48s) linear infinite;
+  will-change: transform;
+}
+.ticker-tape:hover .ticker-track {
+  animation-play-state: paused;
+}
+@keyframes srp-ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ticker-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 20px;
 }

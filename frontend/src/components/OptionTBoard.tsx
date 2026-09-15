@@ -69,7 +69,7 @@ export default function OptionTBoard({ board, loading, height = 520 }: Props) {
       locale={{ emptyText: "暂无期权数据" }}
       onRow={(r) =>
         r.strike === board.atm_strike
-          ? { style: { background: "rgba(200,22,29,0.07)", fontWeight: 600 } }
+          ? { style: { background: "rgba(250,128,0,0.10)", fontWeight: 600 } }
           : {}
       }
     />
