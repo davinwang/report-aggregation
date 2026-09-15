@@ -5,7 +5,6 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     accuracy,
-    admin,
     auth,
     chat,
     derivatives,
@@ -25,7 +24,7 @@ from app.api.v1.endpoints import (
 )
 
 api_router = APIRouter()
-for module in (health, meta, market, research, quant, financials, stock, derivatives, flow, signals, accuracy, weekly, linkage, stream, ops, admin, auth, chat):
+for module in (health, meta, market, research, quant, financials, stock, derivatives, flow, signals, accuracy, weekly, linkage, stream, ops, auth, chat):
     api_router.include_router(module.router)
 
 __all__ = ["api_router"]

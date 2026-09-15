@@ -196,7 +196,7 @@ export default function AccuracyPage() {
               loading={isFetching}
               dataSource={isError ? [] : rows}
               columns={columns}
-              locale={{ emptyText: "暂无数据，请先在“运营数据”中采集行情与研报" }}
+              locale={{ emptyText: "暂无数据，请确认行情与研报已完成采集" }}
               pagination={{ pageSize: 15, size: "small", showSizeChanger: false }}
             />
           </Card>
