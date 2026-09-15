@@ -151,7 +151,7 @@ def resolve_universe(name: Optional[str] = None, session: Optional[Session] = No
         return []
 
     codes: list[str] = []
-    for token in name.split("+"):
+    for token in re.split(r"[+,]", name):
         codes.extend(_resolve_token(token))
 
     seen: set[str] = set()

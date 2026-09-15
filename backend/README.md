@@ -66,7 +66,7 @@ python -m app.ingestion.pipeline --all --universe hs300
 | research_reports | stock_research_report_em | per-symbol |
 | fin_indicators | stock_financial_analysis_indicator | per-symbol |
 | financials_em | stock_{balance,profit,cash_flow}_sheet_by_report_em | per-symbol |
-| disclosures | stock_zh_a_disclosure_report_cninfo | per-symbol |
+| disclosures | stock_notice_report | bulk(by date) |
 
 Phase 2 adds: index_futures (get_futures_daily/CFFEX), index_options (option_finance_board),
 flow feeds (northbound/margin/lhb/individual).
