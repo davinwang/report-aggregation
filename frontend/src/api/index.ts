@@ -4,7 +4,11 @@ import type {
   BasisPayload,
   Dashboard,
   FinancialIndicatorRow,
+  FlowSummary,
   HealthDeep,
+  LhbRow,
+  MarginPayload,
+  NorthboundPayload,
   OptionsPayload,
   Paged,
   QuantSeries,
@@ -82,6 +86,16 @@ export const getFuturesBasis = (params?: { variety?: string; days?: number; date
   getData<BasisPayload>("/api/derivatives/futures/basis", params as Record<string, unknown>);
 export const getOptionsBoard = (params?: { underlying?: string; month?: string; date?: string }) =>
   getData<OptionsPayload>("/api/derivatives/options/board", params as Record<string, unknown>);
+
+// ---- flow (资金流向) ----
+export const getFlowSummary = () => getData<FlowSummary>("/api/flow/summary");
+export const getNorthbound = (days = 30) => getData<NorthboundPayload>("/api/flow/northbound", { days });
+export const getMargin = (days = 60) => getData<MarginPayload>("/api/flow/margin", { days });
+export const getLhb = (params?: { date?: string; direction?: "buy" | "sell"; page?: number; size?: number }) =>
+  getEnvelope<LhbRow[]>("/api/flow/lhb", params as Record<string, unknown>).then((r) => ({
+    rows: r.data,
+    meta: r.meta as Paged<LhbRow>["meta"] & { trade_date?: string | null; stats?: { net_total?: number | null } },
+  }));
 
 // ---- health / ops ----
 export const getHealthDeep = () => http.get<HealthDeep>("/health/deep").then((r) => r.data);

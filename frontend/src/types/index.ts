@@ -251,3 +251,73 @@ export interface OptionsPayload {
   board: OptionBoard;
   overview: OptionOverviewRow[];
 }
+
+// ---- Phase 2: 资金流向 (capital flow) ----
+export interface NorthboundLatest {
+  trade_date: string;
+  board: string;
+  type: string | null;
+  direction: string | null;
+  net_inflow: number | null;
+  net_buy: number | null;
+  balance: number | null;
+  up: number | null;
+  flat: number | null;
+  down: number | null;
+  index: string | null;
+  index_pct: number | null;
+}
+
+export interface NorthboundPayload {
+  dates: string[];
+  boards: string[];
+  net_inflow: Record<string, (number | null)[]>;
+  up: Record<string, (number | null)[]>;
+  down: Record<string, (number | null)[]>;
+  latest: NorthboundLatest[];
+  ref: string | null;
+}
+
+export interface MarginSnapshot {
+  trade_date: string;
+  rzye: number | null;
+  rzmre: number | null;
+  rqye: number | null;
+  rzrqye: number | null;
+}
+
+export interface MarginPayload {
+  dates: string[];
+  sse: {
+    rzye: (number | null)[];
+    rzmre: (number | null)[];
+    rqye: (number | null)[];
+    rzrqye: (number | null)[];
+  };
+  szse: MarginSnapshot | null;
+  latest: MarginSnapshot | null;
+}
+
+export interface LhbRow {
+  code: string;
+  name: string | null;
+  reason: string | null;
+  close: number | null;
+  change_pct: number | null;
+  buy_amt: number | null;
+  sell_amt: number | null;
+  net_amt: number | null;
+  turnover: number | null;
+}
+
+export interface FlowSummary {
+  northbound_date: string | null;
+  north_up: number | null;
+  north_down: number | null;
+  southbound_net: number | null;
+  southbound_net_buy: number | null;
+  margin_sse: MarginSnapshot | null;
+  margin_szse: MarginSnapshot | null;
+  lhb_date: string | null;
+  lhb_net_total: number | null;
+}

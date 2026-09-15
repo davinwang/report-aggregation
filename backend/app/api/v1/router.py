@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     chat,
     derivatives,
     financials,
+    flow,
     health,
     market,
     meta,
@@ -19,7 +20,7 @@ from app.api.v1.endpoints import (
 )
 
 api_router = APIRouter()
-for module in (health, meta, market, research, quant, financials, stock, derivatives, stream, ops, auth, chat):
+for module in (health, meta, market, research, quant, financials, stock, derivatives, flow, stream, ops, auth, chat):
     api_router.include_router(module.router)
 
 __all__ = ["api_router"]

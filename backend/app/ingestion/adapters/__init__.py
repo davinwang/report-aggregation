@@ -22,6 +22,9 @@ from app.ingestion.adapters.fin_indicators import adapter as fin_indicators
 from app.ingestion.adapters.disclosures import adapter as disclosures
 from app.ingestion.adapters.index_futures import adapter as index_futures
 from app.ingestion.adapters.index_options import adapter as index_options
+from app.ingestion.adapters.northbound import adapter as northbound
+from app.ingestion.adapters.margin import adapter as margin
+from app.ingestion.adapters.lhb import adapter as lhb
 
 REGISTRY: dict[str, BaseAdapter] = {a.name: a for a in (
     security_master,
@@ -39,6 +42,9 @@ REGISTRY: dict[str, BaseAdapter] = {a.name: a for a in (
     disclosures,
     index_futures,
     index_options,
+    northbound,
+    margin,
+    lhb,
 )}
 
 # Feeds that iterate the universe (need codes=[...]).
@@ -53,6 +59,9 @@ BULK_ORDER = [
     "index_daily",
     "index_futures",
     "index_options",
+    "northbound",
+    "margin",
+    "lhb",
     "ratings_daily",
     "recommend_pool",
     "disclosures",

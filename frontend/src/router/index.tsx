@@ -17,6 +17,7 @@ const StockDetailPage = lazy(() => import("@/features/stock/StockDetailPage"));
 const OverviewPage = lazy(() => import("@/features/overview/OverviewPage"));
 const BasisPage = lazy(() => import("@/features/derivatives/BasisPage"));
 const OptionsPage = lazy(() => import("@/features/derivatives/OptionsPage"));
+const FlowPage = lazy(() => import("@/features/flow/FlowPage"));
 
 function Fallback(): ReactElement {
   return (
@@ -57,13 +58,13 @@ export default function AppRoutes(): ReactElement {
           <Route path="/stock/:code" element={<StockDetailPage />} />
           <Route path="/basis" element={<BasisPage />} />
           <Route path="/options" element={<OptionsPage />} />
+          <Route path="/flow" element={<FlowPage />} />
 
           {/* Phase 2 — placeholders (navigation already wired) */}
           <Route path="/signals" element={<ComingSoon title="可操作信号" />} />
           <Route path="/accuracy" element={<ComingSoon title="研报准确率" />} />
           <Route path="/weekly" element={<ComingSoon title="周统计" />} />
           <Route path="/market-overview" element={<ComingSoon title="全市场速览" />} />
-          <Route path="/flow" element={<ComingSoon title="资金流向" />} />
           <Route path="/linkage" element={<ComingSoon title="板块联动" />} />
           <Route path="/contrib" element={<ComingSoon title="上传研报" />} />
           <Route path="/contrib/review" element={<ComingSoon title="研报审核" />} />
