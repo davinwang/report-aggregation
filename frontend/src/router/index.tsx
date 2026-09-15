@@ -23,6 +23,8 @@ const AccuracyPage = lazy(() => import("@/features/accuracy/AccuracyPage"));
 const WeeklyPage = lazy(() => import("@/features/weekly/WeeklyPage"));
 const MarketOverviewPage = lazy(() => import("@/features/market/MarketOverviewPage"));
 const LinkagePage = lazy(() => import("@/features/linkage/LinkagePage"));
+const OpsPage = lazy(() => import("@/features/ops/OpsPage"));
+const AdminPage = lazy(() => import("@/features/admin/AdminPage"));
 
 function Fallback(): ReactElement {
   return (
@@ -74,8 +76,8 @@ export default function AppRoutes(): ReactElement {
           {/* 上传研报/审核 — deferred to Phase 3 (scope decision) */}
           <Route path="/contrib" element={<ComingSoon title="上传研报" phase={3} />} />
           <Route path="/contrib/review" element={<ComingSoon title="研报审核" phase={3} />} />
-          <Route path="/ops" element={<ComingSoon title="运营数据" description="采集日志 / 新鲜度 / 错误流" />} />
-          <Route path="/admin" element={<ComingSoon title="管理设置" description="universe / 调度 / 接口开关" />} />
+          <Route path="/ops" element={<OpsPage />} />
+          <Route path="/admin" element={<AdminPage />} />
 
           {/* Phase 3 — AI, flag-gated (stub) */}
           <Route path="/chat" element={<ComingSoon title="AI助手" phase={3} description="LLM 问答（后置）" />} />
