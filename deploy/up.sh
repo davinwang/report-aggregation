@@ -25,8 +25,14 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # 清掉 srp 服务容器及失败重建残留的 <hash>_srp-* 僵尸容器
+# 注意：grep 无匹配时返回 1，在 set -e 下会误伤，必须 || true
 docker ps -a --format '{{.Names}}' \
   | grep -E '(^|[0-9a-f]{12}_)srp-(backend|frontend)$' \
-  | xargs -r docker rm -f
+  | xargs -r docker rm -f || true
 
-docker-compose -p srp up -d "$@"
+# 兼容 compose v1（无连字符）与 v2 子命令形式：优先 docker compose，回落 docker-compose
+if docker compose version >/dev/null 2>&1; then
+  docker compose -p srp up -d "$@"
+else
+  docker-compose -p srp up -d "$@"
+fi
