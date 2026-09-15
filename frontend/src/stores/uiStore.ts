@@ -37,7 +37,7 @@ function persist(state: UIState) {
 }
 
 export const useUIStore = create<UIState>((set, get) => ({
-  mode: (saved.mode as ThemeMode) || "light",
+  mode: (saved.mode as ThemeMode) || "dark",
   period: (saved.period as PeriodKey) || "week",
   sector: (saved.sector as string | null) ?? null,
   collapsed: (saved.collapsed as boolean) ?? false,
