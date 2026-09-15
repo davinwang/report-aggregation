@@ -196,3 +196,58 @@ export interface BasisPayload {
   };
   overview: BasisOverviewRow[];
 }
+
+// ---- Phase 2: derivatives (股指期权 T型报价) ----
+export interface OptionLeg {
+  contract_code: string;
+  last: number | null;
+  updown: number | null;
+  volume: number | null;
+  oi: number | null;
+}
+
+export interface OptionBoardRow {
+  strike: number;
+  call: OptionLeg | null;
+  put: OptionLeg | null;
+}
+
+export interface OptionBoard {
+  underlying: string;
+  variety?: string | null;
+  month: string | null;
+  months: string[];
+  trade_date: string | null;
+  spot: number | null;
+  atm_strike: number | null;
+  rows: OptionBoardRow[];
+  totals: {
+    call_oi?: number | null;
+    put_oi?: number | null;
+    call_volume?: number | null;
+    put_volume?: number | null;
+    pcr_oi?: number | null;
+    pcr_volume?: number | null;
+    contracts?: number | null;
+  };
+}
+
+export interface OptionOverviewRow {
+  underlying: string;
+  variety: string;
+  underlying_code: string;
+  trade_date: string | null;
+  month: string | null;
+  spot: number | null;
+  atm_strike: number | null;
+  pcr_oi: number | null;
+  pcr_volume: number | null;
+  call_oi: number | null;
+  put_oi: number | null;
+}
+
+export interface OptionsPayload {
+  underlyings: string[];
+  board: OptionBoard;
+  overview: OptionOverviewRow[];
+}

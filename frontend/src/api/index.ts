@@ -5,6 +5,7 @@ import type {
   Dashboard,
   FinancialIndicatorRow,
   HealthDeep,
+  OptionsPayload,
   Paged,
   QuantSeries,
   ReportBrief,
@@ -79,6 +80,8 @@ export const getStockFlow = (code: string, limit = 30) =>
 // ---- derivatives (衍生品) ----
 export const getFuturesBasis = (params?: { variety?: string; days?: number; date?: string }) =>
   getData<BasisPayload>("/api/derivatives/futures/basis", params as Record<string, unknown>);
+export const getOptionsBoard = (params?: { underlying?: string; month?: string; date?: string }) =>
+  getData<OptionsPayload>("/api/derivatives/options/board", params as Record<string, unknown>);
 
 // ---- health / ops ----
 export const getHealthDeep = () => http.get<HealthDeep>("/health/deep").then((r) => r.data);
