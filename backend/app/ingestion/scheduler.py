@@ -23,6 +23,7 @@ from __future__ import annotations
 import threading
 from datetime import date, datetime, timedelta
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -37,6 +38,11 @@ from app.ingestion.pipeline import run_all, run_bulk, run_feed, run_group, run_p
 logger = get_logger(__name__)
 
 _scheduler: Optional[BackgroundScheduler] = None
+
+#: Market timezone for one-off job run dates. Always pass timezone-aware datetimes
+#: to APScheduler: a naive ``datetime.now()`` is interpreted in the scheduler's
+#: timezone, which silently misfires by the UTC offset inside containers (UTC).
+_TZ = ZoneInfo("Asia/Shanghai")
 
 # Serializes ingestion runs: one group at a time, later triggers skipped.
 _INGEST_LOCK = threading.Lock()
@@ -160,8 +166,8 @@ def trigger_now(scope: str = "all", universe: Optional[str] = None) -> bool:
         threading.Thread(target=_execute, kwargs={"scope": scope, "universe": universe},
                          daemon=True).start()
         return True
-    _scheduler.add_job(_execute, trigger="date", run_date=datetime.now(),
-                       id=f"oneoff_{scope}_{datetime.now().strftime('%H%M%S')}",
+    _scheduler.add_job(_execute, trigger="date", run_date=datetime.now(_TZ),
+                       id=f"oneoff_{scope}_{datetime.now(_TZ).strftime('%H%M%S')}",
                        kwargs={"scope": scope, "universe": universe},
                        max_instances=3, coalesce=True)
     return True
@@ -199,9 +205,10 @@ def bootstrap_on_startup() -> None:
         logger.info("Bootstrap ingestion disabled (INGEST_BOOTSTRAP=false)")
         return
     if _scheduler is not None and _scheduler.running:
-        run_at = datetime.now() + timedelta(seconds=5)
+        run_at = datetime.now(_TZ) + timedelta(seconds=5)
         _scheduler.add_job(_bootstrap_job, trigger="date", run_date=run_at,
-                           id=BOOTSTRAP_JOB_ID, replace_existing=True, max_instances=1)
+                           id=BOOTSTRAP_JOB_ID, replace_existing=True, max_instances=1,
+                           misfire_grace_time=300)
         logger.info("Bootstrap ingestion scheduled at %s", run_at.strftime("%H:%M:%S"))
     else:
         threading.Thread(target=_bootstrap_job, name="bootstrap-ingest", daemon=True).start()

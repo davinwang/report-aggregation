@@ -68,6 +68,30 @@ def test_trigger_now_rejects_unknown_scope():
     assert sched.trigger_now("no_such_scope") is False
 
 
+def test_bootstrap_oneoff_is_scheduled_ahead_of_now(monkeypatch):
+    """Regression: the one-off bootstrap must be scheduled ~5s AHEAD of the
+    scheduler's timezone now. A naive datetime.now() is interpreted in the
+    scheduler tz, which in a UTC container put run_date 8h in the past and
+    silently discarded the job (empty first-deploy seed never ran)."""
+    from datetime import datetime, timezone
+
+    from app.core.config import settings
+
+    monkeypatch.setattr(sched, "_scheduler", None)
+    monkeypatch.setattr(settings, "scheduler_enabled", True)
+    sched.start_scheduler()
+    try:
+        sched.bootstrap_on_startup()
+        job = sched._scheduler.get_job(sched.BOOTSTRAP_JOB_ID)
+        assert job is not None
+        nrt = job.next_run_time
+        assert nrt is not None and nrt.tzinfo is not None
+        ahead = nrt.timestamp() - datetime.now(timezone.utc).timestamp()
+        assert 0 <= ahead <= 15, f"bootstrap run_date not ~now: {ahead}s"
+    finally:
+        sched.shutdown_scheduler()
+
+
 def test_start_scheduler_registers_all_jobs(monkeypatch):
     """With the scheduler enabled, start_scheduler registers one cron job per group."""
     from app.core.config import settings
