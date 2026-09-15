@@ -5,7 +5,7 @@
 # Usage (from the repo root):
 #   cd deploy && docker compose up -d --build
 #     Frontend UI:  http://localhost:8080
-#     API docs:     http://localhost:8000/docs
+#     API docs:     http://localhost:19731/docs
 #     Deep health:  http://localhost:8080/health/deep
 #
 # First-time data seed (ingests AkShare feeds into SQLite; the in-app
@@ -38,7 +38,7 @@ services:
       AUTH_ENABLED: ${AUTH_ENABLED:-false}
       FEATURE_AI: ${FEATURE_AI:-false}
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "${BACKEND_PORT:-19731}:8000"
     volumes:
       - ../data:/srv/data
     healthcheck:
