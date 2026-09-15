@@ -18,7 +18,7 @@
 # environment (JWT_SECRET, FRONTEND_PORT, BACKEND_PORT, ...). Set AUTH_ENABLED=true
 # to require JWT login.
 
-name: srp
+# name: srp
 
 services:
   backend:
