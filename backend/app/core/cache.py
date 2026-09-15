@@ -4,8 +4,10 @@
 - Pickle file (``data/cache.pkl``) for persistence across restarts.
 - Thread-safe via ``threading.Lock``; atomic writes via temp-file + rename.
 
-Used for hot, expensive-to-compute read endpoints (dashboard, market-overview). Data
-correctness still comes from the DB; the cache only short-circuits repeated aggregation.
+Used for hot, expensive-to-compute read endpoints (全市场速览 matrix, 板块联动 beta).
+Data correctness still comes from the DB; the cache only short-circuits repeated
+aggregation and is cleared when an ingestion run finishes (``BaseAdapter.run``),
+so a page never serves pre-ingestion results beyond that boundary.
 """
 from __future__ import annotations
 

@@ -47,9 +47,19 @@ def get_ak() -> ModuleType:
 
 
 def akshare_version() -> Optional[str]:
+    """Installed akshare version without importing the (heavy) package.
+
+    Importing akshare costs seconds, and /health/deep is a read endpoint — probing
+    must never stall a page load. The dist metadata gives the same answer; when the
+    module has already been imported (by ingestion) its ``__version__`` is used.
+    """
+    if _ak is not None:
+        return getattr(_ak, "__version__", None)
     try:
-        return getattr(get_ak(), "__version__", None)
-    except AkShareUnavailable:
+        from importlib.metadata import version
+
+        return version("akshare")
+    except Exception:  # noqa: BLE001 - not installed / broken metadata
         return None
 
 

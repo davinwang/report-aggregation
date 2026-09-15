@@ -130,8 +130,24 @@ class BaseAdapter(ABC):
             result.finished_at = finished
             result.latency_ms = int((time.monotonic() - t0) * 1000)
             self._finalize(session, log, result)
+            self._invalidate_read_caches()
             self._publish("ingest:end", result.to_dict())
         return result
+
+    def _invalidate_read_caches(self) -> None:
+        """Drop cached read payloads so the next page load picks up the new data.
+
+        Derived read endpoints (e.g. 全市场速览 matrix, 板块联动 beta) cache their
+        computed payloads for a short TTL; ingestion finishing is the only event
+        that changes their inputs, so clear here (any feed, any trigger: scheduler,
+        CLI or API).
+        """
+        try:
+            from app.core.cache import cache_clear  # lazy to avoid import cycle
+
+            cache_clear()
+        except Exception:  # noqa: BLE001 - cache failures must never fail ingestion
+            pass
 
     def _finalize(self, session: Session, log: IngestionLog, result: FeedResult) -> None:
         try:

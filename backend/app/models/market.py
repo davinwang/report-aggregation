@@ -28,6 +28,13 @@ class DailyQuote(Base):
         UniqueConstraint("security_id", "trade_date", "adjust", name="uq_daily_quote_sec_date_adj"),
         Index("ix_daily_quote_sec_date", "security_id", "trade_date"),
         Index("ix_daily_quote_date", "trade_date"),
+        # Hot read paths (K-line tails, 全市场速览 matrix, 板块联动 beta): the composite
+        # (code, adjust, trade_date) turns per-symbol tail loads into pure index seeks;
+        # (code, trade_date) covers MAX(trade_date)-per-code picks; (adjust, code, close)
+        # covers the qfq count-per-code scan. Without these each query sorted ~750 rows.
+        Index("ix_daily_quote_code_adj_date", "code", "adjust", "trade_date"),
+        Index("ix_daily_quote_code_date", "code", "trade_date"),
+        Index("ix_daily_quote_adj_code_close", "adjust", "code", "close"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
