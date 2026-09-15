@@ -1,6 +1,7 @@
 // Typed API functions grouped by backend module. All read endpoints unwrap { data, meta }.
 import { getEnvelope, getData, http } from "./client";
 import type {
+  BasisPayload,
   Dashboard,
   FinancialIndicatorRow,
   HealthDeep,
@@ -74,6 +75,10 @@ export const getStockReports = (code: string, page = 1, size = 20) =>
   getEnvelope<ReportBrief[]>(`/api/stock/${code}/reports`, { page, size });
 export const getStockFlow = (code: string, limit = 30) =>
   getData<Record<string, unknown>[]>(`/api/stock/${code}/flow`, { limit });
+
+// ---- derivatives (衍生品) ----
+export const getFuturesBasis = (params?: { variety?: string; days?: number; date?: string }) =>
+  getData<BasisPayload>("/api/derivatives/futures/basis", params as Record<string, unknown>);
 
 // ---- health / ops ----
 export const getHealthDeep = () => http.get<HealthDeep>("/health/deep").then((r) => r.data);

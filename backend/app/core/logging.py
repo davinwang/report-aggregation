@@ -11,11 +11,26 @@ import sys
 _CONFIGURED = False
 
 
+def _stdout_utf8():
+    """Return stdout forced to UTF-8.
+
+    Windows consoles default to GBK (cp936) so log glyphs such as ``▶`` raise
+    UnicodeEncodeError inside the handler; forcing UTF-8 (with replacement) keeps
+    host-side CLI runs (``python -m app.ingestion.pipeline``) from crashing.
+    """
+    stream = sys.stdout
+    try:
+        stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):  # pragma: no cover - non-reconfigurable stream
+        pass
+    return stream
+
+
 def configure_logging(level: str = "INFO") -> None:
     global _CONFIGURED
     if _CONFIGURED:
         return
-    handler = logging.StreamHandler(sys.stdout)
+    handler = logging.StreamHandler(_stdout_utf8())
     handler.setFormatter(
         logging.Formatter(
             fmt="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",

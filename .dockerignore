@@ -31,6 +31,7 @@ scripts/
 .vscode/
 .idea/
 
-# ── Deploy (only the entrypoint is needed by the backend Dockerfile) ──
+# ── Deploy (only the entrypoint + nginx config are needed by the Dockerfiles) ──
 deploy/
 !deploy/backend/docker-entrypoint.sh
+!deploy/frontend/nginx.conf

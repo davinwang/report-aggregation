@@ -20,6 +20,7 @@ from app.ingestion.adapters.research_reports import adapter as research_reports
 from app.ingestion.adapters.financials_em import adapter as financials_em
 from app.ingestion.adapters.fin_indicators import adapter as fin_indicators
 from app.ingestion.adapters.disclosures import adapter as disclosures
+from app.ingestion.adapters.index_futures import adapter as index_futures
 
 REGISTRY: dict[str, BaseAdapter] = {a.name: a for a in (
     security_master,
@@ -35,6 +36,7 @@ REGISTRY: dict[str, BaseAdapter] = {a.name: a for a in (
     financials_em,
     fin_indicators,
     disclosures,
+    index_futures,
 )}
 
 # Feeds that iterate the universe (need codes=[...]).
@@ -47,15 +49,16 @@ BULK_ORDER = [
     "industry_constituents",
     "spot_snapshot",
     "index_daily",
+    "index_futures",
     "ratings_daily",
     "recommend_pool",
+    "disclosures",
 ]
 PER_SYMBOL_ORDER = [
     "price_history",
     "research_reports",
     "fin_indicators",
     "financials_em",
-    "disclosures",
 ]
 
 

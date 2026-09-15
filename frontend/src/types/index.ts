@@ -148,3 +148,51 @@ export interface HealthDeep {
   checks: Record<string, Record<string, unknown>>;
   freshness: Record<string, Freshness>;
 }
+
+// ---- Phase 2: derivatives (股指期货基差) ----
+export interface BasisContract {
+  symbol: string;
+  expiry: string | null;
+  days_to_expiry: number | null;
+  open: number | null;
+  high: number | null;
+  low: number | null;
+  close: number | null;
+  settle: number | null;
+  pre_settle: number | null;
+  volume: number | null;
+  oi: number | null;
+  basis: number | null;
+  basis_annualized: number | null;
+  underlying_index_close: number | null;
+}
+
+export interface BasisOverviewRow {
+  variety: string;
+  underlying_code: string;
+  underlying_name: string;
+  trade_date: string | null;
+  spot: number | null;
+  symbol: string | null;
+  basis: number | null;
+  basis_annualized: number | null;
+  oi: number | null;
+  volume: number | null;
+  days_to_expiry: number | null;
+  state: string | null;
+}
+
+export interface BasisPayload {
+  varieties: string[];
+  variety: string;
+  underlying: { code: string; name: string };
+  termStructure: { trade_date: string | null; spot: number | null; contracts: BasisContract[] };
+  history: {
+    dates: string[];
+    basis: (number | null)[];
+    basis_annualized: (number | null)[];
+    spot: (number | null)[];
+    symbols: string[];
+  };
+  overview: BasisOverviewRow[];
+}
