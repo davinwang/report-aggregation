@@ -344,3 +344,162 @@ export interface SignalSummary {
   total?: number;
   industries: { industry: string; count: number }[];
 }
+
+// ---- Phase 2: 研报准确率 (rating accuracy) ----
+export interface AccuracyRow {
+  rank: number;
+  subject: string;
+  hits: number;
+  total: number;
+  hit_rate: number | null;
+  net_skill: number | null;
+  prev_delta: number | null;
+}
+
+export interface AccuracyPayload {
+  ref: string | null;
+  horizon: number;
+  by: string;
+  min_events: number;
+  rows: AccuracyRow[];
+  summary: {
+    subjects?: number;
+    events?: number;
+    hits?: number;
+    hit_rate?: number | null;
+    net_skill?: number | null;
+  };
+}
+
+// ---- Phase 2: 周统计 (weekly statistics) ----
+export interface WeeklyWeek {
+  week_key: string;
+  orgs: number;
+  reports: number;
+}
+
+export interface WeeklyMatrixRow {
+  org: string;
+  total: number;
+  by_group: Record<string, number>;
+}
+
+export interface WeeklyMatrix {
+  week_key: string | null;
+  weeks: WeeklyWeek[];
+  groups: string[];
+  group_totals: Record<string, number>;
+  orgs: WeeklyMatrixRow[];
+}
+
+export interface PeerRow {
+  id: number;
+  kind: string;
+  industry_group: string | null;
+  source: string | null;
+  title: string;
+  covered_by_us: boolean | null;
+  url: string | null;
+  uploaded_by: string | null;
+}
+
+export interface PeerPayload {
+  period_key: string | null;
+  periods: string[];
+  rows: PeerRow[];
+}
+
+// ---- Phase 2: 全市场速览 (quant matrix) ----
+export interface QuantMatrixRow {
+  code: string;
+  name: string;
+  close: number | null;
+  ma20: number | null;
+  rsi12: number | null;
+  trend: string;
+  macd: string;
+  rsi: string;
+}
+
+// ---- Phase 2: 板块/指数联动 (linkage) ----
+export interface LinkagePair {
+  a: string;
+  a_name: string;
+  b: string;
+  b_name: string;
+  corr: number;
+}
+
+export interface LinkageMatrix {
+  ref: string | null;
+  window: number;
+  samples?: number;
+  codes: string[];
+  names: string[];
+  matrix: (number | null)[][];
+  pairs: LinkagePair[];
+}
+
+export interface BetaRow {
+  code: string;
+  name: string;
+  beta: number;
+  corr: number;
+  r2: number;
+  vol: number;
+  samples: number;
+}
+
+export interface BetaPayload {
+  ref: string | null;
+  benchmark: string;
+  benchmark_name?: string;
+  window: number;
+  rows: BetaRow[];
+}
+
+// ---- Phase 2: 运营数据 / 管理设置 (ops & admin) ----
+export interface FreshnessRow {
+  feed: string;
+  last_success_at: string | null;
+  latest_data_date: string | null;
+  rows_total: number;
+  weeks_behind: number | null;
+  note: string | null;
+}
+
+export interface IngestionRow {
+  id: number;
+  feed: string;
+  status: string;
+  started_at: string | null;
+  finished_at: string | null;
+  rows_seen: number | null;
+  rows_upserted: number | null;
+  latency_ms: number | null;
+  error: string | null;
+}
+
+export interface FeedInfo {
+  name: string;
+  description: string;
+  per_symbol: boolean;
+}
+
+export interface AdminConfig {
+  app: string;
+  env: string;
+  universe: string;
+  universes: string[];
+  auth_enabled: boolean;
+  feature_ai: boolean;
+  akshare: { timeout: number; max_retries: number; throttle_seconds: number };
+  scheduler: {
+    enabled: boolean;
+    running: boolean;
+    cron: string;
+    timezone: string;
+    next_run_at: string | null;
+  };
+  database: { kind: string; url: string };
+}

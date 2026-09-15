@@ -1,22 +1,32 @@
 // Typed API functions grouped by backend module. All read endpoints unwrap { data, meta }.
 import { getEnvelope, getData, http } from "./client";
 import type {
+  AccuracyPayload,
+  AdminConfig,
   BasisPayload,
+  BetaPayload,
   Dashboard,
+  FeedInfo,
   FinancialIndicatorRow,
   FlowSummary,
+  FreshnessRow,
   HealthDeep,
+  IngestionRow,
   LhbRow,
+  LinkageMatrix,
   MarginPayload,
   NorthboundPayload,
   OptionsPayload,
   Paged,
+  PeerPayload,
+  QuantMatrixRow,
   QuantSeries,
   ReportBrief,
   SecurityMeta,
   SignalRow,
   SignalSummary,
   StockDetail,
+  WeeklyMatrix,
 } from "@/types";
 
 // ---- meta ----
@@ -61,7 +71,7 @@ export const getOrgs = () => getData<{ org: string; count: number }[]>("/api/res
 export const getSeries = (params: { code: string; indicators?: string; period?: string; freq?: string; adjust?: string }) =>
   getData<QuantSeries>("/api/quant/series", params as Record<string, unknown>);
 export const getMatrix = (params?: { limit?: number; scope?: string }) =>
-  getData<Record<string, unknown>[]>("/api/quant/matrix", params);
+  getData<QuantMatrixRow[]>("/api/quant/matrix", params);
 
 // ---- financials ----
 export const getStatements = (code: string, type: string, source = "em", limit = 12) =>
@@ -116,13 +126,42 @@ export const getSignalSummary = (days = 30) => getData<SignalSummary>("/api/sign
 export const refreshSignals = (lookbackDays = 180) =>
   http.post("/api/signals/refresh", null, { params: { lookback_days: lookbackDays } }).then((r) => r.data);
 
+// ---- accuracy (研报准确率) ----
+export const getAccuracyLeaderboard = (params?: {
+  horizon?: number;
+  by?: "org" | "analyst";
+  min_events?: number;
+  limit?: number;
+}) => getData<AccuracyPayload>("/api/accuracy/leaderboard", params as Record<string, unknown>);
+export const refreshAccuracy = (lookbackDays = 180) =>
+  http.post("/api/accuracy/refresh", null, { params: { lookback_days: lookbackDays } }).then((r) => r.data);
+
+// ---- weekly (周统计) ----
+export const getWeeklyMatrix = (week?: string) =>
+  getData<WeeklyMatrix>("/api/weekly/matrix", week ? { week } : undefined);
+export const getWeeklyPeer = (period?: string) =>
+  getData<PeerPayload>("/api/weekly/peer", period ? { period } : undefined);
+export const refreshWeekly = (weeksBack = 12) =>
+  http.post("/api/weekly/refresh", null, { params: { weeks_back: weeksBack } }).then((r) => r.data);
+
+// ---- linkage (板块/指数联动) ----
+export const getLinkageMatrix = (window = 120) =>
+  getData<LinkageMatrix>("/api/linkage/matrix", { window });
+export const getLinkageBeta = (params?: { window?: number; benchmark?: string; limit?: number }) =>
+  getData<BetaPayload>("/api/linkage/beta", params as Record<string, unknown>);
+
 // ---- health / ops ----
 export const getHealthDeep = () => http.get<HealthDeep>("/health/deep").then((r) => r.data);
-export const getOpsFreshness = () => getData<Record<string, unknown>[]>("/api/ops/freshness");
-export const getOpsIngestions = (limit = 50) => getData<Record<string, unknown>[]>("/api/ops/ingestions", { limit });
-export const getOpsFeeds = () => getData<{ name: string; description: string; per_symbol: boolean }[]>("/api/ops/feeds");
+export const getOpsFreshness = () => getData<FreshnessRow[]>("/api/ops/freshness");
+export const getOpsIngestions = (limit = 50) => getData<IngestionRow[]>("/api/ops/ingestions", { limit });
+export const getOpsFeeds = () => getData<FeedInfo[]>("/api/ops/feeds");
 export const triggerIngest = (scope = "all", universe?: string) =>
   http.post("/api/ops/ingest", null, { params: { scope, universe } }).then((r) => r.data);
+
+// ---- admin (管理设置) ----
+export const getAdminConfig = () => getData<AdminConfig>("/api/admin/config");
+export const adminTriggerIngest = (scope = "all", universe?: string) =>
+  http.post("/api/admin/ingest", null, { params: { scope, universe } }).then((r) => r.data);
 
 // ---- auth (login feature disabled; identity is hardcoded in authStore) ----
 export const getMe = () =>
