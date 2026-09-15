@@ -1,7 +1,9 @@
 // Sector heatmap (treemap) colored by change % using CN convention (红涨绿跌).
-// Label density adapts to tile size: large tiles show name + %, medium tiles show
-// the name only, tiny tiles stay unlabeled; text color follows fill intensity.
-import { useMemo } from "react";
+// Labels adapt to each tile's *pixel* footprint (container width is measured via
+// ResizeObserver; squarified tiles are ~square, so side ≈ sqrt(area share)):
+// roomy tiles show name + %, tight tiles show the full name only, slivers stay
+// unlabeled — a tile too small for the whole name never shows a truncated %.
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import { useEchartsTheme } from "@/hooks/useEchartsTheme";
 import { DOWN_COLOR, MONO_FONT, UP_COLOR } from "@/styles/theme";
@@ -37,19 +39,66 @@ interface Props {
   onSelect?: (name: string) => void;
 }
 
+// Label plan for one tile: "full" = name + %, "name" = name only, "off" = hidden.
+interface LabelPlan {
+  mode: "full" | "name" | "off";
+  nameFs: number;
+  pctFs: number;
+}
+
+const NAME_FS_MAX = 13; // caps keep a dense treemap readable
+const PCT_FS_MAX = 11;
+
+function planLabel(name: string, pct: string, side: number): LabelPlan {
+  const availW = side - 8; // intra-tile padding + gap
+  const availH = side - 6;
+  const chars = Math.max(name.length, 1); // CJK glyphs are ~1em wide
+  if (availW < 20 || availH < 14) return { mode: "off", nameFs: 0, pctFs: 0 };
+
+  // Full tier: both lines must fit *completely* — never a truncated %.
+  const nameFs = Math.min(NAME_FS_MAX, Math.floor(availW / chars), Math.floor(availH / 3.1));
+  const pctFs = Math.min(PCT_FS_MAX, nameFs - 1);
+  const pctW = Math.ceil(pctFs * 0.62 * pct.length); // monospace advance ≈ 0.6em
+  if (nameFs >= 10 && pctFs >= 9 && pctW <= availW && nameFs + pctFs + 8 <= availH) {
+    return { mode: "full", nameFs, pctFs };
+  }
+
+  // Name-only tier: shown only when the whole name fits (min 9px for CJK).
+  const onlyFs = Math.min(12, Math.floor(availW / chars), Math.floor(availH / 1.7));
+  if (onlyFs >= 9) return { mode: "name", nameFs: onlyFs, pctFs: 0 };
+
+  return { mode: "off", nameFs: 0, pctFs: 0 };
+}
+
 export default function HeatmapChart({ items, height = 360, onSelect }: Props) {
   const { palette } = useEchartsTheme();
   const dark = palette.mode === "dark";
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [boxW, setBoxW] = useState(0);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width ?? 0;
+      setBoxW((prev) => (Math.abs(prev - w) > 2 ? w : prev));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const option = useMemo(() => {
     const changeOf = new Map(items.map((i) => [i.name, i.value] as const));
     const fmt = (p: { name: string }) => (changeOf.get(p.name) ?? 0).toFixed(2);
     const weights = items.map((it) => Math.abs(it.value ?? 0) + 0.5);
-    const maxW = Math.max(...weights, 1e-6);
+    const totalW = weights.reduce((a, b) => a + b, 0) || 1;
+    const chartW = boxW || 720; // first-frame estimate before ResizeObserver reports
+    const chartArea = chartW * height;
 
     const data = items.map((it, idx) => {
-      // sqrt: label font scales with the tile's linear dimension, not its area.
-      const size = Math.sqrt(weights[idx] / maxW); // 0..1
+      // Estimate the tile's linear pixel size from its area share, then pick
+      // the richest label tier that provably fits inside that box.
+      const side = Math.sqrt((weights[idx] / totalW) * chartArea);
       const intensity = Math.min(Math.abs(it.value ?? 0), 5) / 5;
       const strongFill = 0.3 + 0.7 * intensity > 0.55;
       const textMain = strongFill ? "#ffffff" : dark ? "#d7dce3" : "#1a1a1a";
@@ -59,26 +108,27 @@ export default function HeatmapChart({ items, height = 360, onSelect }: Props) {
           ? "rgba(215,220,227,0.72)"
           : "rgba(0,0,0,0.58)";
       const pct = `${(it.value ?? 0).toFixed(2)}%`;
+      const plan = planLabel(it.name, pct, side);
 
       let label: Record<string, unknown>;
-      if (size < 0.18) {
+      if (plan.mode === "off") {
         label = { show: false };
-      } else if (size < 0.45) {
+      } else if (plan.mode === "name") {
         label = {
           show: true,
           formatter: it.name,
           color: textMain,
-          fontSize: Math.max(9, Math.round(8 + 6 * size)),
+          fontSize: plan.nameFs,
+          overflow: "truncate",
+          width: Math.max(12, Math.floor(side) - 4),
         };
       } else {
-        const nameSize = Math.round(11 + 9 * size); // 12..20
-        const pctSize = Math.max(10, nameSize - 4);
         label = {
           show: true,
           formatter: `{n|${it.name}}\n{v|${pct}}`,
           rich: {
-            n: { fontSize: nameSize, fontWeight: 600, color: textMain, lineHeight: nameSize + 5 },
-            v: { fontSize: pctSize, fontFamily: MONO_FONT, color: textSub, lineHeight: pctSize + 4 },
+            n: { fontSize: plan.nameFs, fontWeight: 600, color: textMain, lineHeight: plan.nameFs + 4 },
+            v: { fontSize: plan.pctFs, fontFamily: MONO_FONT, color: textSub, lineHeight: plan.pctFs + 4 },
           },
         };
       }
@@ -105,7 +155,7 @@ export default function HeatmapChart({ items, height = 360, onSelect }: Props) {
         },
       ],
     };
-  }, [items, palette, dark]);
+  }, [items, palette, dark, boxW, height]);
 
   const onEvents = useMemo(
     () => ({
@@ -116,5 +166,9 @@ export default function HeatmapChart({ items, height = 360, onSelect }: Props) {
     [onSelect],
   );
 
-  return <ReactECharts option={option} notMerge lazyUpdate style={{ height, width: "100%" }} onEvents={onEvents} />;
+  return (
+    <div ref={wrapRef} style={{ width: "100%" }}>
+      <ReactECharts option={option} notMerge lazyUpdate style={{ height, width: "100%" }} onEvents={onEvents} />
+    </div>
+  );
 }

@@ -94,7 +94,7 @@ export default function MarketPage() {
             {data?.sectorHeatmap?.length ? (
               <HeatmapChart
                 items={data.sectorHeatmap.map((s) => ({ name: s.name, value: s.change_pct, group: s.group }))}
-                height={340}
+                height={420}
               />
             ) : (
               <Empty description="暂无行业数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
