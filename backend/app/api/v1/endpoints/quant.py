@@ -13,11 +13,12 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
 from app.api.common import envelope
+from app.core.cache import cache_get, cache_set
 from app.core.db import get_db
 from app.models.market import DailyQuote
 from app.models.security import Security
 from app.services.indicators import DEFAULT_INDICATORS, build_series, compute
-from app.services.quotes import load_bars
+from app.services.quotes import load_bars, load_bars_bulk
 
 router = APIRouter(prefix="/api/quant", tags=["quant"])
 
@@ -75,7 +76,17 @@ def matrix(
     scope: str = Query(default="index+active", description="index|index+active"),
     db: Session = Depends(get_db),
 ) -> dict:
-    """Technical snapshot matrix across a bounded set of securities (全市场速览)."""
+    """Technical snapshot matrix across a bounded set of securities (全市场速览).
+
+    Heavy aggregation (bars -> indicators for up to ``limit`` symbols). The ready
+    payload is cached for 60s and cleared when ingestion lands new data, so repeated
+    page loads render instantly while data still comes from the local DB.
+    """
+    cache_key = f"quant.matrix:{scope}:{limit}"
+    cached_rows = cache_get(cache_key)
+    if cached_rows is not None:
+        return envelope(cached_rows, freq=freq, count=len(cached_rows))
+
     codes: list[str] = list(db.scalars(select(Security.code).where(Security.type == "index")).all())
     if scope == "index+active":
         recent = db.execute(
@@ -86,10 +97,11 @@ def matrix(
     codes = codes[:limit]
 
     name_map = {s.code: s.name for s in db.scalars(select(Security).where(Security.code.in_(codes))).all()}
+    frames = load_bars_bulk(db, codes, limit=120)
     rows: list[dict] = []
     for code in codes:
-        df = load_bars(db, code, limit=120)
-        if df.empty:
+        df = frames.get(code)
+        if df is None or df.empty:
             continue
         ind = compute(df, ["ma", "macd", "rsi"])
         close = float(df["close"].iloc[-1])
@@ -99,6 +111,7 @@ def matrix(
         rsi = _last(ind.get("rsi"), "rsi12")
         rows.append({"code": code, "name": name_map.get(code, code), "close": round(close, 2),
                      "ma20": ma20, "rsi12": rsi, **_state(close, ma20, dif, dea, rsi)})
+    cache_set(cache_key, rows)
     return envelope(rows, freq=freq, count=len(rows))
 
 

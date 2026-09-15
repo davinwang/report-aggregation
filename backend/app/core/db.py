@@ -80,7 +80,11 @@ def session_scope() -> Generator[Session, None, None]:
 
 
 def init_db() -> None:
-    """Create all tables. Import models first so they register on Base.metadata.
+    """Create all tables + ensure hot-path indexes exist.
+
+    Import models first so they register on Base.metadata. ``create_all`` only
+    creates *missing* tables, so composite indexes added to existing deployments
+    are created here explicitly (``IF NOT EXISTS`` — idempotent, one-time cost).
 
     For production use Alembic migrations (``alembic upgrade head``); this helper is
     a convenience for dev and is also exposed via ``python -m app.core.db --create-all``.
@@ -88,7 +92,32 @@ def init_db() -> None:
     import app.models  # noqa: F401  (ensures all models are imported/registered)
 
     Base.metadata.create_all(bind=engine)
+    _ensure_indexes()
     logger.info("Database initialized at %s", settings.resolved_database_url())
+
+
+#: Indexes added after the table already existed on deployed databases.
+#: Mirrors app/models/market.py; keep the two in sync when adding new ones.
+_ENSURE_INDEXES: tuple[tuple[str, str], ...] = (
+    ("ix_daily_quote_code_adj_date", "daily_quote (code, adjust, trade_date)"),
+    ("ix_daily_quote_code_date", "daily_quote (code, trade_date)"),
+    ("ix_daily_quote_adj_code_close", "daily_quote (adjust, code, close)"),
+)
+
+
+def _ensure_indexes() -> None:
+    """Create read-path indexes on pre-existing tables (idempotent)."""
+    import time
+
+    with engine.begin() as conn:
+        for name, target in _ENSURE_INDEXES:
+            t0 = time.monotonic()
+            try:
+                conn.exec_driver_sql(f"CREATE INDEX IF NOT EXISTS {name} ON {target}")
+            except Exception as exc:  # noqa: BLE001 - never block startup on an index
+                logger.warning("Failed to ensure index %s: %s", name, exc)
+            else:
+                logger.info("Index %s ensured (%.1fs)", name, time.monotonic() - t0)
 
 
 if __name__ == "__main__":

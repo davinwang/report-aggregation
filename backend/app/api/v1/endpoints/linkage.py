@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.common import envelope
+from app.core.cache import cache_get, cache_set
 from app.core.db import get_db
 from app.services import linkage as linkage_svc
 
@@ -17,7 +18,13 @@ def matrix(
     db: Session = Depends(get_db),
 ) -> dict:
     """指数相关性矩阵 (Pearson of daily returns) + strongest pairs."""
-    return envelope(linkage_svc.correlation_matrix(db, window=window))
+    cache_key = f"linkage.matrix:{window}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return envelope(cached)
+    payload = linkage_svc.correlation_matrix(db, window=window)
+    cache_set(cache_key, payload)
+    return envelope(payload)
 
 
 @router.get("/beta")
@@ -28,4 +35,10 @@ def beta(
     db: Session = Depends(get_db),
 ) -> dict:
     """个股 Beta/ρ² vs 沪深300 (from 前复权 close history)."""
-    return envelope(linkage_svc.beta_table(db, benchmark=benchmark, window=window, limit=limit))
+    cache_key = f"linkage.beta:{benchmark}:{window}:{limit}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return envelope(cached)
+    payload = linkage_svc.beta_table(db, benchmark=benchmark, window=window, limit=limit)
+    cache_set(cache_key, payload)
+    return envelope(payload)
