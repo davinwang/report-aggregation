@@ -20,6 +20,7 @@ const OptionsPage = lazy(() => import("@/features/derivatives/OptionsPage"));
 const FlowPage = lazy(() => import("@/features/flow/FlowPage"));
 const SignalsPage = lazy(() => import("@/features/signals/SignalsPage"));
 const AccuracyPage = lazy(() => import("@/features/accuracy/AccuracyPage"));
+const WeeklyPage = lazy(() => import("@/features/weekly/WeeklyPage"));
 
 function Fallback(): ReactElement {
   return (
@@ -63,7 +64,7 @@ export default function AppRoutes(): ReactElement {
           <Route path="/flow" element={<FlowPage />} />
           <Route path="/signals" element={<SignalsPage />} />
           <Route path="/accuracy" element={<AccuracyPage />} />
-          <Route path="/weekly" element={<ComingSoon title="周统计" />} />
+          <Route path="/weekly" element={<WeeklyPage />} />
           <Route path="/market-overview" element={<ComingSoon title="全市场速览" />} />
           <Route path="/linkage" element={<ComingSoon title="板块联动" />} />
 
