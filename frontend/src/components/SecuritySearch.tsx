@@ -6,7 +6,11 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getSecurities } from "@/api";
 
-export default function SecuritySearch() {
+interface Props {
+  width?: number | string; // header uses the compact default; the mobile drawer passes 100%
+}
+
+export default function SecuritySearch({ width = 240 }: Props) {
   const [kw, setKw] = useState("");
   const navigate = useNavigate();
   const { data } = useQuery({
@@ -32,7 +36,7 @@ export default function SecuritySearch() {
     <AutoComplete
       value={kw}
       options={options}
-      style={{ width: 240 }}
+      style={{ width }}
       onSelect={(code: string) => {
         setKw("");
         navigate(`/stock/${code}`);

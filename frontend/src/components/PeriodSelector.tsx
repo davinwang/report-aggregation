@@ -10,7 +10,11 @@ const OPTIONS: { value: PeriodKey; label: string }[] = [
   { value: "month", label: "本月" },
 ];
 
-export default function PeriodSelector() {
+interface Props {
+  width?: number | string; // header uses the compact default; the mobile drawer stretches it
+}
+
+export default function PeriodSelector({ width = 100 }: Props) {
   const period = useUIStore((s) => s.period);
   const setPeriod = useUIStore((s) => s.setPeriod);
   return (
@@ -19,7 +23,7 @@ export default function PeriodSelector() {
       value={period}
       onChange={setPeriod}
       options={OPTIONS}
-      style={{ width: 100 }}
+      style={{ width }}
       variant="filled"
     />
   );

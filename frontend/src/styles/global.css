@@ -194,3 +194,30 @@ body[data-theme="light"] ::-webkit-scrollbar-thumb {
   gap: 8px;
   padding: 0 20px;
 }
+
+/* ---- mobile (≤768px) ---- */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 10px;
+  }
+
+  .grid-cards {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  /* Wide data tables scroll horizontally instead of squashing every column. */
+  .ant-table-content {
+    overflow-x: auto !important;
+  }
+  .ant-table-content > table {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  /* Full-screen nav sheet opened from the header menu button. */
+  .srp-mobile-nav .ant-drawer-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+}

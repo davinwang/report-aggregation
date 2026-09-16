@@ -1,7 +1,7 @@
 // Application shell — Bloomberg-terminal chrome: black header with amber brand
 // strip + command search, scrolling ticker tape, dense dark sidebar + content.
-import { useMemo } from "react";
-import { Layout, Menu, Button, Space, Tooltip, Badge } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { Layout, Menu, Button, Space, Tooltip, Badge, Drawer } from "antd";
 import type { MenuProps } from "antd";
 import {
   DashboardOutlined,
@@ -24,6 +24,8 @@ import {
   ReloadOutlined,
   MoonOutlined,
   SunOutlined,
+  MenuOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,6 +34,7 @@ import SectorFilter from "@/components/SectorFilter";
 import SecuritySearch from "@/components/SecuritySearch";
 import TickerTape from "@/components/TickerTape";
 import { useSSE } from "@/hooks/useSSE";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useUIStore } from "@/stores/uiStore";
 import { useAuthStore } from "@/stores/authStore";
 import { MONO_FONT } from "@/styles/theme";
@@ -108,6 +111,16 @@ export default function AppLayout() {
   const queryClient = useQueryClient();
   const { mode, toggleMode, collapsed, setCollapsed } = useUIStore();
   const user = useAuthStore((s) => s.user);
+  const isMobile = useIsMobile();
+
+  // Mobile nav drawer: the sidebar collapses into a single button; tapping it
+  // opens the menu as a full-screen sheet that closes on selection.
+  const [navOpen, setNavOpen] = useState(false);
+
+  // Any route change (menu tap, ticker link, drawer backdrop) dismisses the sheet.
+  useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
 
   // Live channel: refresh cached queries whenever an ingestion run finishes.
   const { status } = useSSE((evt) => {
@@ -122,6 +135,21 @@ export default function AppLayout() {
     return match ?? "/market";
   }, [location.pathname]);
 
+  const onMenuClick: MenuProps["onClick"] = ({ key }) => {
+    setNavOpen(false);
+    navigate(key);
+  };
+
+  const navMenu = (
+    <Menu
+      mode="inline"
+      selectedKeys={[selectedKey]}
+      items={MENU}
+      onClick={onMenuClick}
+      style={{ borderInlineEnd: "none", height: "100%", overflowY: "auto", background: "transparent" }}
+    />
+  );
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Header
@@ -129,7 +157,7 @@ export default function AppLayout() {
           display: "flex",
           alignItems: "center",
           gap: 12,
-          padding: "0 14px",
+          padding: isMobile ? "0 10px" : "0 14px",
           background: "var(--srp-bg)",
           borderBottom: "2px solid var(--srp-brand)",
           position: "sticky",
@@ -137,6 +165,17 @@ export default function AppLayout() {
           zIndex: 20,
         }}
       >
+        {isMobile && (
+          <Button
+            size="small"
+            type="text"
+            icon={<MenuOutlined />}
+            aria-label="打开导航菜单"
+            onClick={() => setNavOpen(true)}
+            style={{ color: "var(--srp-text)", flex: "none", paddingInline: 4 }}
+          />
+        )}
+
         <div
           style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer", flex: "none" }}
           onClick={() => navigate("/market")}
@@ -170,17 +209,161 @@ export default function AppLayout() {
           </div>
         </div>
 
-        <SecuritySearch />
+        {/* Search + global filters live in the header on desktop only; on mobile
+            they move inside the nav drawer to keep the header uncluttered. */}
+        {!isMobile && <SecuritySearch />}
 
         <div style={{ flex: 1 }} />
 
         <Space size={6}>
-          <PeriodSelector />
-          <SectorFilter />
+          {!isMobile && (
+            <>
+              <PeriodSelector />
+              <SectorFilter />
+            </>
+          )}
           <Tooltip title="刷新数据 (重新拉取)">
             <Button size="small" icon={<ReloadOutlined />} onClick={() => queryClient.invalidateQueries()} />
           </Tooltip>
-          <Tooltip title={`SSE: ${status}`}>
+          {!isMobile && (
+            <Tooltip title={`SSE: ${status}`}>
+              <Badge
+                status={status === "open" ? "processing" : status === "error" ? "error" : "default"}
+                text={
+                  <span className="num" style={{ fontSize: 10, letterSpacing: "0.12em" }}>
+                    LIVE
+                  </span>
+                }
+              />
+            </Tooltip>
+          )}
+          <Tooltip title="切换主题">
+            <Button size="small" icon={mode === "light" ? <MoonOutlined /> : <SunOutlined />} onClick={toggleMode} />
+          </Tooltip>
+          {!isMobile && (
+            <span
+              className="num"
+              style={{
+                fontSize: 11,
+                color: "var(--srp-brand)",
+                border: "1px solid var(--srp-brand)",
+                padding: "1px 8px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {user?.username ?? "admin"}
+            </span>
+          )}
+        </Space>
+      </Header>
+
+      <TickerTape />
+
+      <Layout>
+        {!isMobile && (
+          <Sider
+            width={208}
+            collapsible
+            collapsed={collapsed}
+            onCollapse={setCollapsed}
+            theme={mode === "dark" ? "dark" : "light"}
+            style={{ borderRight: "1px solid var(--srp-border)" }}
+          >
+            {navMenu}
+          </Sider>
+        )}
+        <Content style={{ background: "var(--srp-bg)", minHeight: 280 }}>
+          <Outlet />
+        </Content>
+      </Layout>
+
+      {/* Mobile navigation: the sidebar collapsed into a header button; tapping it
+          opens this full-screen sheet, and a selection navigates + dismisses it. */}
+      <Drawer
+        open={isMobile && navOpen}
+        onClose={() => setNavOpen(false)}
+        placement="left"
+        width="100vw"
+        closable={false}
+        rootClassName="srp-mobile-nav"
+        styles={{ body: { padding: 0, background: "var(--srp-bg)" } }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+              padding: "8px 12px",
+              borderBottom: "1px solid var(--srp-border)",
+              flex: "none",
+            }}
+          >
+            <div
+              style={{
+                width: 22,
+                height: 22,
+                background: "var(--srp-brand)",
+                color: "#000",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: MONO_FONT,
+                fontWeight: 700,
+                fontSize: 13,
+                flex: "none",
+              }}
+            >
+              S
+            </div>
+            <div style={{ lineHeight: 1.15, flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--srp-text)" }}>股票研报聚合平台</div>
+              <div className="num" style={{ fontSize: 9, letterSpacing: "0.22em", color: "var(--srp-brand)" }}>
+                SRP TERMINAL
+              </div>
+            </div>
+            <Button
+              size="small"
+              type="text"
+              icon={<CloseOutlined />}
+              aria-label="关闭导航菜单"
+              onClick={() => setNavOpen(false)}
+              style={{ color: "var(--srp-text)", flex: "none" }}
+            />
+          </div>
+
+          {/* Global controls that live in the header on desktop. */}
+          <div
+            style={{
+              display: "grid",
+              gap: 8,
+              padding: "10px 12px",
+              borderBottom: "1px solid var(--srp-border)",
+              flex: "none",
+            }}
+          >
+            <SecuritySearch width="100%" />
+            <div style={{ display: "flex", gap: 8 }}>
+              <PeriodSelector width="38%" />
+              <SectorFilter width="62%" />
+            </div>
+          </div>
+
+          <div style={{ flex: 1, minHeight: 0 }}>{navMenu}</div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "8px 12px",
+              borderTop: "1px solid var(--srp-border)",
+              flex: "none",
+            }}
+          >
+            <span className="num" style={{ fontSize: 11, color: "var(--srp-brand)" }}>
+              {user?.username ?? "admin"}
+            </span>
             <Badge
               status={status === "open" ? "processing" : status === "error" ? "error" : "default"}
               text={
@@ -189,48 +372,9 @@ export default function AppLayout() {
                 </span>
               }
             />
-          </Tooltip>
-          <Tooltip title="切换主题">
-            <Button size="small" icon={mode === "light" ? <MoonOutlined /> : <SunOutlined />} onClick={toggleMode} />
-          </Tooltip>
-          <span
-            className="num"
-            style={{
-              fontSize: 11,
-              color: "var(--srp-brand)",
-              border: "1px solid var(--srp-brand)",
-              padding: "1px 8px",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {user?.username ?? "admin"}
-          </span>
-        </Space>
-      </Header>
-
-      <TickerTape />
-
-      <Layout>
-        <Sider
-          width={208}
-          collapsible
-          collapsed={collapsed}
-          onCollapse={setCollapsed}
-          theme={mode === "dark" ? "dark" : "light"}
-          style={{ borderRight: "1px solid var(--srp-border)" }}
-        >
-          <Menu
-            mode="inline"
-            selectedKeys={[selectedKey]}
-            items={MENU}
-            onClick={({ key }) => navigate(key)}
-            style={{ borderInlineEnd: "none", height: "100%", overflowY: "auto", background: "transparent" }}
-          />
-        </Sider>
-        <Content style={{ background: "var(--srp-bg)", minHeight: 280 }}>
-          <Outlet />
-        </Content>
-      </Layout>
+          </div>
+        </div>
+      </Drawer>
     </Layout>
   );
 }

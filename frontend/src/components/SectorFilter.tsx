@@ -16,7 +16,11 @@ export const SECTOR_GROUPS = [
   "未分类",
 ];
 
-export default function SectorFilter() {
+interface Props {
+  width?: number | string; // header uses the compact default; the mobile drawer stretches it
+}
+
+export default function SectorFilter({ width = 120 }: Props) {
   const sector = useUIStore((s) => s.sector);
   const setSector = useUIStore((s) => s.setSector);
   return (
@@ -27,7 +31,7 @@ export default function SectorFilter() {
       value={sector ?? undefined}
       onChange={(v) => setSector(v ?? null)}
       options={SECTOR_GROUPS.map((g) => ({ value: g, label: g }))}
-      style={{ width: 120 }}
+      style={{ width }}
       variant="filled"
     />
   );
