@@ -11,19 +11,42 @@ import PageContainer from "@/components/PageContainer";
 import RankingBar from "@/components/RankingBar";
 import ProvenanceTag from "@/components/ProvenanceTag";
 import StatCard from "@/components/StatCard";
-import { DOWN_COLOR, UP_COLOR } from "@/styles/theme";
+import { useUIStore } from "@/stores/uiStore";
+import { DOWN_COLOR, UP_COLOR, hexToRgb, mixRgb } from "@/styles/theme";
 import { fmtNum } from "@/hooks/useRelativeTime";
 
-function corrBg(v: number | null): string {
-  if (v == null) return "transparent";
-  const t = Math.min(1, Math.abs(v));
-  return v >= 0
-    ? `rgba(228,57,60,${(0.08 + 0.55 * t).toFixed(3)})`
-    : `rgba(47,168,79,${(0.08 + 0.55 * t).toFixed(3)})`;
+// Diverging heat scale over ρ ∈ [-1, 1] — CN convention (红=正相关, 绿=负相关).
+// |ρ| → 0 fades to the plain cell colour; |ρ| → 1 deepens toward a saturated hue.
+// Light-mode anchors are darkened market hues so the hot end stays dark enough for
+// white numerals; numeral colour is picked from the fill's luminance (works in both themes).
+function darken(hex: string, amt: number): string {
+  const to2 = (x: number) => Math.round(x * (1 - amt)).toString(16).padStart(2, "0");
+  return `#${hexToRgb(hex).map(to2).join("")}`;
+}
+
+const CORR_BASE = { dark: "#10141b", light: "#ffffff" } as const;
+const CORR_POS = { dark: UP_COLOR, light: darken(UP_COLOR, 0.22) };
+const CORR_NEG = { dark: DOWN_COLOR, light: darken(DOWN_COLOR, 0.22) };
+
+function corrTint(v: number | null, dark: boolean): { bg: string; fg?: string } {
+  if (v == null) return { bg: "transparent" };
+  const k = dark ? "dark" : "light";
+  // Ease the magnitude so mid-range ρ (0.4–0.8) still lands on visibly distinct tints.
+  const mixT = 0.9 * Math.pow(Math.min(1, Math.abs(v)), 0.85);
+  const rgb = mixRgb(CORR_BASE[k], v >= 0 ? CORR_POS[k] : CORR_NEG[k], mixT);
+  const lum = (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255;
+  return { bg: `rgb(${rgb.join(",")})`, fg: lum < 0.45 ? "#fff" : undefined };
+}
+
+function corrGradient(dark: boolean): string {
+  const k = dark ? "dark" : "light";
+  return `linear-gradient(90deg, ${CORR_NEG[k]}, ${CORR_BASE[k]}, ${CORR_POS[k]})`;
 }
 
 export default function LinkagePage() {
   const [window, setWindow] = useState(120);
+  const mode = useUIStore((s) => s.mode);
+  const dark = mode === "dark";
 
   const { data: matrix, isFetching: mFetching } = useQuery({
     queryKey: ["linkage", "matrix", window],
@@ -59,6 +82,7 @@ export default function LinkagePage() {
       align: "center" as const,
       render: (_: unknown, __: number, i: number) => {
         const v = mx[i]?.[j];
+        const { bg, fg } = corrTint(v, dark);
         return (
           <span
             style={{
@@ -66,8 +90,8 @@ export default function LinkagePage() {
               minWidth: 52,
               padding: "2px 4px",
               borderRadius: 3,
-              background: corrBg(v),
-              color: v != null && Math.abs(v) > 0.7 ? "#fff" : undefined,
+              background: bg,
+              color: fg,
               fontVariantNumeric: "tabular-nums",
             }}
           >
@@ -164,7 +188,18 @@ export default function LinkagePage() {
         />
       </div>
 
-      <Card size="small" title={`指数相关性矩阵 (近${window}个交易日收益)`} style={{ marginBottom: 12 }}>
+      <Card
+        size="small"
+        title={`指数相关性矩阵 (近${window}个交易日收益)`}
+        style={{ marginBottom: 12 }}
+        extra={
+          <span className="muted" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+            -1
+            <span style={{ width: 64, height: 8, borderRadius: 1, background: corrGradient(dark) }} />
+            +1
+          </span>
+        }
+      >
         {codes.length ? (
           <Table
             size="small"

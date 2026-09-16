@@ -143,9 +143,13 @@ export function hexToRgb(h: string): [number, number, number] {
   return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
 }
 
-export function mixColor(a: string, b: string, t: number): string {
+export function mixRgb(a: string, b: string, t: number): [number, number, number] {
   const pa = hexToRgb(a);
   const pb = hexToRgb(b);
-  const c = pa.map((x, i) => Math.round(x + (pb[i] - x) * t));
-  return `rgb(${c[0]},${c[1]},${c[2]})`;
+  const ch = (i: number) => Math.round(pa[i] + (pb[i] - pa[i]) * t);
+  return [ch(0), ch(1), ch(2)];
+}
+
+export function mixColor(a: string, b: string, t: number): string {
+  return `rgb(${mixRgb(a, b, t).join(",")})`;
 }
