@@ -2,9 +2,9 @@
 
 Multiple frequency-based cron jobs (all Asia/Shanghai), one per FEED_GROUPS entry:
 
-- ``intraday_refresh``   盘中实时快照 — 交易时段每10分钟 (市场看板/全市场速览/板块热力)
+- ``intraday_refresh``   盘中实时快照 — 交易时段每10分钟 (市场看板/全市场速览/板块热力/沪深港通涨跌家数)
 - ``daily_close``        收盘后日频行情 — 工作日 16:30 (技术指标/基差/期权)
-- ``daily_evening``      晚间日频数据 — 工作日 19:00 (资金流向/龙虎榜/评级/研报/公告)
+- ``daily_evening``      晚间日频数据 — 工作日 19:00 (两融/龙虎榜/评级/研报/公告)
 - ``weekly_master``      周度主数据 — 周一 08:00 (证券主档/行业成分)
 - ``weekly_financials``  周度财报 — 周六 12:00 (业绩/财务指标/三大报表)
 

@@ -209,6 +209,11 @@ export default function FlowPage() {
             暂无沪深港通数据。请运行 <Typography.Text code>northbound</Typography.Text> 采集。
           </Typography.Paragraph>
         )}
+        {nb?.dates?.length === 1 && (
+          <Typography.Paragraph type="secondary" style={{ margin: "8px 0 0", fontSize: 12 }}>
+            涨跌家数为逐日累积数据（上游仅保留当日快照，收盘后冻结），当前仅 1 个交易日，趋势将随每日采集逐步展开。
+          </Typography.Paragraph>
+        )}
         <Table
           size="small"
           rowKey={(r) => `${r.trade_date}-${r.board}`}

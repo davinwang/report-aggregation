@@ -77,16 +77,19 @@ PER_SYMBOL_ORDER = [
 # job whose feed list is ordered so intra-group dependencies hold (e.g.
 # index_futures needs index_daily bars for the basis spot leg, and
 # security_master must exist before anything maps code → security_id).
-#   intraday          实时/盘中: 交易时段每10分钟 (市场看板/全市场速览/板块热力)
+# northbound sits in ``intraday`` (not daily_evening) because its upstream report
+# only carries the current session and rolls to the next session's all-flat
+# placeholder row once the evening clearing finishes (~16:30 CST) — the post-close
+# intraday runs (15:10-15:50) are what persist the frozen closing 涨跌家数.
+#   intraday          实时/盘中: 交易时段每10分钟 (市场看板/全市场速览/板块热力/沪深港通涨跌家数)
 #   daily_close       日频·收盘后: 工作日 16:30 (技术指标/基差/期权)
-#   daily_evening     日频·晚间: 工作日 19:00 (资金流向/研报库/信号/公告)
+#   daily_evening     日频·晚间: 工作日 19:00 (两融/龙虎榜/研报库/信号/公告)
 #   weekly_master     周度主数据: 周一 (证券主档/行业成分)
 #   weekly_financials 周期·财报: 周六 (业绩/财务指标/三大报表)
 FEED_GROUPS: dict[str, list[str]] = {
-    "intraday": ["spot_snapshot", "industry_boards"],
+    "intraday": ["northbound", "spot_snapshot", "industry_boards"],
     "daily_close": ["index_daily", "index_futures", "index_options", "price_history"],
     "daily_evening": [
-        "northbound",
         "margin",
         "lhb",
         "ratings_daily",

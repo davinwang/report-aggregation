@@ -25,6 +25,10 @@ export default function LineChart({ dates, series, height = 320, yAxisNames, zoo
 
   const option = useMemo(() => {
     const dual = series.some((s) => s.yAxisIndex === 1);
+    // A line needs ≥2 points to draw anything: with sparse history (e.g. a single
+    // session of 涨跌家数) a symbol-less series renders as an empty plot even though
+    // the data is there. Show markers while the series is short, clean lines after.
+    const sparse = dates.length <= 31;
     const yAxes = dual
       ? [
           { ...baseOption.valueAxis, scale: true, name: yAxisNames?.[0], nameTextStyle: { color: palette.textStyle.color } },
@@ -53,7 +57,7 @@ export default function LineChart({ dates, series, height = 320, yAxisNames, zoo
         data: s.data,
         yAxisIndex: s.yAxisIndex ?? 0,
         smooth: s.type !== "bar",
-        showSymbol: false,
+        showSymbol: sparse,
         connectNulls: true,
         lineStyle: { width: 1.6, color: palette.series[i % palette.series.length] },
         itemStyle: { color: palette.series[i % palette.series.length] },

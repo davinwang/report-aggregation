@@ -8,9 +8,11 @@ import pandas as pd
 from sqlalchemy import select
 
 from app.ingestion import throttle
+from app.ingestion.adapters.northbound import NorthboundAdapter
 from app.ingestion.adapters.ratings_daily import RatingsDailyAdapter
 from app.ingestion.adapters.research_reports import ResearchReportsAdapter
 from app.ingestion.adapters.security_master import SecurityMasterAdapter
+from app.models.flow import NorthboundDaily
 from app.models.research import RatingEvent, ResearchReport
 from app.models.security import Security
 
@@ -75,3 +77,43 @@ def test_research_reports_per_symbol(session, fake_ak):
     assert r.title.startswith("深度报告") and r.org == "国泰君安"
     assert r.pdf_url.endswith("x.pdf")
     assert r.forecast_json["2025"]["eps"] == 3.2
+
+
+def test_northbound_skips_preopen_placeholder_rows(session, fake_ak):
+    """EM rolls the summary report to the next session's placeholder row (every
+    stock 持平, 上涨/下跌 = 0) once the evening clearing finishes; such rows must be
+    dropped so they never shadow the real session's breadth."""
+    fake_ak.stock_hsgt_fund_flow_summary_em = lambda: pd.DataFrame([
+        {"交易日": "2026-09-16", "类型": "沪港通", "板块": "沪股通", "资金方向": "北向",
+         "交易状态": 3, "成交净买额": 0.0, "资金净流入": 0.0, "当日资金余额": 0.0,
+         "上涨数": 0, "持平数": 1643, "下跌数": 0, "相关指数": "上证指数", "指数涨跌幅": -0.08},
+        {"交易日": "2026-09-15", "类型": "沪港通", "板块": "沪股通", "资金方向": "北向",
+         "交易状态": 3, "成交净买额": 0.0, "资金净流入": 0.0, "当日资金余额": 0.0,
+         "上涨数": 421, "持平数": 26, "下跌数": 1196, "相关指数": "上证指数", "指数涨跌幅": -0.54},
+        {"交易日": "2026-09-15", "类型": "深港通", "板块": "深股通", "资金方向": "北向",
+         "交易状态": 3, "成交净买额": 0.0, "资金净流入": 0.0, "当日资金余额": 0.0,
+         "上涨数": 413, "持平数": 19, "下跌数": 1447, "相关指数": "深证成指", "指数涨跌幅": -0.72},
+    ])
+    res = NorthboundAdapter().run(session)
+    assert res.status == "ok", res.error
+    assert res.rows_seen == 2  # the placeholder row was dropped before persist
+    rows = session.scalars(select(NorthboundDaily).order_by(NorthboundDaily.board)).all()
+    assert {r.trade_date.isoformat() for r in rows} == {"2026-09-15"}
+    assert {r.board for r in rows} == {"沪股通", "深股通"}
+    sh = next(r for r in rows if r.board == "沪股通")
+    assert sh.extra_json["up"] == 421 and sh.extra_json["down"] == 1196
+    assert sh.extra_json["index_pct"] == -0.54
+
+
+def test_northbound_all_placeholder_run_is_empty_not_junk(session, fake_ak):
+    """A pre-open/evening run that sees only placeholder rows stores nothing (the
+    day's frozen counts stay intact) and reports status='empty'."""
+    fake_ak.stock_hsgt_fund_flow_summary_em = lambda: pd.DataFrame([
+        {"交易日": "2026-09-16", "类型": "沪港通", "板块": "沪股通", "资金方向": "北向",
+         "交易状态": 3, "成交净买额": 0.0, "资金净流入": 0.0, "当日资金余额": 0.0,
+         "上涨数": 0, "持平数": 1643, "下跌数": 0, "相关指数": "上证指数", "指数涨跌幅": -0.08},
+    ])
+    res = NorthboundAdapter().run(session)
+    assert res.status == "empty"
+    assert res.rows_upserted == 0
+    assert session.scalars(select(NorthboundDaily)).all() == []
