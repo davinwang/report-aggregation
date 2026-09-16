@@ -98,11 +98,38 @@ def _execute(scope: str, universe: Optional[str] = None, prewarm: bool = True) -
                 run_feed(scope, session, universe=universe)
         logger.info("Ingestion finished (scope=%s) in %.1fs", scope, (datetime.now() - started).total_seconds())
         if prewarm:
+            _refresh_derived_after_ingest(scope)
             _prewarm_after_ingest()
     except Exception:  # noqa: BLE001
         logger.exception("Ingestion crashed (scope=%s)", scope)
     finally:
         _INGEST_LOCK.release()
+
+
+#: Groups whose feeds land the source rows the derived read models are built
+#: from (ratings/reports → signal/accuracy/weekly). After these groups finish,
+#: rebuild the derived tables so 可操作信号/研报准确率/周统计 stay populated
+#: without anyone clicking 重算. The startup bootstrap runs daily_evening, so a
+#: fresh full seed derives them too.
+_DERIVED_AFTER_GROUPS = frozenset({"daily_evening", "all"})
+
+
+def _refresh_derived_after_ingest(group: str) -> None:
+    """Rebuild signal/weekly/accuracy read models (best-effort, own session)."""
+    if group not in _DERIVED_AFTER_GROUPS:
+        return
+    from app.core.db import session_scope as _scope  # lazy: import-graph hygiene
+    from app.services.derived import refresh_derived
+
+    try:
+        with _scope() as session:
+            stats = refresh_derived(session)
+        logger.info(
+            "Derived read models refreshed after '%s': %s", group,
+            {k: ("ERROR" if "error" in v else v.get("total", "ok")) for k, v in stats.items() if k != "accuracy"},
+        )
+    except Exception:  # noqa: BLE001 - ingestion itself already committed; never propagate
+        logger.exception("Derived read-model refresh after '%s' failed", group)
 
 
 def _prewarm_after_ingest() -> None:
