@@ -72,7 +72,9 @@ export default function WeeklyPage() {
     },
     { title: "合计", dataIndex: "total", width: isMobile ? 48 : 72, align: "right", render: (v: number) => <b className="num">{v}</b> },
     ...groups.map((g) => ({
-      title: g,
+      title: (
+        <span style={{ whiteSpace: "nowrap", fontSize: isMobile ? 12 : undefined }}>{g}</span>
+      ),
       key: g,
       width: industryColWidth,
       align: "right" as const,
