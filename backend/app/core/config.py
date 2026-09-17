@@ -66,8 +66,10 @@ class Settings(BaseSettings):
     scheduler_cron_weekly_master: str = "0 8 * * mon"
     # 周度财报 (业绩/财务指标/三大报表): 周六 12:00
     scheduler_cron_weekly_financials: str = "0 12 * * sat"
-    # 资讯舆情快讯 (东财/财联社): 每日 07:00-23:00 每20分钟 (含周末)
-    scheduler_cron_news: str = "*/20 7-23 * * *"
+    # 资讯舆情快讯 (东财/财联社): 每日 07:00-23:00 每20分钟 (含周末)。
+    # 分钟取 :02/:22/:42 — 刻意避开 intraday 的 */10 网格 (:00/:20/:40)：两个 job
+    # 同秒触发时全局 ingest 锁先到先得，news 会稳定输给 intraday 而被永远饿死。
+    scheduler_cron_news: str = "2-59/20 7-23 * * *"
 
     # Startup bootstrap: seed an empty database on first deploy; if market data
     # is more than ``ingest_bootstrap_stale_days`` behind, catch up daily groups.

@@ -7,7 +7,7 @@ Multiple frequency-based cron jobs (all Asia/Shanghai), one per FEED_GROUPS entr
 - ``daily_evening``      晚间日频数据 — 工作日 19:00 (两融/龙虎榜/评级/研报/公告)
 - ``weekly_master``      周度主数据 — 周一 08:00 (证券主档/行业成分)
 - ``weekly_financials``  周度财报 — 周六 12:00 (业绩/财务指标/三大报表)
-- ``news_refresh``       资讯舆情·快讯 — 每日 07:00-23:00 每20分钟 (东财快讯/财联社)
+- ``news_refresh``       资讯舆情·快讯 — 每日 07:00-23:00 每20分钟 (东财快讯/财联社; 分钟取 :02/:22/:42, 避开 intraday 的 */10 网格以免锁竞争饿死)
 
 Crons are configurable via ``SCHEDULER_CRON_*`` settings (5-field cron; day-of-week
 uses APScheduler names like ``mon-fri`` because APScheduler maps 0→Monday, unlike
@@ -22,6 +22,7 @@ skipped with a warning instead of piling onto SQLite); SSE publishing is thread-
 from __future__ import annotations
 
 import threading
+import time
 from datetime import date, datetime, timedelta
 from typing import Optional
 from zoneinfo import ZoneInfo
@@ -45,8 +46,30 @@ _scheduler: Optional[BackgroundScheduler] = None
 #: timezone, which silently misfires by the UTC offset inside containers (UTC).
 _TZ = ZoneInfo("Asia/Shanghai")
 
-# Serializes ingestion runs: one group at a time, later triggers skipped.
+# Serializes ingestion runs: one group at a time. On conflict the loser retries
+# briefly in-place instead of dropping the run (prevents cron collisions — e.g.
+# news_refresh vs intraday_refresh — from starving a job forever).
 _INGEST_LOCK = threading.Lock()
+
+_LOCK_RETRY_DELAYS: tuple[float, ...] = (20.0, 60.0, 90.0)
+
+
+def _acquire_ingest_lock(scope: str) -> bool:
+    """Try to take the global ingest lock; on conflict wait-and-retry a few times.
+
+    Returns True once the lock is held (release happens in ``_execute``'s finally).
+    Only gives up when another run keeps holding the lock for all retry windows —
+    at that point the next cron tick is a better recovery than an unbounded wait.
+    """
+    for attempt, delay in enumerate((0.0,) + _LOCK_RETRY_DELAYS):
+        if delay:
+            logger.info("Ingestion '%s' waiting %.0fs: another run is in progress (retry %d/%d)",
+                        scope, delay, attempt, len(_LOCK_RETRY_DELAYS))
+            time.sleep(delay)
+        if _INGEST_LOCK.acquire(blocking=False):
+            return True
+    logger.warning("Ingestion '%s' skipped: another run held the lock through all retries", scope)
+    return False
 
 INTRADAY_JOB_ID = "intraday_refresh"
 DAILY_CLOSE_JOB_ID = "daily_close"
@@ -76,15 +99,24 @@ def _execute(scope: str, universe: Optional[str] = None, prewarm: bool = True) -
     """Run one ingestion scope in the caller's thread (used by all jobs).
 
     Valid scopes: a FEED_GROUPS key, 'all' | 'bulk' | 'per_symbol', or a single
-    feed name. A global lock prevents overlapping runs from locking SQLite.
+    feed name. A global lock prevents overlapping runs from locking SQLite; a
+    run that loses the race retries briefly instead of being silently dropped
+    (two jobs with overlapping triggers must not starve one another).
     """
     throttle.configure(settings.akshare_throttle_seconds)
     if scope not in VALID_SCOPES:
         logger.error("Unknown ingestion scope '%s'; valid: %s", scope, ", ".join(sorted(VALID_SCOPES)))
         return
-    if not _INGEST_LOCK.acquire(blocking=False):
-        logger.warning("Ingestion '%s' skipped: another run is already in progress", scope)
+    if not _acquire_ingest_lock(scope):
         return
+    try:
+        _run_scope(scope, universe=universe, prewarm=prewarm)
+    finally:
+        _INGEST_LOCK.release()
+
+
+def _run_scope(scope: str, universe: Optional[str] = None, prewarm: bool = True) -> None:
+    """Execute one ingestion scope; caller must hold ``_INGEST_LOCK``."""
     started = datetime.now()
     logger.info("Ingestion started (scope=%s, universe=%s)", scope, universe or settings.universe)
     try:
@@ -105,8 +137,6 @@ def _execute(scope: str, universe: Optional[str] = None, prewarm: bool = True) -
             _prewarm_after_ingest()
     except Exception:  # noqa: BLE001
         logger.exception("Ingestion crashed (scope=%s)", scope)
-    finally:
-        _INGEST_LOCK.release()
 
 
 #: Groups whose feeds land the source rows the derived read models are built
@@ -259,12 +289,14 @@ def _bootstrap_job() -> None:
 
     from app.core.db import init_db
     from app.models.market import DailyQuote
+    from app.models.news import NewsItem
     from app.services.aggregation import latest_trade_date
 
     try:
         init_db()  # idempotent: guarantees the schema exists even standalone
         with session_scope() as session:
             n_quotes = session.scalar(select(func.count()).select_from(DailyQuote)) or 0
+            n_news = session.scalar(select(func.count()).select_from(NewsItem)) or 0
             ltd = latest_trade_date(session)
     except Exception:  # noqa: BLE001
         logger.exception("Bootstrap: failed to inspect database state")
@@ -283,6 +315,12 @@ def _bootstrap_job() -> None:
             _execute("daily_evening", prewarm=False)
         else:
             logger.info("Bootstrap: data current (latest trade date %s); scheduled jobs will maintain it", ltd)
+        if n_news == 0:
+            # News lives outside the market-data staleness check: a fresh deploy
+            # over a current DB (e.g. redeploy between cron ticks) leaves the
+            # news table empty until the next news_refresh tick — seed it now.
+            logger.info("Bootstrap: news table empty → seeding news_refresh")
+            _execute("news_refresh", prewarm=False)
     _prewarm_after_ingest()
 
 

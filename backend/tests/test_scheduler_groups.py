@@ -68,6 +68,63 @@ def test_trigger_now_rejects_unknown_scope():
     assert sched.trigger_now("no_such_scope") is False
 
 
+def test_news_cron_avoids_intraday_grid():
+    """Regression: news_refresh (:02/:22/:42) must not collide with intraday's
+    */10 grid (:00/:20/:40) — same-second triggers race for the global ingest
+    lock, intraday always won, and the news table stayed empty forever."""
+    from apscheduler.triggers.cron import CronTrigger
+
+    from app.core.config import settings
+
+    def fire_minutes(cron: str) -> set[int]:
+        parts = parse_cron(cron)
+        trig = CronTrigger(**parts, timezone="Asia/Shanghai")
+        fields = {f.name: str(f) for f in trig.fields}
+        expr = fields["minute"]
+        if expr.startswith("*/"):
+            step = int(expr[2:])
+            return set(range(0, 60, step))
+        if "/" in expr:
+            start, step = expr.split("/")
+            lo = int(start.split("-")[0])
+            return set(range(lo, 60, int(step)))
+        if "-" in expr:
+            lo, hi = (int(x) for x in expr.split("-"))
+            return set(range(lo, hi + 1))
+        return {int(m) for m in expr.split(",")}
+
+    news = fire_minutes(settings.scheduler_cron_news)
+    intraday = fire_minutes(settings.scheduler_cron_intraday)
+    assert news == {2, 22, 42}
+    assert not (news & intraday), f"cron collision on minutes {news & intraday}"
+
+
+def test_execute_waits_for_lock_then_runs(monkeypatch):
+    """A run that loses the lock race retries instead of being dropped."""
+    delays: list[float] = []
+    monkeypatch.setattr(sched.time, "sleep", delays.append)
+    monkeypatch.setattr(sched.throttle, "configure", lambda *_: None)
+
+    # Lock already held → the loser must go through the retry windows.
+    assert sched._INGEST_LOCK.locked() is False
+    holder = sched._INGEST_LOCK.acquire()
+    assert holder
+    calls: list[str] = []
+    monkeypatch.setattr(sched, "_run_scope", lambda scope, **kw: calls.append(scope))
+    try:
+        sched._execute("news_refresh")
+        assert calls == []
+        assert delays == list(sched._LOCK_RETRY_DELAYS)
+    finally:
+        sched._INGEST_LOCK.release()
+
+    # Lock free → acquires and releases cleanly (no leaks).
+    delays.clear()
+    sched._execute("news_refresh")
+    assert delays == []
+    assert sched._INGEST_LOCK.locked() is False
+
+
 def test_bootstrap_oneoff_is_scheduled_ahead_of_now(monkeypatch):
     """Regression: the one-off bootstrap must be scheduled ~5s AHEAD of the
     scheduler's timezone now. A naive datetime.now() is interpreted in the
