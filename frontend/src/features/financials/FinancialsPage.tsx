@@ -1,7 +1,7 @@
 // 财务数据 — a NEW module for the stock version: 关键指标 / 业绩 / 三大报表 / 公告披露.
 // Route: /financials and /financials/:code
 import { useMemo, useState } from "react";
-import { Card, Input, Table, Tabs, Tag, Typography } from "antd";
+import { Card, Input, Space, Table, Tabs, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import { getDisclosures, getEarnings, getFinancialIndicators, getStatements } fr
 import type { FinancialIndicatorRow } from "@/types";
 import PageContainer from "@/components/PageContainer";
 import ProvenanceTag from "@/components/ProvenanceTag";
+import PageRefresh from "@/components/PageRefresh";
 import { fmtAmount, fmtDate, fmtNum, fmtPct } from "@/hooks/useRelativeTime";
 
 // Common 东财 statement field codes → Chinese labels (fallback to the raw code).
@@ -96,7 +97,7 @@ export default function FinancialsPage() {
     <PageContainer
       title="财务数据"
       description="关键指标 / 业绩 / 三大报表 / 公告披露（来源：东方财富、巨潮资讯、新浪财经）"
-      extra={<ProvenanceTag source="em" />}
+      extra={<Space><ProvenanceTag source="em" /><PageRefresh queryKeys={[["fin"]]} feeds={["financials_em", "fin_indicators", "disclosures"]} /></Space>}
     >
       <Card size="small" style={{ marginBottom: 12 }}>
         <Input.Search

@@ -94,7 +94,7 @@ export default function MarketOverviewPage() {
     <PageContainer
       title="全市场速览"
       description="技术面矩阵 — 指数 + 活跃个股的 趋势 / MACD / RSI 状态一览（基于已采集日线）"
-      extra={<Space><ProvenanceTag source="em" /><PageRefresh queryKeys={[["quant", "matrix"]]} /></Space>}
+      extra={<Space><ProvenanceTag source="em" /><PageRefresh queryKeys={[["quant", "matrix"]]} feeds={["price_history"]} /></Space>}
     >
       <div className="grid-cards" style={{ marginBottom: 12 }}>
         <StatCard

@@ -37,7 +37,7 @@ export default function MarketPage() {
         <Space>
           {data && <FreshnessBadge feed="行情" freshness={data.freshness?.["spot_snapshot"]} />}
           <ProvenanceTag source="em" date={data?.latestTradeDate} />
-          <PageRefresh queryKeys={[["market"]]} />
+          <PageRefresh queryKeys={[["market"]]} feeds={["index_daily", "industry_boards"]} />
         </Space>
       }
     >

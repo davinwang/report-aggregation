@@ -61,7 +61,7 @@ export default function OptionsPage() {
     <PageContainer
       title="股指期权"
       description="中金所股指期权 T型报价 — 行权价居中，看涨/看跌分列两侧（IO 沪深300 / MO 中证1000 / HO 上证50）"
-      extra={<Space><ProvenanceTag source="exchange" date={board?.trade_date} /><PageRefresh queryKeys={[["derivatives", "options"]]} /></Space>}
+      extra={<Space><ProvenanceTag source="exchange" date={board?.trade_date} /><PageRefresh queryKeys={[["derivatives", "options"]]} feeds={["index_options"]} /></Space>}
     >
       <div className="grid-cards" style={{ marginBottom: 12 }}>
         <StatCard title="标的指数" value={fmtNum(board?.spot ?? null, 2)} footer={board?.trade_date ?? "-"} loading={isFetching && !data} />

@@ -83,7 +83,7 @@ export default function NewsPage() {
         <Space size={6}>
           <FreshnessBadge feed="资讯" freshness={summary?.freshness} />
           <ProvenanceTag source="em" />
-          <PageRefresh queryKeys={[["news"]]} />
+          <PageRefresh queryKeys={[["news"]]} feeds={["news_flash"]} />
         </Space>
       }
     >

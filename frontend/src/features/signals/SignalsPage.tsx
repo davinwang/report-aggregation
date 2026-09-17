@@ -124,7 +124,7 @@ export default function SignalsPage() {
       extra={
         <Space wrap>
           <ProvenanceTag source="em" date={summary?.ref ?? null} />
-          <PageRefresh queryKeys={[["signals"]]} />
+          <PageRefresh queryKeys={[["signals"]]} feeds={["ratings_daily"]} />
           <Button
             size="small"
             icon={<SyncOutlined />}

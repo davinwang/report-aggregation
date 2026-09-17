@@ -93,7 +93,7 @@ export default function BasisPage() {
     <PageContainer
       title="股指期货基差"
       description="IF / IH / IC / IM 期现基差与年化基差率（升贴水），基差 = 期货结算价 − 标的指数收盘"
-      extra={<Space><ProvenanceTag source="exchange" date={ts?.trade_date} /><PageRefresh queryKeys={[["derivatives", "basis"]]} /></Space>}
+      extra={<Space><ProvenanceTag source="exchange" date={ts?.trade_date} /><PageRefresh queryKeys={[["derivatives", "basis"]]} feeds={["index_futures"]} /></Space>}
     >
       <div className="grid-cards" style={{ marginBottom: 12 }}>
         <StatCard title={`${variety} 主力合约`} value={main?.symbol ?? "-"} footer={main?.underlying_name} loading={isFetching && !data} />

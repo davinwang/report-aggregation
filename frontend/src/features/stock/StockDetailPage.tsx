@@ -9,6 +9,7 @@ import StatCard from "@/components/StatCard";
 import ReportTable from "@/components/ReportTable";
 import KLineChart from "@/components/KLineChart";
 import ProvenanceTag from "@/components/ProvenanceTag";
+import PageRefresh from "@/components/PageRefresh";
 import { fmtAmount, fmtDate, fmtNum, fmtPct } from "@/hooks/useRelativeTime";
 
 export default function StockDetailPage() {
@@ -43,6 +44,7 @@ export default function StockDetailPage() {
       extra={
         <Space>
           <ProvenanceTag source="em" />
+          <PageRefresh queryKeys={[["quant", "series"], ["stock"], ["fin"]]} feeds={["price_history", "financials_em", "fin_indicators"]} />
           <Link to={`/technical/${code}`}><Button size="small">技术指标</Button></Link>
           <Link to={`/financials/${code}`}><Button size="small">财务数据</Button></Link>
         </Space>

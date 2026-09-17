@@ -149,7 +149,7 @@ export default function FlowPage() {
     <PageContainer
       title="资金流向"
       description="沪深港通 (北向/南向) · 融资融券 · 龙虎榜 — 交易所与东方财富公开数据"
-      extra={<Space><ProvenanceTag source="exchange" date={nb?.ref ?? null} /><PageRefresh queryKeys={[["flow"]]} /></Space>}
+      extra={<Space><ProvenanceTag source="exchange" date={nb?.ref ?? null} /><PageRefresh queryKeys={[["flow"]]} feeds={["northbound", "margin", "lhb"]} /></Space>}
     >
       <div className="grid-cards" style={{ marginBottom: 12 }}>
         <StatCard

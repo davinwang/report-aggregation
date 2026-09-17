@@ -159,7 +159,7 @@ export default function LinkagePage() {
       extra={
         <Space wrap>
           <ProvenanceTag source="exchange" date={matrix?.ref ?? null} />
-          <PageRefresh queryKeys={[["linkage"]]} />
+          <PageRefresh queryKeys={[["linkage"]]} feeds={["price_history"]} />
           <Segmented
             size="small"
             value={window}

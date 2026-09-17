@@ -52,7 +52,7 @@ export default function ResearchPage() {
       extra={
         <Space>
           <ProvenanceTag source="em" />
-          <PageRefresh queryKeys={[["research"]]} />
+          <PageRefresh queryKeys={[["research"]]} feeds={["research_reports"]} />
           <Button
             size="small"
             icon={<DownloadOutlined />}

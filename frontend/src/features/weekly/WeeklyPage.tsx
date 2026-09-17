@@ -210,7 +210,7 @@ export default function WeeklyPage() {
     <PageContainer
       title="周统计"
       description="周度研报分布 — 机构×行业矩阵（自有研报库）与友商报告/活动（Phase 3 支持上传）"
-      extra={<Space><ProvenanceTag source="em" date={matrix?.week_key ?? null} /><PageRefresh queryKeys={[["weekly"]]} /></Space>}
+      extra={<Space><ProvenanceTag source="em" date={matrix?.week_key ?? null} /><PageRefresh queryKeys={[["weekly"]]} feeds={["research_reports"]} /></Space>}
     >
       <div className="grid-cards" style={{ marginBottom: 12 }}>
         <StatCard

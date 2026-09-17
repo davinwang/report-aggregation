@@ -54,7 +54,7 @@ export default function TechnicalPage() {
     <PageContainer
       title="技术指标"
       description="K线 + 30+ 技术指标（服务端计算，前复权）"
-      extra={<Space><ProvenanceTag source="em" /><PageRefresh queryKeys={[["quant", "series"]]} /></Space>}
+      extra={<Space><ProvenanceTag source="em" /><PageRefresh queryKeys={[["quant", "series"]]} feeds={["price_history"]} /></Space>}
     >
       <Card size="small" style={{ marginBottom: 12 }}>
         <Space wrap>

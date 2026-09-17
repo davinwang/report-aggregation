@@ -104,7 +104,7 @@ export default function AccuracyPage() {
       extra={
         <Space wrap>
           {data?.ref && <Tag bordered={false}>截至 {data.ref}</Tag>}
-          <PageRefresh queryKeys={[["accuracy"]]} />
+          <PageRefresh queryKeys={[["accuracy"]]} feeds={["ratings_daily"]} />
           <Button
             size="small"
             icon={<SyncOutlined />}
