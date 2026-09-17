@@ -24,6 +24,7 @@ dependencies = [
     "cachetools>=5.3",
     "python-dateutil>=2.8",
     "PyJWT>=2.8",
+    "mcp>=1.9,<2",
 ]
 
 [project.optional-dependencies]

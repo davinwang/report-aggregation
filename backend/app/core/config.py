@@ -66,6 +66,8 @@ class Settings(BaseSettings):
     scheduler_cron_weekly_master: str = "0 8 * * mon"
     # 周度财报 (业绩/财务指标/三大报表): 周六 12:00
     scheduler_cron_weekly_financials: str = "0 12 * * sat"
+    # 资讯舆情快讯 (东财/财联社): 每日 07:00-23:00 每20分钟 (含周末)
+    scheduler_cron_news: str = "*/20 7-23 * * *"
 
     # Startup bootstrap: seed an empty database on first deploy; if market data
     # is more than ``ingest_bootstrap_stale_days`` behind, catch up daily groups.
@@ -74,6 +76,18 @@ class Settings(BaseSettings):
 
     # ---- Feature flags ----
     feature_ai: bool = False
+    # MCP (Model Context Protocol) tool outlet for external AI clients
+    # (Claude Code / Cursor / ...). The streamable-HTTP endpoint is mounted at
+    # ``mcp_path`` when enabled — see README "MCP 接入".
+    feature_mcp: bool = False
+    mcp_path: str = "/mcp"
+    # Static bearer token for MCP clients. Empty = no auth (LAN/dev posture,
+    # mirrors AUTH_ENABLED=false); set MCP_TOKEN in production.
+    mcp_token: str = ""
+    # Extra allowed Host headers for the MCP endpoint (comma-separated), e.g.
+    # "192.168.1.5:*,myhost.lan" when serving beyond localhost. FastMCP's
+    # DNS-rebinding protection only allows localhost hosts by default.
+    mcp_allowed_hosts: str = ""
 
     # ---- Derived ----
     default_bars: int = Field(default=250, description="Default K-line bars for /api/quant/series")

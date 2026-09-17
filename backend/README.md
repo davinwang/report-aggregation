@@ -67,6 +67,7 @@ python -m app.ingestion.pipeline --all --universe hs300
 | fin_indicators | stock_financial_analysis_indicator | per-symbol |
 | financials_em | stock_{balance,profit,cash_flow}_sheet_by_report_em | per-symbol |
 | disclosures | stock_notice_report | bulk(by date) |
+| news_flash | stock_info_global_em / stock_info_global_cls | bulk (快讯, 单源降级) |
 
 Phase 2 adds: index_futures (get_futures_daily/CFFEX), index_options (option_finance_board),
 flow feeds (northbound/margin/lhb/individual).
@@ -85,3 +86,6 @@ pytest tests/test_indicators.py -q
 - Every adapter is wrapped with retry/backoff, throttling, idempotent upserts, and writes
   `IngestionLog` + `DataFreshness` so stale feeds are visible in the UI.
 - Indicators are pure numpy/pandas (no TA-Lib) to avoid Windows native-build issues.
+- MCP tool outlet (`FEATURE_MCP`): read-only tools live in `app/mcp/tools.py` (pure functions,
+  unit-testable), FastMCP wiring in `app/mcp/server.py`, token middleware in `app/mcp/auth.py`.
+  See the root README "MCP 接入" for endpoints and client config.

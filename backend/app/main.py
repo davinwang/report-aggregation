@@ -9,7 +9,7 @@ Docs: http://localhost:8000/docs   Health: http://localhost:8000/health/deep
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,10 +17,10 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
+from app.core.bootstrap import ensure_default_users
 from app.core.config import REPO_ROOT, settings
 from app.core.db import SessionLocal, init_db
 from app.core.logging import configure_logging, get_logger
-from app.core.bootstrap import ensure_default_users
 from app.ingestion import scheduler
 from app.sse import bus
 
@@ -44,7 +44,12 @@ async def lifespan(app: FastAPI):
     scheduler.start_scheduler()
     scheduler.bootstrap_on_startup()
 
-    yield
+    async with AsyncExitStack() as stack:
+        # Optional MCP tool outlet: run its streamable-HTTP session manager for
+        # the whole app lifetime (a mounted sub-app's own lifespan never runs).
+        if _mcp_lifespan is not None:
+            await stack.enter_async_context(_mcp_lifespan())
+        yield
 
     logger.info("Shutting down %s", settings.app_name)
     scheduler.shutdown_scheduler()
@@ -67,6 +72,23 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+
+# MCP tool outlet for external AI clients — mounted BEFORE the SPA catch-all so
+# "/mcp" wins. Optional: only when FEATURE_MCP=true and the 'mcp' package is
+# installed; a missing package degrades to a logged error, never a boot failure.
+_mcp_lifespan = None
+if settings.feature_mcp:
+    try:
+        from app.mcp.server import mcp_asgi, mcp_lifespan
+
+        app.mount(settings.mcp_path, mcp_asgi())
+        _mcp_lifespan = mcp_lifespan
+        if settings.mcp_token:
+            logger.info("MCP endpoint mounted at %s (token required)", settings.mcp_path)
+        else:
+            logger.warning("MCP endpoint mounted at %s WITHOUT a token (MCP_TOKEN empty)", settings.mcp_path)
+    except Exception as exc:  # noqa: BLE001 - optional outlet must never block boot
+        logger.error("MCP endpoint disabled: %s. Install 'mcp>=1.9,<2' and restart.", exc)
 
 
 @app.get("/", include_in_schema=False)

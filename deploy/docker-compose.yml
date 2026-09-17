@@ -7,6 +7,7 @@
 #     Frontend UI:  http://localhost:19732
 #     API docs:     http://localhost:19731/docs
 #     Deep health:  http://localhost:19732/health/deep
+#     MCP 端点:     http://localhost:19731/mcp/  (或经前端: http://localhost:19732/mcp/)
 #
 # First-time data: the backend auto-seeds an empty database on boot (INGEST_BOOTSTRAP,
 # runs every feed group once) and then keeps data fresh via frequency-based cron jobs:
@@ -46,6 +47,9 @@ services:
       INGEST_BOOTSTRAP_STALE_DAYS: ${INGEST_BOOTSTRAP_STALE_DAYS:-3}
       AUTH_ENABLED: ${AUTH_ENABLED:-false}
       FEATURE_AI: ${FEATURE_AI:-false}
+      FEATURE_MCP: ${FEATURE_MCP:-true}
+      MCP_TOKEN: ${MCP_TOKEN:-}
+      MCP_ALLOWED_HOSTS: ${MCP_ALLOWED_HOSTS:-}
     ports:
       - "${BACKEND_PORT:-19731}:8000"
     volumes:

@@ -72,7 +72,7 @@ def health_deep(db: Session = Depends(get_db)) -> dict:
         "sse": {"ok": True, "subscribers": bus.subscriber_count()},
         "market_data": {"ok": ltd is not None, "latest": ltd.isoformat() if ltd else None,
                         "weeks_behind": weeks_behind},
-        "feature_flags": {"ai": settings.feature_ai},
+        "feature_flags": {"ai": settings.feature_ai, "mcp": settings.feature_mcp},
     }
     return {
         "status": _overall_status(checks),

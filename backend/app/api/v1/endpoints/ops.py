@@ -12,6 +12,7 @@ from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.api.common import envelope
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.security import require_admin
 from app.ingestion import scheduler
@@ -57,6 +58,30 @@ def ingestions(limit: int = Query(default=50, ge=1, le=500), db: Session = Depen
 def jobs() -> dict:
     """Scheduled ingestion jobs (id, cron trigger, next run time)."""
     return envelope(scheduler.jobs_info())
+
+
+@router.get("/mcp")
+def mcp_status() -> dict:
+    """MCP tool outlet status — endpoint path, token requirement, tool registry."""
+    tool_names: list[str] = []
+    if settings.feature_mcp:
+        try:
+            from app.mcp import tools as mcp_tools  # lazy: tools module has no SDK dependency
+
+            tool_names = list(mcp_tools.__all__)
+        except Exception:  # noqa: BLE001 - status must not fail the request
+            tool_names = []
+    return envelope({
+        "enabled": settings.feature_mcp,
+        "path": settings.mcp_path,
+        "token_required": bool(settings.mcp_token),
+        "tools": tool_names,
+        "client_hint": (
+            "Streamable HTTP MCP. Claude Code: "
+            "claude mcp add --transport http srp <base_url><path>/ "
+            '--header "Authorization: Bearer <MCP_TOKEN>"'
+        ),
+    })
 
 
 @router.post("/ingest")
