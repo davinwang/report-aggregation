@@ -1,4 +1,4 @@
-// 功能导航 — site map + system status board (analog of the reference /overview).
+// 平台总览 — site map + system status board (analog of the reference /overview).
 import { Badge, Card, Col, Row, Space, Table, Tag, Typography } from "antd";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -8,19 +8,22 @@ import { relTime } from "@/hooks/useRelativeTime";
 
 const MODULES: { group: string; items: { to: string; label: string; phase: number }[] }[] = [
   {
+    group: "首页",
+    items: [{ to: "/overview", label: "平台总览", phase: 1 }],
+  },
+  {
     group: "数据看板",
     items: [
       { to: "/market", label: "市场看板", phase: 1 },
       { to: "/news", label: "资讯舆情", phase: 2 },
-      { to: "/overview", label: "功能导航", phase: 1 },
     ],
   },
   {
     group: "研报中心",
     items: [
       { to: "/research", label: "研报库", phase: 1 },
-      { to: "/signals", label: "可操作信号", phase: 2 },
-      { to: "/accuracy", label: "研报准确率", phase: 2 },
+      { to: "/signals", label: "评级信号", phase: 2 },
+      { to: "/accuracy", label: "评级胜率", phase: 2 },
       { to: "/weekly", label: "周统计", phase: 2 },
     ],
   },
@@ -66,7 +69,7 @@ export default function OverviewPage() {
 
   return (
     <PageContainer
-      title="功能导航"
+      title="平台总览"
       description="站点地图 + 系统运行状态"
       extra={
         <Space>

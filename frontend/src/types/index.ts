@@ -322,7 +322,7 @@ export interface FlowSummary {
   lhb_net_total: number | null;
 }
 
-// ---- Phase 2: 可操作信号 (actionable signals) ----
+// ---- Phase 2: 评级信号 (rating signals) ----
 export interface SignalRow {
   id: number;
   code: string;
@@ -345,7 +345,7 @@ export interface SignalSummary {
   industries: { industry: string; count: number }[];
 }
 
-// ---- Phase 2: 研报准确率 (rating accuracy) ----
+// ---- Phase 2: 评级胜率 (rating win-rate) ----
 export interface AccuracyRow {
   rank: number;
   subject: string;

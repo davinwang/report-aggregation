@@ -5,7 +5,7 @@ import { Layout, Menu, Button, Space, Tooltip, Badge, Drawer } from "antd";
 import type { MenuProps } from "antd";
 import {
   DashboardOutlined,
-  AppstoreOutlined,
+  HomeOutlined,
   ReadOutlined,
   BulbOutlined,
   AimOutlined,
@@ -47,11 +47,15 @@ type MenuItem = Required<MenuProps>["items"][number];
 const MENU: MenuItem[] = [
   {
     type: "group",
+    label: "首页",
+    children: [{ key: "/overview", icon: <HomeOutlined />, label: "平台总览" }],
+  },
+  {
+    type: "group",
     label: "数据看板",
     children: [
       { key: "/market", icon: <DashboardOutlined />, label: "市场看板" },
       { key: "/news", icon: <NotificationOutlined />, label: "资讯舆情" },
-      { key: "/overview", icon: <AppstoreOutlined />, label: "功能导航" },
     ],
   },
   {
@@ -59,8 +63,8 @@ const MENU: MenuItem[] = [
     label: "研报中心",
     children: [
       { key: "/research", icon: <ReadOutlined />, label: "研报库" },
-      { key: "/signals", icon: <BulbOutlined />, label: "可操作信号" },
-      { key: "/accuracy", icon: <AimOutlined />, label: "研报准确率" },
+      { key: "/signals", icon: <BulbOutlined />, label: "评级信号" },
+      { key: "/accuracy", icon: <AimOutlined />, label: "评级胜率" },
       { key: "/weekly", icon: <BarChartOutlined />, label: "周统计" },
     ],
   },

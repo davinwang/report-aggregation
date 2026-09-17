@@ -132,7 +132,7 @@ export const getNewsSummary = (days = 1) =>
     freshness: (r.meta as { freshness?: Freshness | null }).freshness ?? null,
   }));
 
-// ---- signals (可操作信号) ----
+// ---- signals (评级信号) ----
 export const getSignals = (params?: {
   action?: string;
   industry?: string;
@@ -149,7 +149,7 @@ export const getSignalSummary = (days = 30) => getData<SignalSummary>("/api/sign
 export const refreshSignals = (lookbackDays = 180) =>
   http.post("/api/signals/refresh", null, { params: { lookback_days: lookbackDays } }).then((r) => r.data);
 
-// ---- accuracy (研报准确率) ----
+// ---- accuracy (评级胜率) ----
 export const getAccuracyLeaderboard = (params?: {
   horizon?: number;
   by?: "org" | "analyst";

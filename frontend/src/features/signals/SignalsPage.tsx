@@ -1,4 +1,4 @@
-// 可操作信号 — 规则驱动: 评级上调/下调 · 首次覆盖 · 一致评级.
+// 评级信号 — 规则驱动: 评级上调/下调 · 首次覆盖 · 一致评级.
 // Derived from the 东财研报库 (no LLM — AI deferred). Route: /signals
 import { useState } from "react";
 import { Button, Card, Col, Row, Segmented, Select, Space, Table, Tag, Typography } from "antd";
@@ -118,7 +118,7 @@ export default function SignalsPage() {
 
   return (
     <PageContainer
-      title="可操作信号"
+      title="评级信号"
       description="规则驱动 · 基于东财研报库：评级上调/下调 · 首次覆盖 · 一致评级（近90日 ≥3 家机构同向覆盖）"
       extra={
         <Space wrap>

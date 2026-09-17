@@ -1,4 +1,4 @@
-// 研报准确率 — 机构/分析师评级命中率与净技能值 (20/60交易日 vs 沪深300).
+// 评级胜率 — 机构/分析师评级命中率与净技能值 (20/60交易日 vs 沪深300).
 // Route: /accuracy
 import { useState } from "react";
 import { Button, Card, Col, Row, Segmented, Select, Space, Table, Tag, Typography } from "antd";
@@ -98,7 +98,7 @@ export default function AccuracyPage() {
 
   return (
     <PageContainer
-      title="研报准确率"
+      title="评级胜率"
       description={`评级命中率与净技能值 — 未来 ${horizon} 个交易日相对沪深300的超额方向判断`}
       extra={
         <Space wrap>
