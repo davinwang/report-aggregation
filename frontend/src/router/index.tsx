@@ -15,7 +15,6 @@ const ResearchPage = lazy(() => import("@/features/research/ResearchPage"));
 const TechnicalPage = lazy(() => import("@/features/technical/TechnicalPage"));
 const FinancialsPage = lazy(() => import("@/features/financials/FinancialsPage"));
 const StockDetailPage = lazy(() => import("@/features/stock/StockDetailPage"));
-const OverviewPage = lazy(() => import("@/features/overview/OverviewPage"));
 const BasisPage = lazy(() => import("@/features/derivatives/BasisPage"));
 const OptionsPage = lazy(() => import("@/features/derivatives/OptionsPage"));
 const FlowPage = lazy(() => import("@/features/flow/FlowPage"));
@@ -56,7 +55,8 @@ export default function AppRoutes(): ReactElement {
           {/* Phase 1 — implemented */}
           <Route path="/market" element={<MarketPage />} />
           <Route path="/news" element={<NewsPage />} />
-          <Route path="/overview" element={<OverviewPage />} />
+          {/* 平台总览页已取消 (2026-09-17) — 与侧边栏重复; 旧链接回落到市场看板 */}
+          <Route path="/overview" element={<Navigate to="/market" replace />} />
           <Route path="/research" element={<ResearchPage />} />
           <Route path="/technical" element={<TechnicalPage />} />
           <Route path="/technical/:code" element={<TechnicalPage />} />

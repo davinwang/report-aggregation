@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Layout, Menu, Button, Space, Tooltip, Badge, Drawer } from "antd";
 import type { MenuProps } from "antd";
 import {
-  DashboardOutlined,
   HomeOutlined,
   ReadOutlined,
   BulbOutlined,
@@ -45,13 +44,12 @@ const MENU: MenuItem[] = [
   {
     type: "group",
     label: "首页",
-    children: [{ key: "/overview", icon: <HomeOutlined />, label: "平台总览" }],
+    children: [{ key: "/market", icon: <HomeOutlined />, label: "市场看板" }],
   },
   {
     type: "group",
     label: "数据看板",
     children: [
-      { key: "/market", icon: <DashboardOutlined />, label: "市场看板" },
       { key: "/news", icon: <NotificationOutlined />, label: "资讯舆情" },
     ],
   },
@@ -101,7 +99,7 @@ const MENU: MenuItem[] = [
 ];
 
 const ALL_KEYS = [
-  "/market", "/news", "/overview", "/research", "/signals", "/accuracy", "/weekly",
+  "/market", "/news", "/research", "/signals", "/accuracy", "/weekly",
   "/technical", "/market-overview", "/basis", "/options", "/financials",
   "/flow", "/linkage", "/chat", "/admin",
 ];
