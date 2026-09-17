@@ -8,6 +8,7 @@ import { getReports, getResearchFacets } from "@/api";
 import PageContainer from "@/components/PageContainer";
 import ReportTable from "@/components/ReportTable";
 import ProvenanceTag from "@/components/ProvenanceTag";
+import PageRefresh from "@/components/PageRefresh";
 import { useExport } from "@/hooks/useExport";
 
 const { RangePicker } = DatePicker;
@@ -51,6 +52,7 @@ export default function ResearchPage() {
       extra={
         <Space>
           <ProvenanceTag source="em" />
+          <PageRefresh queryKeys={[["research"]]} />
           <Button
             size="small"
             icon={<DownloadOutlined />}

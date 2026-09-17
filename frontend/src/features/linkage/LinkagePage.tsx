@@ -10,6 +10,7 @@ import type { BetaRow, LinkagePair } from "@/types";
 import PageContainer from "@/components/PageContainer";
 import RankingBar from "@/components/RankingBar";
 import ProvenanceTag from "@/components/ProvenanceTag";
+import PageRefresh from "@/components/PageRefresh";
 import StatCard from "@/components/StatCard";
 import { useUIStore } from "@/stores/uiStore";
 import { DOWN_COLOR, UP_COLOR, hexToRgb, mixRgb } from "@/styles/theme";
@@ -158,6 +159,7 @@ export default function LinkagePage() {
       extra={
         <Space wrap>
           <ProvenanceTag source="exchange" date={matrix?.ref ?? null} />
+          <PageRefresh queryKeys={[["linkage"]]} />
           <Segmented
             size="small"
             value={window}

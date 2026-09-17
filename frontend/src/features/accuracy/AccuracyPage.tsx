@@ -9,6 +9,7 @@ import { getAccuracyLeaderboard, refreshAccuracy } from "@/api";
 import type { AccuracyRow } from "@/types";
 import PageContainer from "@/components/PageContainer";
 import RankingBar from "@/components/RankingBar";
+import PageRefresh from "@/components/PageRefresh";
 import StatCard from "@/components/StatCard";
 import { msg } from "@/utils/message";
 import { changeColor } from "@/styles/theme";
@@ -103,6 +104,7 @@ export default function AccuracyPage() {
       extra={
         <Space wrap>
           {data?.ref && <Tag bordered={false}>截至 {data.ref}</Tag>}
+          <PageRefresh queryKeys={[["accuracy"]]} />
           <Button
             size="small"
             icon={<SyncOutlined />}

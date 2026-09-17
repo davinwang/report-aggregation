@@ -10,6 +10,7 @@ import { getSignalSummary, getSignals, refreshSignals } from "@/api";
 import type { SignalRow } from "@/types";
 import PageContainer from "@/components/PageContainer";
 import ProvenanceTag from "@/components/ProvenanceTag";
+import PageRefresh from "@/components/PageRefresh";
 import StatCard from "@/components/StatCard";
 import { SECTOR_GROUPS } from "@/components/SectorFilter";
 import { msg } from "@/utils/message";
@@ -123,6 +124,7 @@ export default function SignalsPage() {
       extra={
         <Space wrap>
           <ProvenanceTag source="em" date={summary?.ref ?? null} />
+          <PageRefresh queryKeys={[["signals"]]} />
           <Button
             size="small"
             icon={<SyncOutlined />}

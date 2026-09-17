@@ -10,6 +10,7 @@ import type { NewsItem } from "@/types";
 import PageContainer from "@/components/PageContainer";
 import FreshnessBadge from "@/components/FreshnessBadge";
 import ProvenanceTag from "@/components/ProvenanceTag";
+import PageRefresh from "@/components/PageRefresh";
 import StatCard from "@/components/StatCard";
 
 const { RangePicker } = DatePicker;
@@ -82,6 +83,7 @@ export default function NewsPage() {
         <Space size={6}>
           <FreshnessBadge feed="资讯" freshness={summary?.freshness} />
           <ProvenanceTag source="em" />
+          <PageRefresh queryKeys={[["news"]]} />
         </Space>
       }
     >

@@ -19,10 +19,7 @@ import {
   DeploymentUnitOutlined,
   NotificationOutlined,
   RobotOutlined,
-  CloudUploadOutlined,
-  ControlOutlined,
   SettingOutlined,
-  ReloadOutlined,
   MoonOutlined,
   SunOutlined,
   MenuOutlined,
@@ -98,8 +95,6 @@ const MENU: MenuItem[] = [
     label: "工具",
     children: [
       { key: "/chat", icon: <RobotOutlined />, label: "AI助手" },
-      { key: "/contrib", icon: <CloudUploadOutlined />, label: "上传研报" },
-      { key: "/ops", icon: <ControlOutlined />, label: "运营数据" },
       { key: "/admin", icon: <SettingOutlined />, label: "管理设置" },
     ],
   },
@@ -108,7 +103,7 @@ const MENU: MenuItem[] = [
 const ALL_KEYS = [
   "/market", "/news", "/overview", "/research", "/signals", "/accuracy", "/weekly",
   "/technical", "/market-overview", "/basis", "/options", "/financials",
-  "/flow", "/linkage", "/chat", "/contrib", "/ops", "/admin",
+  "/flow", "/linkage", "/chat", "/admin",
 ];
 
 export default function AppLayout() {
@@ -228,9 +223,6 @@ export default function AppLayout() {
               <SectorFilter />
             </>
           )}
-          <Tooltip title="刷新数据 (重新拉取)">
-            <Button size="small" icon={<ReloadOutlined />} onClick={() => queryClient.invalidateQueries()} />
-          </Tooltip>
           {!isMobile && (
             <Tooltip title={`SSE: ${status}`}>
               <Badge

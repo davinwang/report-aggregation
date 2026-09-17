@@ -53,8 +53,6 @@ const MODULES: { group: string; items: { to: string; label: string; phase: numbe
     group: "工具",
     items: [
       { to: "/chat", label: "AI助手", phase: 3 },
-      { to: "/contrib", label: "上传研报", phase: 3 },
-      { to: "/ops", label: "运营数据", phase: 3 },
       { to: "/admin", label: "管理设置", phase: 3 },
     ],
   },

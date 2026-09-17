@@ -10,6 +10,7 @@ import type { LhbRow, NorthboundLatest } from "@/types";
 import PageContainer from "@/components/PageContainer";
 import LineChart from "@/components/LineChart";
 import ProvenanceTag from "@/components/ProvenanceTag";
+import PageRefresh from "@/components/PageRefresh";
 import StatCard from "@/components/StatCard";
 import { changeColor } from "@/styles/theme";
 import { fmtAmount, fmtNum, fmtPct } from "@/hooks/useRelativeTime";
@@ -148,7 +149,7 @@ export default function FlowPage() {
     <PageContainer
       title="资金流向"
       description="沪深港通 (北向/南向) · 融资融券 · 龙虎榜 — 交易所与东方财富公开数据"
-      extra={<ProvenanceTag source="exchange" date={nb?.ref ?? null} />}
+      extra={<Space><ProvenanceTag source="exchange" date={nb?.ref ?? null} /><PageRefresh queryKeys={[["flow"]]} /></Space>}
     >
       <div className="grid-cards" style={{ marginBottom: 12 }}>
         <StatCard

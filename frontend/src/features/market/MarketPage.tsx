@@ -11,6 +11,7 @@ import HeatmapChart from "@/components/HeatmapChart";
 import ReportTable from "@/components/ReportTable";
 import FreshnessBadge from "@/components/FreshnessBadge";
 import ProvenanceTag from "@/components/ProvenanceTag";
+import PageRefresh from "@/components/PageRefresh";
 import { fmtAmount } from "@/hooks/useRelativeTime";
 import type { SignalItem } from "@/types";
 import { Link } from "react-router-dom";
@@ -36,6 +37,7 @@ export default function MarketPage() {
         <Space>
           {data && <FreshnessBadge feed="行情" freshness={data.freshness?.["spot_snapshot"]} />}
           <ProvenanceTag source="em" date={data?.latestTradeDate} />
+          <PageRefresh queryKeys={[["market"]]} />
         </Space>
       }
     >

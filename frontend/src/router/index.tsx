@@ -73,10 +73,7 @@ export default function AppRoutes(): ReactElement {
           <Route path="/linkage" element={<LinkagePage />} />
 
           {/* Phase 3 — placeholders (navigation already wired) */}
-          {/* 上传研报/审核、运营数据/管理设置 — deferred to Phase 3 (scope decision) */}
-          <Route path="/contrib" element={<ComingSoon title="上传研报" phase={3} />} />
-          <Route path="/contrib/review" element={<ComingSoon title="研报审核" phase={3} />} />
-          <Route path="/ops" element={<ComingSoon title="运营数据" phase={3} description="采集日志 / 新鲜度 / 错误流" />} />
+          {/* 上传研报/运营数据功能已取消 (2026-09-17); 管理设置 deferred to Phase 3 */}
           <Route path="/admin" element={<ComingSoon title="管理设置" phase={3} description="universe / 调度 / 接口开关" />} />
 
           {/* Phase 3 — AI, flag-gated (stub) */}

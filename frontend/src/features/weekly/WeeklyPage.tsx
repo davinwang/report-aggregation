@@ -9,8 +9,10 @@ import { getWeeklyMatrix, getWeeklyPeer, refreshWeekly } from "@/api";
 import type { PeerRow, WeeklyMatrixRow } from "@/types";
 import PageContainer from "@/components/PageContainer";
 import ProvenanceTag from "@/components/ProvenanceTag";
+import PageRefresh from "@/components/PageRefresh";
 import StatCard from "@/components/StatCard";
 import { msg } from "@/utils/message";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useUIStore } from "@/stores/uiStore";
 import { BRAND, mixColor } from "@/styles/theme";
 
@@ -45,19 +47,34 @@ export default function WeeklyPage() {
   // Amber heat scale for the org×industry count matrix: monochrome on purpose —
   // counts carry no up/down direction, so red/green would conflict with 红涨绿跌.
   const mode = useUIStore((s) => s.mode);
+  const isMobile = useIsMobile();
   const cellBase = mode === "dark" ? "#10141b" : "#ffffff";
   const cellTint = (v: number) => {
     const mixT = 0.12 + 0.76 * (v / maxCell);
     return { bg: mixColor(cellBase, BRAND, mixT), strong: mixT > 0.6 };
   };
 
+  // 手机上机构名收窄且不固定 — fixed:left 会占掉近半屏可视区，横向滚动没意义。
+  const orgColWidth = isMobile ? 108 : 160;
+  const industryColWidth = isMobile ? 56 : 84;
   const matrixColumns: ColumnsType<WeeklyMatrixRow> = [
-    { title: "机构", dataIndex: "org", width: 160, fixed: "left", render: (v: string) => <Typography.Text strong>{v}</Typography.Text> },
-    { title: "合计", dataIndex: "total", width: 72, align: "right", render: (v: number) => <b className="num">{v}</b> },
+    {
+      title: "机构",
+      dataIndex: "org",
+      width: orgColWidth,
+      fixed: isMobile ? undefined : "left",
+      ellipsis: true,
+      render: (v: string) => (
+        <Typography.Text strong ellipsis style={{ maxWidth: orgColWidth - 24, display: "inline-block" }}>
+          {v}
+        </Typography.Text>
+      ),
+    },
+    { title: "合计", dataIndex: "total", width: isMobile ? 48 : 72, align: "right", render: (v: number) => <b className="num">{v}</b> },
     ...groups.map((g) => ({
       title: g,
       key: g,
-      width: 84,
+      width: industryColWidth,
       align: "right" as const,
       render: (_: unknown, r: WeeklyMatrixRow) => {
         const v = r.by_group?.[g];
@@ -133,7 +150,7 @@ export default function WeeklyPage() {
           dataSource={matrix.orgs}
           columns={matrixColumns}
           pagination={{ pageSize: 20, size: "small", showSizeChanger: false }}
-          scroll={{ x: 900 }}
+          scroll={{ x: isMobile ? 108 + 48 + groups.length * industryColWidth : 900 }}
           summary={() => (
             <Table.Summary.Row>
               <Table.Summary.Cell index={0}>
@@ -191,7 +208,7 @@ export default function WeeklyPage() {
     <PageContainer
       title="周统计"
       description="周度研报分布 — 机构×行业矩阵（自有研报库）与友商报告/活动（Phase 3 支持上传）"
-      extra={<ProvenanceTag source="em" date={matrix?.week_key ?? null} />}
+      extra={<Space><ProvenanceTag source="em" date={matrix?.week_key ?? null} /><PageRefresh queryKeys={[["weekly"]]} /></Space>}
     >
       <div className="grid-cards" style={{ marginBottom: 12 }}>
         <StatCard

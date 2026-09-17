@@ -9,6 +9,7 @@ import { getMatrix } from "@/api";
 import type { QuantMatrixRow } from "@/types";
 import PageContainer from "@/components/PageContainer";
 import ProvenanceTag from "@/components/ProvenanceTag";
+import PageRefresh from "@/components/PageRefresh";
 import StatCard from "@/components/StatCard";
 import { DOWN_COLOR, UP_COLOR } from "@/styles/theme";
 import { fmtNum } from "@/hooks/useRelativeTime";
@@ -93,7 +94,7 @@ export default function MarketOverviewPage() {
     <PageContainer
       title="全市场速览"
       description="技术面矩阵 — 指数 + 活跃个股的 趋势 / MACD / RSI 状态一览（基于已采集日线）"
-      extra={<ProvenanceTag source="em" />}
+      extra={<Space><ProvenanceTag source="em" /><PageRefresh queryKeys={[["quant", "matrix"]]} /></Space>}
     >
       <div className="grid-cards" style={{ marginBottom: 12 }}>
         <StatCard

@@ -8,6 +8,7 @@ import { getSeries } from "@/api";
 import PageContainer from "@/components/PageContainer";
 import KLineChart from "@/components/KLineChart";
 import ProvenanceTag from "@/components/ProvenanceTag";
+import PageRefresh from "@/components/PageRefresh";
 
 // Fetched indicator set (overlays + sub-pane candidates).
 const FETCH_INDICATORS = "ma,boll,macd,kdj,rsi,dmi,cci,wr,bias,atr,obv,mavol";
@@ -53,7 +54,7 @@ export default function TechnicalPage() {
     <PageContainer
       title="技术指标"
       description="K线 + 30+ 技术指标（服务端计算，前复权）"
-      extra={<ProvenanceTag source="em" />}
+      extra={<Space><ProvenanceTag source="em" /><PageRefresh queryKeys={[["quant", "series"]]} /></Space>}
     >
       <Card size="small" style={{ marginBottom: 12 }}>
         <Space wrap>
