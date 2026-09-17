@@ -104,7 +104,7 @@ def test_start_scheduler_registers_all_jobs(monkeypatch):
         jobs = {j["id"] for j in sched.jobs_info()}
         assert jobs == {
             sched.INTRADAY_JOB_ID, sched.DAILY_CLOSE_JOB_ID, sched.DAILY_EVENING_JOB_ID,
-            sched.WEEKLY_MASTER_JOB_ID, sched.WEEKLY_FINANCIALS_JOB_ID,
+            sched.WEEKLY_MASTER_JOB_ID, sched.WEEKLY_FINANCIALS_JOB_ID, sched.NEWS_JOB_ID,
         }
         info = {j["id"]: j for j in sched.jobs_info()}
         assert all(j["next_run"] for j in info.values())

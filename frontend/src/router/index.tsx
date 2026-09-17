@@ -10,6 +10,7 @@ import NotFound from "@/features/common/NotFound";
 
 // Lazy Phase-1 pages (code-split).
 const MarketPage = lazy(() => import("@/features/market/MarketPage"));
+const NewsPage = lazy(() => import("@/features/news/NewsPage"));
 const ResearchPage = lazy(() => import("@/features/research/ResearchPage"));
 const TechnicalPage = lazy(() => import("@/features/technical/TechnicalPage"));
 const FinancialsPage = lazy(() => import("@/features/financials/FinancialsPage"));
@@ -54,6 +55,7 @@ export default function AppRoutes(): ReactElement {
 
           {/* Phase 1 — implemented */}
           <Route path="/market" element={<MarketPage />} />
+          <Route path="/news" element={<NewsPage />} />
           <Route path="/overview" element={<OverviewPage />} />
           <Route path="/research" element={<ResearchPage />} />
           <Route path="/technical" element={<TechnicalPage />} />

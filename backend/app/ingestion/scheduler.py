@@ -7,6 +7,7 @@ Multiple frequency-based cron jobs (all Asia/Shanghai), one per FEED_GROUPS entr
 - ``daily_evening``      晚间日频数据 — 工作日 19:00 (两融/龙虎榜/评级/研报/公告)
 - ``weekly_master``      周度主数据 — 周一 08:00 (证券主档/行业成分)
 - ``weekly_financials``  周度财报 — 周六 12:00 (业绩/财务指标/三大报表)
+- ``news_refresh``       资讯舆情·快讯 — 每日 07:00-23:00 每20分钟 (东财快讯/财联社)
 
 Crons are configurable via ``SCHEDULER_CRON_*`` settings (5-field cron; day-of-week
 uses APScheduler names like ``mon-fri`` because APScheduler maps 0→Monday, unlike
@@ -52,6 +53,7 @@ DAILY_CLOSE_JOB_ID = "daily_close"
 DAILY_EVENING_JOB_ID = "daily_evening"
 WEEKLY_MASTER_JOB_ID = "weekly_master"
 WEEKLY_FINANCIALS_JOB_ID = "weekly_financials"
+NEWS_JOB_ID = "news_refresh"
 BOOTSTRAP_JOB_ID = "bootstrap_ingest"
 
 LEGACY_SCOPES = ("all", "bulk", "per_symbol")
@@ -63,6 +65,7 @@ _JOB_SPECS: list[tuple[str, str, str, str, int]] = [
     (DAILY_EVENING_JOB_ID, "daily_evening", "scheduler_cron_daily_evening", "0 19 * * mon-fri", 6 * 3600),
     (WEEKLY_MASTER_JOB_ID, "weekly_master", "scheduler_cron_weekly_master", "0 8 * * mon", 12 * 3600),
     (WEEKLY_FINANCIALS_JOB_ID, "weekly_financials", "scheduler_cron_weekly_financials", "0 12 * * sat", 48 * 3600),
+    (NEWS_JOB_ID, "news_refresh", "scheduler_cron_news", "*/20 7-23 * * *", 600),
 ]
 
 #: Schedulable scopes = frequency groups + legacy scopes + single feed names.
@@ -228,7 +231,8 @@ def jobs_info() -> list[dict]:
 
 #: Group order for the empty-database seed: master data first (security_id_map),
 #: then realtime/EOD/financial groups; every registered feed runs exactly once.
-_BOOTSTRAP_GROUPS = ("weekly_master", "intraday", "daily_close", "daily_evening", "weekly_financials")
+_BOOTSTRAP_GROUPS = ("weekly_master", "intraday", "daily_close", "daily_evening",
+                     "weekly_financials", "news_refresh")
 
 
 def bootstrap_on_startup() -> None:

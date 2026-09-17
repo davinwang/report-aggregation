@@ -5,26 +5,26 @@ look them up uniformly. Add new adapters here (and to the ordering lists) as the
 """
 from __future__ import annotations
 
-from app.ingestion.base import BaseAdapter
-
-from app.ingestion.adapters.security_master import adapter as security_master
-from app.ingestion.adapters.spot_snapshot import adapter as spot_snapshot
-from app.ingestion.adapters.index_daily import adapter as index_daily
-from app.ingestion.adapters.ratings_daily import adapter as ratings_daily
-from app.ingestion.adapters.recommend_pool import adapter as recommend_pool
-from app.ingestion.adapters.industry_boards import adapter as industry_boards
-from app.ingestion.adapters.industry_constituents import adapter as industry_constituents
-from app.ingestion.adapters.earnings import adapter as earnings
-from app.ingestion.adapters.price_history import adapter as price_history
-from app.ingestion.adapters.research_reports import adapter as research_reports
-from app.ingestion.adapters.financials_em import adapter as financials_em
-from app.ingestion.adapters.fin_indicators import adapter as fin_indicators
 from app.ingestion.adapters.disclosures import adapter as disclosures
+from app.ingestion.adapters.earnings import adapter as earnings
+from app.ingestion.adapters.fin_indicators import adapter as fin_indicators
+from app.ingestion.adapters.financials_em import adapter as financials_em
+from app.ingestion.adapters.index_daily import adapter as index_daily
 from app.ingestion.adapters.index_futures import adapter as index_futures
 from app.ingestion.adapters.index_options import adapter as index_options
-from app.ingestion.adapters.northbound import adapter as northbound
-from app.ingestion.adapters.margin import adapter as margin
+from app.ingestion.adapters.industry_boards import adapter as industry_boards
+from app.ingestion.adapters.industry_constituents import adapter as industry_constituents
 from app.ingestion.adapters.lhb import adapter as lhb
+from app.ingestion.adapters.margin import adapter as margin
+from app.ingestion.adapters.news_flash import adapter as news_flash
+from app.ingestion.adapters.northbound import adapter as northbound
+from app.ingestion.adapters.price_history import adapter as price_history
+from app.ingestion.adapters.ratings_daily import adapter as ratings_daily
+from app.ingestion.adapters.recommend_pool import adapter as recommend_pool
+from app.ingestion.adapters.research_reports import adapter as research_reports
+from app.ingestion.adapters.security_master import adapter as security_master
+from app.ingestion.adapters.spot_snapshot import adapter as spot_snapshot
+from app.ingestion.base import BaseAdapter
 
 REGISTRY: dict[str, BaseAdapter] = {a.name: a for a in (
     security_master,
@@ -45,6 +45,7 @@ REGISTRY: dict[str, BaseAdapter] = {a.name: a for a in (
     northbound,
     margin,
     lhb,
+    news_flash,
 )}
 
 # Feeds that iterate the universe (need codes=[...]).
@@ -65,6 +66,7 @@ BULK_ORDER = [
     "ratings_daily",
     "recommend_pool",
     "disclosures",
+    "news_flash",
 ]
 PER_SYMBOL_ORDER = [
     "price_history",
@@ -86,6 +88,7 @@ PER_SYMBOL_ORDER = [
 #   daily_evening     日频·晚间: 工作日 19:00 (两融/龙虎榜/研报库/信号/公告)
 #   weekly_master     周度主数据: 周一 (证券主档/行业成分)
 #   weekly_financials 周期·财报: 周六 (业绩/财务指标/三大报表)
+#   news_refresh      资讯舆情·快讯: 每日 07:00-23:00 每20分钟 (东财快讯/财联社)
 FEED_GROUPS: dict[str, list[str]] = {
     "intraday": ["northbound", "spot_snapshot", "industry_boards"],
     "daily_close": ["index_daily", "index_futures", "index_options", "price_history"],
@@ -99,6 +102,7 @@ FEED_GROUPS: dict[str, list[str]] = {
     ],
     "weekly_master": ["security_master", "industry_constituents"],
     "weekly_financials": ["earnings", "fin_indicators", "financials_em"],
+    "news_refresh": ["news_flash"],
 }
 
 # feed name -> groups it belongs to (for /ops feeds listing).

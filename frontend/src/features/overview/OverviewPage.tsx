@@ -11,6 +11,7 @@ const MODULES: { group: string; items: { to: string; label: string; phase: numbe
     group: "数据看板",
     items: [
       { to: "/market", label: "市场看板", phase: 1 },
+      { to: "/news", label: "资讯舆情", phase: 2 },
       { to: "/overview", label: "功能导航", phase: 1 },
     ],
   },

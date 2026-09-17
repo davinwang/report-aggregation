@@ -458,6 +458,33 @@ export interface BetaPayload {
   rows: BetaRow[];
 }
 
+// ---- Phase 2: 资讯舆情 (news flash) ----
+export interface NewsRelatedStock {
+  code: string;
+  name: string;
+}
+
+export interface NewsItem {
+  id: number;
+  source: "em" | "cls" | string;
+  title: string;
+  content: string;
+  url: string | null;
+  publish_date: string;
+  publish_at: string; // "YYYY-MM-DD HH:mm:ss"
+  sentiment: "利好" | "中性" | "利空" | null;
+  sentiment_score: number | null;
+  related_codes: NewsRelatedStock[];
+}
+
+export interface NewsSummary {
+  ref: string | null;
+  days: number;
+  total: number;
+  by_sentiment: Partial<Record<"利好" | "中性" | "利空", number>>;
+  by_date: { date: string; total: number; 利好?: number; 中性?: number; 利空?: number }[];
+}
+
 // ---- Phase 2: 运营数据 / 管理设置 (ops & admin) ----
 export interface FreshnessRow {
   feed: string;

@@ -11,14 +11,15 @@ from app.models.base import (
     TimestampMixin,
     utcnow,
 )
-from app.models.security import (
-    INDUSTRY_GROUPS,
-    IndustryBoard,
-    IndustryConstituent,
-    Security,
-    group_of,
+from app.models.financial import (
+    Disclosure,
+    EarningsReport,
+    FinancialIndicator,
+    FinancialStatement,
 )
+from app.models.flow import FundFlowDaily, LhbRecord, MarginData, NorthboundDaily
 from app.models.market import DailyQuote, IndexFutureDaily, OptionQuote
+from app.models.news import NewsItem
 from app.models.research import (
     AccuracySnapshot,
     PeerActivity,
@@ -27,13 +28,13 @@ from app.models.research import (
     Signal,
     WeeklyStat,
 )
-from app.models.financial import (
-    Disclosure,
-    EarningsReport,
-    FinancialIndicator,
-    FinancialStatement,
+from app.models.security import (
+    INDUSTRY_GROUPS,
+    IndustryBoard,
+    IndustryConstituent,
+    Security,
+    group_of,
 )
-from app.models.flow import FundFlowDaily, LhbRecord, MarginData, NorthboundDaily
 from app.models.system import AiSynthesis, DataFreshness, IngestionLog, User
 
 __all__ = [
@@ -70,6 +71,8 @@ __all__ = [
     "NorthboundDaily",
     "MarginData",
     "LhbRecord",
+    # news
+    "NewsItem",
     # system
     "User",
     "IngestionLog",

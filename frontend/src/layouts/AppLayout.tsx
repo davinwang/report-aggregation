@@ -17,6 +17,7 @@ import {
   AccountBookOutlined,
   MoneyCollectOutlined,
   DeploymentUnitOutlined,
+  NotificationOutlined,
   RobotOutlined,
   CloudUploadOutlined,
   ControlOutlined,
@@ -49,6 +50,7 @@ const MENU: MenuItem[] = [
     label: "数据看板",
     children: [
       { key: "/market", icon: <DashboardOutlined />, label: "市场看板" },
+      { key: "/news", icon: <NotificationOutlined />, label: "资讯舆情" },
       { key: "/overview", icon: <AppstoreOutlined />, label: "功能导航" },
     ],
   },
@@ -100,7 +102,7 @@ const MENU: MenuItem[] = [
 ];
 
 const ALL_KEYS = [
-  "/market", "/overview", "/research", "/signals", "/accuracy", "/weekly",
+  "/market", "/news", "/overview", "/research", "/signals", "/accuracy", "/weekly",
   "/technical", "/market-overview", "/basis", "/options", "/financials",
   "/flow", "/linkage", "/chat", "/contrib", "/ops", "/admin",
 ];

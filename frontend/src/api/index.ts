@@ -9,12 +9,15 @@ import type {
   FeedInfo,
   FinancialIndicatorRow,
   FlowSummary,
+  Freshness,
   FreshnessRow,
   HealthDeep,
   IngestionRow,
   LhbRow,
   LinkageMatrix,
   MarginPayload,
+  NewsItem,
+  NewsSummary,
   NorthboundPayload,
   OptionsPayload,
   Paged,
@@ -107,6 +110,26 @@ export const getLhb = (params?: { date?: string; direction?: "buy" | "sell"; pag
   getEnvelope<LhbRow[]>("/api/flow/lhb", params as Record<string, unknown>).then((r) => ({
     rows: r.data,
     meta: r.meta as Paged<LhbRow>["meta"] & { trade_date?: string | null; stats?: { net_total?: number | null } },
+  }));
+
+// ---- news (资讯舆情) ----
+export const getNews = (params?: {
+  q?: string;
+  sentiment?: string;
+  source?: string;
+  start?: string;
+  end?: string;
+  page?: number;
+  size?: number;
+}) =>
+  getEnvelope<NewsItem[]>("/api/news", params as Record<string, unknown>).then((r) => ({
+    rows: r.data,
+    meta: r.meta as Paged<NewsItem>["meta"],
+  }));
+export const getNewsSummary = (days = 1) =>
+  getEnvelope<NewsSummary>("/api/news/summary", { days }).then((r) => ({
+    data: r.data,
+    freshness: (r.meta as { freshness?: Freshness | null }).freshness ?? null,
   }));
 
 // ---- signals (可操作信号) ----
