@@ -2,8 +2,7 @@
 
 Fetches the CFFEX daily futures frame, keeps only equity-index varieties, links each
 row to its underlying index close (from the ``index_daily`` bars already in the DB) and
-computes ``basis`` / ``basis_annualized`` through ``services.basis``. This is the stock
-analog of the reference platform's 期限结构 module.
+computes ``basis`` / ``basis_annualized`` through ``services.basis``.
 
 Runs after ``index_daily`` in the bulk order so the spot leg is available.
 """

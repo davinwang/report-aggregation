@@ -1,8 +1,7 @@
 """recommend_pool — bulk 机构推荐池 via ``stock_institute_recommend``.
 
 Fetches the "上调评级股票" / "下调评级股票" pools (whole-market, one call each) and
-materializes them as rule-based ``Signal`` rows — the stock analog of the reference's
-可操作信号. No LLM involved (AI deferred).
+materializes them as rule-based ``Signal`` rows (可操作信号). No LLM involved (AI deferred).
 """
 from __future__ import annotations
 

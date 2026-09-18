@@ -1,4 +1,4 @@
-"""Health & deep-health probe (analog of the reference's /health/deep).
+"""Health & deep-health probe.
 
 Reports dependency availability, DB row counts, per-feed freshness, scheduler and SSE
 status — so operators (and the UI 功能导航 page) can see data currency at a glance.

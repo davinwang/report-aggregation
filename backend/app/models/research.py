@@ -1,6 +1,6 @@
 """Research reports, ratings, derived signals, accuracy and weekly stats.
 
-These are the heart of the platform (the reference's 研报库 / 可操作信号 / 研报准确率 / 周统计).
+These are the heart of the platform (研报库 / 可操作信号 / 研报准确率 / 周统计).
 ``ResearchReport`` holds full report rows (title/org/analyst/rating/target/PDF);
 ``RatingEvent`` holds the bulk daily ratings feed; ``Signal`` and ``AccuracySnapshot``
 are derived by services (no LLM in MVP — rule-based).

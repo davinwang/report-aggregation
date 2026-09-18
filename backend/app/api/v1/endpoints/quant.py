@@ -1,6 +1,6 @@
 """技术指标 (quant) endpoints — K-line series + all-market matrix.
 
-``/api/quant/series`` mirrors the reference's server-computed indicator API; indicators
+``/api/quant/series`` provides server-computed indicators; indicators
 are computed in Python (services.indicators) over stored bars and returned ECharts-ready.
 """
 from __future__ import annotations

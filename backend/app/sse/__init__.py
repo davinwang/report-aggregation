@@ -1,4 +1,4 @@
-"""Server-Sent Events package (mirrors the reference platform's SSE live-refresh)."""
+"""Server-Sent Events package (live-refresh via SSE)."""
 from app.sse.bus import (  # noqa: F401
     format_sse,
     publish,

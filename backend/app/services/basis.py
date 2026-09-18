@@ -1,4 +1,4 @@
-"""股指期货基差 (stock-index futures basis) — the stock analog of the reference's 期限结构.
+"""股指期货基差 (stock-index futures basis).
 
 Conventions (matching ``IndexFutureDaily``):
 

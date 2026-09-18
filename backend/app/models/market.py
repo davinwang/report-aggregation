@@ -58,7 +58,7 @@ class IndexFutureDaily(Base, TimestampMixin):
     """中金所股指期货日线 (IF/IH/IC/IM) via ``get_futures_daily(market="CFFEX")``.
 
     ``basis`` = settle − underlying_index_close; ``basis_annualized`` computed in
-    ``services.basis``. This is the stock analog of the reference's 期限结构.
+    ``services.basis``.
     """
 
     __tablename__ = "index_future_daily"

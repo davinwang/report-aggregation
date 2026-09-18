@@ -2,7 +2,7 @@
 
 ``stock_rank_forecast_cninfo(date=)`` is the KEY bulk feed: one call returns every
 rating action published that day (证券代码/研究机构/研究员/投资评级/评级变化/目标价),
-which is the stock analog of the reference's per-period 研报 window. Drives 研报库,
+which drives the per-period 研报 window. Drives 研报库,
 可操作信号 and 研报准确率 without per-symbol crawling.
 """
 from __future__ import annotations

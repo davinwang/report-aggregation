@@ -1,4 +1,4 @@
-"""SSE stream endpoint (mirrors the reference's live-refresh channel).
+"""SSE stream endpoint (live-refresh channel via SSE).
 
 On connect the client receives a ``hello`` event (parity with "SSE 已就绪"), a replay of
 recent events, then a live feed of ingestion progress + freshness updates. A comment

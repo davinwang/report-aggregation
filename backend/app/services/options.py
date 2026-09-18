@@ -6,7 +6,7 @@ frame carries ``instrument`` (e.g. ``IO2612-C-3900``), ``lastprice``, ``updown``
 the instrument code, so everything is parsed here.
 
 The T-board pivots the flat contract list into one row per strike with call columns on
-the left and put columns on the right (the reference platform's T型报价), plus PCR
+the left and put columns on the right (T型报价), plus PCR
 (put/call ratio) totals by 持仓量 and 成交量.
 
 Date anchoring: reads anchor to ``option_quote``'s own newest snapshot date, never to

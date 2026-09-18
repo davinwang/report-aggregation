@@ -1,5 +1,5 @@
-// SSE subscription to /api/stream (ingestion progress + freshness), mirroring the
-// reference's live channel. Returns connection status and the latest event.
+// SSE subscription to /api/stream (ingestion progress + freshness).
+// Returns connection status and the latest event.
 import { useEffect, useRef, useState } from "react";
 
 export interface SSEEvent {

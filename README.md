@@ -1,7 +1,6 @@
 # 股票研报聚合平台 (Stock Research Aggregation Platform)
 
-A stock-investment research aggregation platform inspired by the 国泰君安期货·研报聚合平台,
-rebuilt for **A股个股 + 指数 + 股指期货 (IF/IH/IC/IM) + 股指期权 (IO/MO/HO)**.
+A stock-investment research aggregation platform for **A股个股 + 指数 + 股指期货 (IF/IH/IC/IM) + 股指期权 (IO/MO/HO)**.
 
 Data is sourced from **public feeds** via [AkShare](https://akshare.akfamily.xyz/) (东方财富 /
 新浪财经 / 巨潮资讯 / 交易所), ingested into a local database on a schedule. The UI never
@@ -18,7 +17,7 @@ Included (stock-transformed): 市场看板 · 研报库 · 技术指标(K线) ·
 功能导航 (Phase 1); 全市场速览 · 可操作信号 · 研报准确率 · 周统计 · 股指期货基差 · 股指期权 ·
 资金流向 · 板块/指数联动 · 资讯舆情 · 登录/管理/运营/上传 (Phase 2); AI综合研判 · AI助手 (Phase 3, feature-flagged).
 
-**Explicitly removed** vs. the reference platform: `报告生成 (/report)` and `质控审核 (/qc)`.
+**Explicitly excluded**: `报告生成 (/report)` and `质控审核 (/qc)`.
 
 ---
 

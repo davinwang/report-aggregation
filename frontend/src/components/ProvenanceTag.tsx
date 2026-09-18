@@ -1,5 +1,5 @@
 // Provenance tag — shows the data source and (optionally) the data date.
-// Mirrors the reference's useProvenanceTag: every card/table should disclose origin.
+// Every card/table should disclose its data origin.
 import { Tag, Tooltip } from "antd";
 
 const SOURCE_LABEL: Record<string, string> = {

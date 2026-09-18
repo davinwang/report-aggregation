@@ -1,7 +1,7 @@
 """运营数据 (ops) — ingestion control + observability.
 
 GET stats are public (the UI shows freshness); triggering ingestion requires admin.
-This is where the header "扫描/刷新" action lands (mirrors the reference's 扫描研报).
+This is where the header "扫描/刷新" action lands.
 """
 from __future__ import annotations
 

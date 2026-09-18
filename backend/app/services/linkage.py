@@ -1,6 +1,6 @@
 """板块/指数联动 (linkage) — index correlation matrix + individual-stock Beta.
 
-The stock analog of the reference's 股期联动:
+Provides:
 
 * **指数相关性** — Pearson correlation of daily returns across the tracked
   benchmark indices, aligned on their common trading days.

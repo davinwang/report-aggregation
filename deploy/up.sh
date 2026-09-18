@@ -8,14 +8,12 @@
 #    本服务的旧容器。注意 v1 失败的重建会把旧容器改名为 <12位hash>_srp-*，需一并清理。
 #
 # 2) 固定项目名 -p srp：
-#    本栈与 gtjaqh 旧栈都在各自仓库的 deploy/ 目录启动，默认项目名都是 deploy，
-#    compose 会把 gtjaqh 容器当成"本项目孤儿"（每次 up 都警告，--remove-orphans
-#    会误删它们）。指定 -p srp 后标签与网络（srp_default）独立，警告消失，
-#    本目录的 down / --remove-orphans 也只影响 srp 自己。
+#    使用通用项目名 srp，compose 标签与网络（srp_default）独立，
+#    避免与其他同目录 compose 项目冲突（孤儿容器警告、--remove-orphans 误删）。
 #    迁移：旧的 srp 容器带的是 deploy 标签，下面按名清理的步骤正好先删掉它们。
 #
 # 数据安全：SQLite 在 ../data bind mount 里，删容器不丢数据；
-# 清理只按 srp-backend / srp-frontend 名称匹配，不碰 gtjaqh 旧栈容器。
+# 清理只按 srp-backend / srp-frontend 名称匹配。
 #
 # 用法（可透传 compose 参数）：
 #   ./up.sh            # 相当于 docker-compose -p srp up -d

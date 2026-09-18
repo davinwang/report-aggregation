@@ -1,5 +1,4 @@
-// 股指期货基差 — IF/IH/IC/IM term structure + front-month basis trend.
-// The stock analog of the reference platform's 期限结构 (Back/Contango → 升水/贴水).
+// 股指期货基差 — IF/IH/IC/IM term structure + front-month basis trend (Back/Contango → 升水/贴水).
 // Route: /basis
 import { useState } from "react";
 import { Card, Col, Row, Segmented, Select, Space, Table, Tag, Typography } from "antd";

@@ -1,4 +1,4 @@
-// Global period-window selector (bound to the UI store). Transform of the reference's
+// Global period-window selector (bound to the UI store).
 // 期次窗口: for stocks the natural windows are 今日/本周/近两周/本月.
 import { Select } from "antd";
 import { useUIStore, type PeriodKey } from "@/stores/uiStore";

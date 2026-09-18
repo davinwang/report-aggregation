@@ -1,4 +1,4 @@
-"""Period-window helpers (transform of the reference's 周四16:00 futures cycle).
+"""Period-window helpers (周四16:00 futures cycle for derivatives).
 
 For stocks the natural window is the trading week (Mon–Fri). ``resolve_window`` maps a
 period token + optional reference date into an inclusive [start, end] date range and a
