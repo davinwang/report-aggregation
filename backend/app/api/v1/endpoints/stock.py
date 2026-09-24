@@ -41,6 +41,7 @@ def flow(code: str, limit: int = Query(default=30, ge=1, le=120), db: Session = 
     ).all()
     return {"data": [{
         "trade_date": r.trade_date.isoformat(), "close": r.close, "change_pct": r.change_pct,
-        "main_net_inflow": r.main_net_inflow, "super_large_net": r.super_large_net,
+        "main_net_inflow": r.main_net_inflow, "main_net_inflow_pct": r.main_net_inflow_pct,
+        "super_large_net": r.super_large_net,
         "large_net": r.large_net, "medium_net": r.medium_net, "small_net": r.small_net,
     } for r in rows], "meta": {"code": code, "count": len(rows)}}

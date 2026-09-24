@@ -12,7 +12,8 @@ from app.ingestion.adapters.northbound import NorthboundAdapter
 from app.ingestion.adapters.ratings_daily import RatingsDailyAdapter
 from app.ingestion.adapters.research_reports import ResearchReportsAdapter
 from app.ingestion.adapters.security_master import SecurityMasterAdapter
-from app.models.flow import NorthboundDaily
+from app.ingestion.adapters.stock_flow import StockFlowAdapter
+from app.models.flow import FundFlowDaily, NorthboundDaily
 from app.models.research import RatingEvent, ResearchReport
 from app.models.security import Security
 
@@ -117,3 +118,26 @@ def test_northbound_all_placeholder_run_is_empty_not_junk(session, fake_ak):
     assert res.status == "empty"
     assert res.rows_upserted == 0
     assert session.scalars(select(NorthboundDaily)).all() == []
+
+
+def test_stock_flow_per_symbol(session, fake_ak):
+    """个股资金流写入 FundFlowDaily，供 GET /api/stock/{code}/flow 读取。"""
+    fake_ak.stock_individual_fund_flow = lambda stock=None, market=None: pd.DataFrame([
+        {"日期": "2026-09-15", "收盘价": 1700.0, "涨跌幅": 1.23,
+         "主力净流入-净额": 1.5e8, "主力净流入-净占比": 8.1,
+         "超大单净流入-净额": 9e7, "大单净流入-净额": 6e7,
+         "中单净流入-净额": -4e7, "小单净流入-净额": -1.1e8},
+        {"日期": "bad-date", "收盘价": None},  # skipped: unparseable date
+    ])
+    res = StockFlowAdapter().run(session, codes=["600519"])
+    assert res.status == "ok", res.error
+    rows = session.scalars(select(FundFlowDaily)).all()
+    assert len(rows) == 1
+    r = rows[0]
+    assert r.code == "600519" and r.trade_date.isoformat() == "2026-09-15"
+    assert r.main_net_inflow == 1.5e8 and r.main_net_inflow_pct == 8.1
+    assert r.super_large_net == 9e7 and r.small_net == -1.1e8
+    # idempotent
+    res2 = StockFlowAdapter().run(session, codes=["600519"])
+    assert res2.status == "ok", res2.error
+    assert len(session.scalars(select(FundFlowDaily)).all()) == 1

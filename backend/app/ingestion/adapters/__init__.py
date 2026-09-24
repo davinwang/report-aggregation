@@ -24,6 +24,7 @@ from app.ingestion.adapters.recommend_pool import adapter as recommend_pool
 from app.ingestion.adapters.research_reports import adapter as research_reports
 from app.ingestion.adapters.security_master import adapter as security_master
 from app.ingestion.adapters.spot_snapshot import adapter as spot_snapshot
+from app.ingestion.adapters.stock_flow import adapter as stock_flow
 from app.ingestion.base import BaseAdapter
 
 REGISTRY: dict[str, BaseAdapter] = {a.name: a for a in (
@@ -45,6 +46,7 @@ REGISTRY: dict[str, BaseAdapter] = {a.name: a for a in (
     northbound,
     margin,
     lhb,
+    stock_flow,
     news_flash,
 )}
 
@@ -73,6 +75,7 @@ PER_SYMBOL_ORDER = [
     "research_reports",
     "fin_indicators",
     "financials_em",
+    "stock_flow",
 ]
 
 # Frequency-based schedule groups (Asia/Shanghai). Each group is one scheduled
@@ -98,6 +101,7 @@ FEED_GROUPS: dict[str, list[str]] = {
         "ratings_daily",
         "recommend_pool",
         "research_reports",
+        "stock_flow",
         "disclosures",
     ],
     "weekly_master": ["security_master", "industry_constituents"],

@@ -27,7 +27,7 @@ def test_group_ordering_dependencies():
     assert FEED_GROUPS["weekly_master"][0] == "security_master"
     assert FEED_GROUPS["daily_close"].index("index_daily") < FEED_GROUPS["daily_close"].index("index_futures")
     # per-symbol feeds keep universe resolution (they resolve codes via run_feed)
-    for name in ("price_history", "research_reports", "financials_em", "fin_indicators"):
+    for name in ("price_history", "research_reports", "financials_em", "fin_indicators", "stock_flow"):
         assert REGISTRY[name].per_symbol
 
 
