@@ -121,6 +121,7 @@ def _report_brief(r: ResearchReport) -> dict:
         "industry": r.industry, "industry_group": r.industry_group,
         "publish_date": r.publish_date.isoformat() if r.publish_date else None,
         "pdf_url": r.pdf_url, "source": r.source,
+        "forecast_json": r.forecast_json,
     }
 
 

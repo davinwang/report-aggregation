@@ -54,6 +54,14 @@ export interface SignalItem {
   industry_group?: string | null;
 }
 
+export interface YearForecast {
+  eps?: number | null; // 元/股
+  pe?: number | null; // 倍
+}
+
+/** Per-year earnings forecast from a research report, e.g. {"2026": {eps, pe}}. */
+export type ForecastJson = Record<string, YearForecast> | null;
+
 export interface ReportBrief {
   id: number;
   code: string;
@@ -70,6 +78,7 @@ export interface ReportBrief {
   publish_date: string | null;
   pdf_url: string | null;
   source: string;
+  forecast_json?: ForecastJson;
 }
 
 export interface Dashboard {

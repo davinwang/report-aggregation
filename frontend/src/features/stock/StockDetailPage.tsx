@@ -1,5 +1,6 @@
 // 个股详情 — aggregate view: quote, financial snapshot, recent research, ratings, K-line.
 // Route: /stock/:code
+import { useMemo } from "react";
 import { Button, Card, Col, Descriptions, Row, Space, Table, Tag, Typography } from "antd";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -26,6 +27,27 @@ export default function StockDetailPage() {
   const q = d?.quote;
   const f = d?.financials;
 
+  // Aggregate per-report earnings forecasts into one EPS/PE row per year (mean of reports that carry it).
+  const forecastRows = useMemo(() => {
+    const acc: Record<string, { eps: number[]; pe: number[] }> = {};
+    for (const r of d?.reports ?? []) {
+      for (const [year, v] of Object.entries(r.forecast_json ?? {})) {
+        const slot = (acc[year] ??= { eps: [], pe: [] });
+        if (v?.eps != null) slot.eps.push(v.eps);
+        if (v?.pe != null) slot.pe.push(v.pe);
+      }
+    }
+    const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+    return Object.keys(acc)
+      .sort()
+      .map((year) => ({
+        year,
+        eps: avg(acc[year].eps),
+        pe: avg(acc[year].pe),
+        reports: acc[year].eps.length,
+      }));
+  }, [d?.reports]);
+
   return (
     <PageContainer
       title={
@@ -44,7 +66,7 @@ export default function StockDetailPage() {
       extra={
         <Space>
           <ProvenanceTag source="em" />
-          <PageRefresh queryKeys={[["quant", "series"], ["stock"], ["fin"]]} feeds={["price_history", "financials_em", "fin_indicators"]} />
+          <PageRefresh queryKeys={[["quant", "series"], ["stock"], ["fin"]]} feeds={["price_history", "financials_em", "fin_indicators", "research_reports"]} />
           <Link to={`/technical/${code}`}><Button size="small">技术指标</Button></Link>
           <Link to={`/financials/${code}`}><Button size="small">财务数据</Button></Link>
         </Space>
@@ -90,6 +112,40 @@ export default function StockDetailPage() {
               <Descriptions.Item label="毛利率">{f?.gross_margin != null ? `${fmtNum(f.gross_margin)}%` : "-"}</Descriptions.Item>
               <Descriptions.Item label="资产负债率">{f?.debt_ratio != null ? `${fmtNum(f.debt_ratio)}%` : "-"}</Descriptions.Item>
             </Descriptions>
+          </Card>
+
+          <Card size="small" title="盈利预测 (研报均值)" style={{ marginBottom: 12 }}>
+            {forecastRows.length ? (
+              <Table
+                size="small"
+                rowKey="year"
+                pagination={false}
+                dataSource={forecastRows}
+                columns={[
+                  { title: "年度", dataIndex: "year", width: 80, render: (v: string) => `${v}E` },
+                  {
+                    title: "EPS (元)",
+                    dataIndex: "eps",
+                    align: "right",
+                    render: (v: number | null) => fmtNum(v),
+                  },
+                  { title: "PE (倍)", dataIndex: "pe", align: "right", render: (v: number | null) => fmtNum(v) },
+                  {
+                    title: "样本",
+                    dataIndex: "reports",
+                    align: "right",
+                    width: 64,
+                    render: (v: number) => (
+                      <Typography.Text type="secondary">{v} 篇</Typography.Text>
+                    ),
+                  },
+                ]}
+              />
+            ) : (
+              <Typography.Text type="secondary">
+                暂无盈利预测（请运行 research_reports 采集；仅展示研报库前 10 篇的均值）。
+              </Typography.Text>
+            )}
           </Card>
 
           <Card size="small" title="近期评级">

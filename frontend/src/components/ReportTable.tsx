@@ -1,9 +1,9 @@
 // Reusable research-report table (研报库 / 看板最新研报 / 个股研报).
-import { Table, Tag, Typography } from "antd";
+import { Table, Tag, Tooltip, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Link } from "react-router-dom";
 import type { ReportBrief } from "@/types";
-import { fmtDate } from "@/hooks/useRelativeTime";
+import { fmtDate, fmtNum } from "@/hooks/useRelativeTime";
 
 const RATING_COLOR: Record<string, string> = {
   买入: "red",
@@ -69,6 +69,29 @@ export default function ReportTable({ rows, loading, showCode = true, size = "sm
         if (r.target_price_low != null && r.target_price_high != null && r.target_price_low !== r.target_price_high)
           return `${r.target_price_low}~${r.target_price_high}`;
         return String(r.target_price_high ?? r.target_price_low);
+      },
+    },
+    {
+      title: "盈利预测",
+      width: 130,
+      render: (_: unknown, r) => {
+        const f = r.forecast_json;
+        if (!f) return "-";
+        const years = Object.keys(f).sort();
+        if (!years.length) return "-";
+        const tip = years
+          .map((y) => `${y}: EPS ${fmtNum(f[y]?.eps)} · PE ${fmtNum(f[y]?.pe)}`)
+          .join("\n");
+        return (
+          <Tooltip title={<span style={{ whiteSpace: "pre-line" }}>{tip}</span>}>
+            <span className="num">
+              {years
+                .slice(0, 2)
+                .map((y) => `${y.slice(2)}E ${f[y]?.eps != null ? fmtNum(f[y].eps) : "-"}`)
+                .join(" · ")}
+            </span>
+          </Tooltip>
+        );
       },
     },
     { title: "行业", dataIndex: "industry_group", width: 96, ellipsis: true, render: (v, r) => v || r.industry || "-" },
