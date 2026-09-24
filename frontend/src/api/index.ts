@@ -22,6 +22,8 @@ import type {
   OptionsPayload,
   Paged,
   PeerPayload,
+  PoolRow,
+  PoolSummary,
   QuantMatrixRow,
   QuantSeries,
   ReportBrief,
@@ -29,6 +31,7 @@ import type {
   SignalRow,
   SignalSummary,
   StockDetail,
+  StockFlowRow,
   WeeklyMatrix,
 } from "@/types";
 
@@ -94,7 +97,7 @@ export const getStockDetail = (code: string) => getData<StockDetail>(`/api/stock
 export const getStockReports = (code: string, page = 1, size = 20) =>
   getEnvelope<ReportBrief[]>(`/api/stock/${code}/reports`, { page, size });
 export const getStockFlow = (code: string, limit = 30) =>
-  getData<Record<string, unknown>[]>(`/api/stock/${code}/flow`, { limit });
+  getData<StockFlowRow[]>(`/api/stock/${code}/flow`, { limit });
 
 // ---- derivatives (衍生品) ----
 export const getFuturesBasis = (params?: { variety?: string; days?: number; date?: string }) =>
@@ -148,6 +151,21 @@ export const getSignals = (params?: {
 export const getSignalSummary = (days = 30) => getData<SignalSummary>("/api/signals/summary", { days });
 export const refreshSignals = (lookbackDays = 180) =>
   http.post("/api/signals/refresh", null, { params: { lookback_days: lookbackDays } }).then((r) => r.data);
+
+// ---- pool (机构推荐池) ----
+export const getPoolList = (params?: {
+  kind?: string;
+  industry?: string;
+  days?: number;
+  date?: string;
+  page?: number;
+  size?: number;
+}) =>
+  getEnvelope<PoolRow[]>("/api/pool/list", params as Record<string, unknown>).then((r) => ({
+    rows: r.data,
+    meta: r.meta as Paged<PoolRow>["meta"] & { ref?: string | null; days?: number },
+  }));
+export const getPoolSummary = (days = 30) => getData<PoolSummary>("/api/pool/summary", { days });
 
 // ---- accuracy (评级胜率) ----
 export const getAccuracyLeaderboard = (params?: {

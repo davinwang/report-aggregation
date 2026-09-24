@@ -107,6 +107,41 @@ class Signal(Base, TimestampMixin):
     industry_group: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
 
 
+class RecommendPool(Base, TimestampMixin):
+    """机构推荐池 (新浪 stock_institute_recommend) — 上调/下调/首次评级名单.
+
+    Independent of ``Signal``: ``refresh_signals`` deterministically rebuilds the
+    Signal window (delete + reinsert), so the pool must not live there or every
+    signal refresh would wipe it.
+    """
+
+    __tablename__ = "recommend_pool"
+    __table_args__ = (
+        UniqueConstraint("code", "trade_date", "kind", name="uq_pool_code_date_kind"),
+        Index("ix_pool_trade_date", "trade_date"),
+        Index("ix_pool_kind", "kind"),
+        Index("ix_pool_code", "code"),
+        Index("ix_pool_industry_group", "industry_group"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    security_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    code: Mapped[str] = mapped_column(String(16))
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    trade_date: Mapped[date] = mapped_column(Date)
+    kind: Mapped[str] = mapped_column(String(16))              # upgrade|downgrade|first
+    rating: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)   # 最新评级
+    direction: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    strength: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)  # 弱|中|强
+    org: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    analysts: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    target_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    industry: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    industry_group: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    source: Mapped[str] = mapped_column(String(16), default="sina")            # sina
+    sources_json: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+
+
 class AccuracySnapshot(Base, TimestampMixin):
     """研报准确率 — per-org/analyst hit-rate & net-skill for a period."""
 

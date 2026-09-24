@@ -59,6 +59,7 @@ const MENU: MenuItem[] = [
     children: [
       { key: "/research", icon: <ReadOutlined />, label: "研报库" },
       { key: "/signals", icon: <BulbOutlined />, label: "评级信号" },
+      { key: "/pool", icon: <BulbOutlined />, label: "机构推荐池" },
       { key: "/accuracy", icon: <AimOutlined />, label: "评级胜率" },
       { key: "/weekly", icon: <BarChartOutlined />, label: "周统计" },
     ],
@@ -99,7 +100,7 @@ const MENU: MenuItem[] = [
 ];
 
 const ALL_KEYS = [
-  "/market", "/news", "/research", "/signals", "/accuracy", "/weekly",
+  "/market", "/news", "/research", "/signals", "/pool", "/accuracy", "/weekly",
   "/technical", "/market-overview", "/basis", "/options", "/financials",
   "/flow", "/linkage", "/chat", "/admin",
 ];

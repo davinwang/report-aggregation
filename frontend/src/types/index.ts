@@ -354,6 +354,45 @@ export interface SignalSummary {
   industries: { industry: string; count: number }[];
 }
 
+// ---- Phase 1 gap fill: 机构推荐池 (sina recommend pool) ----
+export interface PoolRow {
+  id: number;
+  code: string;
+  name: string | null;
+  trade_date: string;
+  kind: "upgrade" | "downgrade" | "first" | string;
+  rating: string | null;
+  direction: string | null;
+  strength: string | null;
+  org: string | null;
+  analysts: string | null;
+  target_price: number | null;
+  industry: string | null;
+  industry_group: string | null;
+  sources?: unknown;
+}
+
+export interface PoolSummary {
+  ref: string | null;
+  days: number;
+  counts: Record<string, number>;
+  total: number;
+  industries: { industry: string; count: number }[];
+}
+
+// ---- 个股资金流 (stock daily fund flow) ----
+export interface StockFlowRow {
+  trade_date: string;
+  close: number | null;
+  change_pct: number | null;
+  main_net_inflow: number | null;
+  main_net_inflow_pct: number | null;
+  super_large_net: number | null;
+  large_net: number | null;
+  medium_net: number | null;
+  small_net: number | null;
+}
+
 // ---- Phase 2: 评级胜率 (rating win-rate) ----
 export interface AccuracyRow {
   rank: number;

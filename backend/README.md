@@ -60,7 +60,7 @@ python -m app.ingestion.pipeline --all --universe hs300
 | spot_snapshot | stock_zh_a_spot_em | bulk |
 | index_daily | stock_zh_index_daily | bulk(loop) |
 | ratings_daily | stock_rank_forecast_cninfo | bulk(by date) |
-| recommend_pool | stock_institute_recommend | bulk |
+| recommend_pool | sina 机构推荐池 (上调/下调/首次, 自建fetch) | bulk |
 | earnings | stock_yjbb_em | bulk(by quarter) |
 | price_history | stock_zh_a_hist | per-symbol |
 | research_reports | stock_research_report_em | per-symbol |

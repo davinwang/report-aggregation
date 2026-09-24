@@ -4,7 +4,8 @@ import { useMemo } from "react";
 import { Button, Card, Col, Descriptions, Row, Space, Table, Tag, Typography } from "antd";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getSeries, getStockDetail } from "@/api";
+import { getSeries, getStockDetail, getStockFlow } from "@/api";
+import type { StockFlowRow } from "@/types";
 import PageContainer from "@/components/PageContainer";
 import StatCard from "@/components/StatCard";
 import ReportTable from "@/components/ReportTable";
@@ -12,6 +13,7 @@ import KLineChart from "@/components/KLineChart";
 import ProvenanceTag from "@/components/ProvenanceTag";
 import PageRefresh from "@/components/PageRefresh";
 import { fmtAmount, fmtDate, fmtNum, fmtPct } from "@/hooks/useRelativeTime";
+import { DOWN_COLOR, UP_COLOR } from "@/styles/theme";
 
 export default function StockDetailPage() {
   const { code = "" } = useParams();
@@ -21,6 +23,12 @@ export default function StockDetailPage() {
     queryFn: () => getSeries({ code, indicators: "ma,boll,macd", period: "6m" }),
     enabled: !!code,
     staleTime: 30_000,
+  });
+  const flow = useQuery({
+    queryKey: ["stock", "flow", code],
+    queryFn: () => getStockFlow(code, 30),
+    enabled: !!code,
+    staleTime: 60_000,
   });
 
   const d = detail.data;
@@ -66,7 +74,7 @@ export default function StockDetailPage() {
       extra={
         <Space>
           <ProvenanceTag source="em" />
-          <PageRefresh queryKeys={[["quant", "series"], ["stock"], ["fin"]]} feeds={["price_history", "financials_em", "fin_indicators", "research_reports"]} />
+          <PageRefresh queryKeys={[["quant", "series"], ["stock"]]} feeds={["price_history", "financials_em", "fin_indicators", "research_reports", "stock_flow"]} />
           <Link to={`/technical/${code}`}><Button size="small">技术指标</Button></Link>
           <Link to={`/financials/${code}`}><Button size="small">财务数据</Button></Link>
         </Space>
@@ -144,6 +152,50 @@ export default function StockDetailPage() {
             ) : (
               <Typography.Text type="secondary">
                 暂无盈利预测（请运行 research_reports 采集；仅展示研报库前 10 篇的均值）。
+              </Typography.Text>
+            )}
+          </Card>
+
+          <Card size="small" title="资金流向 (近30日)" style={{ marginBottom: 12 }}>
+            {flow.data && flow.data.length ? (
+              <Table
+                size="small"
+                rowKey="trade_date"
+                pagination={false}
+                scroll={{ y: 240 }}
+                dataSource={flow.data as StockFlowRow[]}
+                columns={[
+                  { title: "日期", dataIndex: "trade_date", width: 100 },
+                  {
+                    title: "主力净流入",
+                    dataIndex: "main_net_inflow",
+                    align: "right",
+                    width: 110,
+                    render: (v: number | null) => {
+                      if (v == null) return "-";
+                      const color = v >= 0 ? UP_COLOR : DOWN_COLOR;
+                      return <span style={{ color }}>{fmtAmount(v)}</span>;
+                    },
+                  },
+                  {
+                    title: "占比",
+                    dataIndex: "main_net_inflow_pct",
+                    align: "right",
+                    width: 76,
+                    render: (v: number | null) => (v != null ? `${fmtNum(v)}%` : "-"),
+                  },
+                  {
+                    title: "超大单",
+                    dataIndex: "super_large_net",
+                    align: "right",
+                    width: 96,
+                    render: (v: number | null) => (v != null ? fmtAmount(v) : "-"),
+                  },
+                ]}
+              />
+            ) : (
+              <Typography.Text type="secondary">
+                {flow.isFetching ? "加载中…" : "暂无资金流数据（请运行 stock_flow 采集）。"}
               </Typography.Text>
             )}
           </Card>
