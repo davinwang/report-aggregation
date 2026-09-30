@@ -77,23 +77,28 @@ export default function KLineChart({
     });
 
     // ---- grid layout ----
+    // All positions/sizes are PERCENTAGES of the chart container. An earlier version
+    // advanced a pixel-based cursor by the numeric value of percent heights (46 → 46px),
+    // so every grid stacked into the top ~90px of a 900px-tall chart and the panes drew
+    // on top of each other. Keeping top/height in the same unit makes that impossible.
     const paneKeys = subs.length ? subs : [VOLUME_PANE];
     const subPaneKeys = paneKeys.filter((k) => k !== VOLUME_PANE);
-    const TOP = 20;
-    const GAP = 2;
+    const TOP_PCT = 2.5;
+    const GAP_PCT = 0.6;
     const PRICE_PCT = 46;
     const VOL_PCT = 11;
-    const SUB_PCT = Math.max(9, (100 - TOP - PRICE_PCT - VOL_PCT - GAP * (subPaneKeys.length + 2)) / subPaneKeys.length);
+    const SUB_PCT = Math.max(
+      8,
+      (100 - TOP_PCT - PRICE_PCT - VOL_PCT - GAP_PCT * (subPaneKeys.length + 2)) / subPaneKeys.length,
+    );
     const gridCount = subPaneKeys.length + 2;
     const gridIndexOf = (key: string) => (key === VOLUME_PANE ? 1 : 2 + subPaneKeys.indexOf(key));
 
     const grids: Record<string, unknown>[] = [];
-    const tops: number[] = [];
-    let cursor = TOP;
+    let cursor = TOP_PCT;
     for (const h of [PRICE_PCT, VOL_PCT, ...subPaneKeys.map(() => SUB_PCT)]) {
-      tops.push(cursor);
-      cursor += h + GAP;
-      grids.push({ left: 60, right: 20, top: tops[tops.length - 1], height: `${h}%` });
+      grids.push({ left: 60, right: 20, top: `${cursor}%`, height: `${h}%` });
+      cursor += h + GAP_PCT;
     }
 
     const xAxes = Array.from({ length: gridCount }, (_, i) => ({
