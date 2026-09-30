@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from bisect import bisect_left
 from datetime import date, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
@@ -41,7 +41,7 @@ def compute_accuracy(
     session: Session,
     horizon: int = 20,
     lookback_days: int = DEFAULT_LOOKBACK_DAYS,
-    ref: Optional[date] = None,
+    ref: date | None = None,
     subject_type: str = "org",
 ) -> dict[str, Any]:
     """Evaluate rating calls over ``horizon`` trading days and store snapshots."""
@@ -118,7 +118,8 @@ def _load_events(
         ).all()
     else:
         raw = session.execute(
-            select(ResearchReport.org, ResearchReport.code, ResearchReport.rating, ResearchReport.publish_date)
+            select(ResearchReport.org, ResearchReport.code, ResearchReport.rating,
+                   ResearchReport.publish_date)
             .where(ResearchReport.publish_date >= since, ResearchReport.org.isnot(None))
             .order_by(ResearchReport.publish_date)
         ).all()
@@ -139,7 +140,7 @@ def _load_events(
     return calls
 
 
-def _load_benchmark(session: Session) -> tuple[list[date], dict[date, Optional[float]]]:
+def _load_benchmark(session: Session) -> tuple[list[date], dict[date, float | None]]:
     rows = session.execute(
         select(DailyQuote.trade_date, DailyQuote.close)
         .where(DailyQuote.code == BENCHMARK_CODE)
@@ -148,8 +149,8 @@ def _load_benchmark(session: Session) -> tuple[list[date], dict[date, Optional[f
     return [d for d, _c in rows], {d: c for d, c in rows}
 
 
-def _load_closes(session: Session, codes: list[str]) -> dict[str, tuple[list[date], list[Optional[float]]]]:
-    out: dict[str, tuple[list[date], list[Optional[float]]]] = {}
+def _load_closes(session: Session, codes: list[str]) -> dict[str, tuple[list[date], list[float | None]]]:
+    out: dict[str, tuple[list[date], list[float | None]]] = {}
     for i in range(0, len(codes), 200):
         chunk = codes[i : i + 200]
         rows = session.execute(
@@ -164,7 +165,7 @@ def _load_closes(session: Session, codes: list[str]) -> dict[str, tuple[list[dat
     return out
 
 
-def _bench_close(bench_dates: list[date], bench: dict[date, Optional[float]], d: date) -> Optional[float]:
+def _bench_close(bench_dates: list[date], bench: dict[date, float | None], d: date) -> float | None:
     i = bisect_left(bench_dates, d)
     if i < len(bench_dates) and bench_dates[i] == d:
         return bench[d]
@@ -175,8 +176,8 @@ def _bench_close(bench_dates: list[date], bench: dict[date, Optional[float]], d:
 
 def _evaluate(
     events: list[tuple[str, str, str, date]],
-    closes: dict[str, tuple[list[date], list[Optional[float]]]],
-    bench: tuple[list[date], dict[date, Optional[float]]],
+    closes: dict[str, tuple[list[date], list[float | None]]],
+    bench: tuple[list[date], dict[date, float | None]],
     horizon: int,
 ) -> dict[str, dict[str, Any]]:
     bench_dates, bench_map = bench

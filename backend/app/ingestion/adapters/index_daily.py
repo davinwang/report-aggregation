@@ -16,12 +16,12 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.logging import get_logger
 from app.ingestion import throttle
 from app.ingestion.akshare_client import get_ak
 from app.ingestion.base import BaseAdapter, bulk_upsert
 from app.ingestion.df_utils import get, records
 from app.ingestion.normalizers import to_date, to_float
-from app.core.logging import get_logger
 from app.models.market import DailyQuote
 from app.models.security import Security
 
@@ -120,12 +120,16 @@ class IndexDailyAdapter(BaseAdapter):
             if sec is None:
                 session.add(Security(code=sym, name=nm, type="index", exchange=ex, is_active=True))
         session.flush()
-        id_map = {s.code: s.id for s in session.scalars(select(Security).where(Security.type == "index")).all()}
+        id_map = {
+            s.code: s.id
+            for s in session.scalars(select(Security).where(Security.type == "index")).all()
+        }
         for r in rows:
             r["security_id"] = id_map.get(r["code"])
         codes = list({r["code"] for r in rows})
         scope = select(DailyQuote).where(DailyQuote.code.in_(codes))
-        return bulk_upsert(session, DailyQuote, rows, key_fields=["code", "trade_date", "adjust"], scope=scope)
+        return bulk_upsert(session, DailyQuote, rows,
+                           key_fields=["code", "trade_date", "adjust"], scope=scope)
 
 
 adapter = IndexDailyAdapter()

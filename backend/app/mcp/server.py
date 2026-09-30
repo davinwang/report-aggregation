@@ -23,7 +23,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from functools import partial
-from typing import Any, Optional
+from typing import Any
 
 import anyio
 
@@ -32,7 +32,7 @@ from app.core.db import SessionLocal
 from app.mcp import tools
 from app.mcp.auth import TokenAuthMiddleware
 
-_server: Optional[Any] = None
+_server: Any | None = None
 
 
 def _call_sync(fn: Callable[..., dict], args: tuple, kwargs: dict) -> dict:
@@ -97,13 +97,13 @@ def build_server() -> Any:
 
     @mcp.tool()
     async def search_reports(
-        keyword: Optional[str] = None,
-        code: Optional[str] = None,
-        org: Optional[str] = None,
-        industry: Optional[str] = None,
-        rating: Optional[str] = None,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
+        keyword: str | None = None,
+        code: str | None = None,
+        org: str | None = None,
+        industry: str | None = None,
+        rating: str | None = None,
+        start: str | None = None,
+        end: str | None = None,
         page: int = 1,
         size: int = 20,
     ) -> dict:
@@ -117,9 +117,9 @@ def build_server() -> Any:
     async def technical_series(
         code: str,
         period: str = "1y",
-        indicators: Optional[str] = None,
+        indicators: str | None = None,
         freq: str = "daily",
-        params: Optional[str] = None,
+        params: str | None = None,
     ) -> dict:
         """技术指标序列 (ECharts-ready). period: 6m|1y|2y|3y|5y; freq: daily|weekly|monthly;
         indicators: 逗号分隔 (ma,macd,kdj,rsi,boll...); params: 指标参数覆盖, 如 "ma=5,10,20"."""
@@ -127,7 +127,7 @@ def build_server() -> Any:
                            freq=freq, params=params)
 
     @mcp.tool()
-    async def indicator_catalog(group: Optional[str] = None) -> dict:
+    async def indicator_catalog(group: str | None = None) -> dict:
         """技术指标目录: 每项指标的中文名/分类/主图副图/公式说明/默认参数;
         group 过滤: 趋势|震荡|动量|量价|波动|衍生品."""
         return tools.indicator_catalog(group)
@@ -135,7 +135,7 @@ def build_server() -> Any:
     @mcp.tool()
     async def signal_matrix(
         scope: str = "index",
-        columns: Optional[str] = None,
+        columns: str | None = None,
         freq: str = "daily",
         limit: int = 60,
     ) -> dict:
@@ -151,9 +151,9 @@ def build_server() -> Any:
 
     @mcp.tool()
     async def list_signals(
-        kind: Optional[str] = None,
+        kind: str | None = None,
         days: int = 30,
-        industry: Optional[str] = None,
+        industry: str | None = None,
         page: int = 1,
         size: int = 50,
     ) -> dict:
@@ -170,7 +170,7 @@ def build_server() -> Any:
         )
 
     @mcp.tool()
-    async def basis_overview(variety: Optional[str] = None) -> dict:
+    async def basis_overview(variety: str | None = None) -> dict:
         """股指期货基差: 期限结构 + 最新基差快照; variety=IF|IH|IC|IM."""
         return await _call(tools.basis_overview, variety=variety)
 
@@ -196,9 +196,9 @@ def build_server() -> Any:
 
     @mcp.tool()
     async def list_news(
-        q: Optional[str] = None,
-        sentiment: Optional[str] = None,
-        source: Optional[str] = None,
+        q: str | None = None,
+        sentiment: str | None = None,
+        source: str | None = None,
         days: int = 1,
         page: int = 1,
         size: int = 50,

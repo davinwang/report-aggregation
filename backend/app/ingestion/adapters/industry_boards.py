@@ -46,7 +46,8 @@ class IndustryBoardsAdapter(BaseAdapter):
 
         if is_fund_flow and len(cols) >= 8:
             # stock_fund_flow_industry: use iloc for encoding-safe access
-            # col layout: [序号, 行业, 行业指数, 行业-涨跌幅, 主力流入, 主力流出, 换手, 公司数量, 领涨股, 领涨股-涨跌幅, 换手率]
+            # col layout: [序号, 行业, 行业指数, 行业-涨跌幅, 主力流入, 主力流出,
+            #              换手, 公司数量, 领涨股, 领涨股-涨跌幅, 换手率]
             for _, r in raw.iterrows():
                 name = clean_text(str(r.iloc[1])) if len(r) > 1 else None
                 if not name:

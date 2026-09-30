@@ -2,10 +2,10 @@
 resolve columns by candidate names instead of hard-coding positions."""
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 
-def pick_col(df, *candidates: str) -> Optional[str]:
+def pick_col(df, *candidates: str) -> str | None:
     """Return the first column whose name matches any candidate (exact, then contains)."""
     if df is None or not hasattr(df, "columns"):
         return None

@@ -6,7 +6,7 @@ for different reasons, which is exactly the model's unique key.
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -20,7 +20,7 @@ from app.models.flow import LhbRecord
 DEFAULT_DAYS = 10
 
 
-def _parse_ymd(s: Any) -> Optional[date]:
+def _parse_ymd(s: Any) -> date | None:
     if not s:
         return None
     if isinstance(s, date) and not isinstance(s, datetime):

@@ -45,7 +45,8 @@ class ResearchReportsAdapter(SymbolLoopAdapter):
         ak = get_ak()
         return ak.stock_research_report_em(symbol=code)
 
-    def normalize_symbol(self, code: str, raw: Any, since_days: int | None = None, **kwargs) -> list[dict[str, Any]]:
+    def normalize_symbol(self, code: str, raw: Any, since_days: int | None = None,
+                         **kwargs) -> list[dict[str, Any]]:
         cutoff = date.today().toordinal() - since_days if since_days else None
         rows: list[dict[str, Any]] = []
         for r in records(raw):

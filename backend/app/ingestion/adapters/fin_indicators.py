@@ -64,7 +64,8 @@ class FinIndicatorsAdapter(SymbolLoopAdapter):
             r["security_id"] = id_map.get(r["code"])
         codes = list({r["code"] for r in rows})
         scope = select(FinancialIndicator).where(FinancialIndicator.code.in_(codes))
-        return bulk_upsert(session, FinancialIndicator, rows, key_fields=["code", "report_period"], scope=scope)
+        return bulk_upsert(session, FinancialIndicator, rows,
+                           key_fields=["code", "report_period"], scope=scope)
 
 
 adapter = FinIndicatorsAdapter()

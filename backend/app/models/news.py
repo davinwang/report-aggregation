@@ -7,7 +7,6 @@ names in ``NewsFlashAdapter.persist``. Read API in ``api/v1/endpoints/news.py``.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Optional
 
 from sqlalchemy import JSON, Date, DateTime, Float, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
@@ -26,11 +25,11 @@ class NewsItem(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     source: Mapped[str] = mapped_column(String(16))                 # em|cls
     title: Mapped[str] = mapped_column(String(512))
-    content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+    content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     publish_date: Mapped[date] = mapped_column(Date)                # local (CST) date
     #: Local wall time; never null — it is part of the dedupe key.
     publish_at: Mapped[datetime] = mapped_column(DateTime)
-    sentiment: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, index=True)  # 利好|中性|利空
-    sentiment_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    related_codes: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)  # [{code, name}]
+    sentiment: Mapped[str | None] = mapped_column(String(8), nullable=True, index=True)  # 利好|中性|利空
+    sentiment_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    related_codes: Mapped[list | None] = mapped_column(JSON, nullable=True)  # [{code, name}]

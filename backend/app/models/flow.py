@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
 
 from sqlalchemy import JSON, Date, Float, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
@@ -22,14 +21,14 @@ class FundFlowDaily(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(16))
     trade_date: Mapped[date] = mapped_column(Date)
-    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    change_pct: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    main_net_inflow: Mapped[Optional[float]] = mapped_column(Float, nullable=True)     # 主力净流入
-    main_net_inflow_pct: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    super_large_net: Mapped[Optional[float]] = mapped_column(Float, nullable=True)     # 超大单
-    large_net: Mapped[Optional[float]] = mapped_column(Float, nullable=True)           # 大单
-    medium_net: Mapped[Optional[float]] = mapped_column(Float, nullable=True)          # 中单
-    small_net: Mapped[Optional[float]] = mapped_column(Float, nullable=True)           # 小单
+    close: Mapped[float | None] = mapped_column(Float, nullable=True)
+    change_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    main_net_inflow: Mapped[float | None] = mapped_column(Float, nullable=True)     # 主力净流入
+    main_net_inflow_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    super_large_net: Mapped[float | None] = mapped_column(Float, nullable=True)     # 超大单
+    large_net: Mapped[float | None] = mapped_column(Float, nullable=True)           # 大单
+    medium_net: Mapped[float | None] = mapped_column(Float, nullable=True)          # 中单
+    small_net: Mapped[float | None] = mapped_column(Float, nullable=True)           # 小单
 
 
 class NorthboundDaily(Base, TimestampMixin):
@@ -41,8 +40,8 @@ class NorthboundDaily(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     trade_date: Mapped[date] = mapped_column(Date, index=True)
     board: Mapped[str] = mapped_column(String(16), default="north")   # north|沪股通|深股通
-    net_inflow: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    extra_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    net_inflow: Mapped[float | None] = mapped_column(Float, nullable=True)
+    extra_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
 class MarginData(Base, TimestampMixin):
@@ -56,12 +55,12 @@ class MarginData(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     exchange: Mapped[str] = mapped_column(String(16))     # SSE|SZSE
-    code: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)  # null = market summary
+    code: Mapped[str | None] = mapped_column(String(16), nullable=True)  # null = market summary
     trade_date: Mapped[date] = mapped_column(Date)
-    rzye: Mapped[Optional[float]] = mapped_column(Float, nullable=True)      # 融资余额
-    rzmre: Mapped[Optional[float]] = mapped_column(Float, nullable=True)     # 融资买入额
-    rqye: Mapped[Optional[float]] = mapped_column(Float, nullable=True)      # 融券余额
-    rzrqye: Mapped[Optional[float]] = mapped_column(Float, nullable=True)    # 融资融券余额
+    rzye: Mapped[float | None] = mapped_column(Float, nullable=True)      # 融资余额
+    rzmre: Mapped[float | None] = mapped_column(Float, nullable=True)     # 融资买入额
+    rqye: Mapped[float | None] = mapped_column(Float, nullable=True)      # 融券余额
+    rzrqye: Mapped[float | None] = mapped_column(Float, nullable=True)    # 融资融券余额
 
 
 class LhbRecord(Base, TimestampMixin):
@@ -75,12 +74,12 @@ class LhbRecord(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(16))
-    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     trade_date: Mapped[date] = mapped_column(Date)
-    reason: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
-    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    change_pct: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    buy_amt: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    sell_amt: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    net_amt: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    turnover: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    reason: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    close: Mapped[float | None] = mapped_column(Float, nullable=True)
+    change_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    buy_amt: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sell_amt: Mapped[float | None] = mapped_column(Float, nullable=True)
+    net_amt: Mapped[float | None] = mapped_column(Float, nullable=True)
+    turnover: Mapped[float | None] = mapped_column(Float, nullable=True)

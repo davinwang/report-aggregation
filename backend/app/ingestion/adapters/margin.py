@@ -9,7 +9,7 @@ date over weekdays until a session returns data.
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -28,7 +28,7 @@ DEFAULT_DAYS = 20
 SZSE_YI = 1e8  # SZSE frames are in 亿元
 
 
-def _parse_ymd(s: Any) -> Optional[date]:
+def _parse_ymd(s: Any) -> date | None:
     if not s:
         return None
     if isinstance(s, date) and not isinstance(s, datetime):
@@ -128,7 +128,7 @@ class MarginAdapter(BaseAdapter):
         )
 
 
-def _scaled(v: Any) -> Optional[float]:
+def _scaled(v: Any) -> float | None:
     """SZSE values arrive in 亿元; scale to 元 for cross-exchange comparability."""
     f = to_float(v)
     return round(f * SZSE_YI, 2) if f is not None else None

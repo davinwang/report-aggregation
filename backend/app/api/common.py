@@ -6,7 +6,7 @@ uniform shape carrying pagination + data-freshness ("新鲜度") provenance.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Any, Optional
+from typing import Any
 
 
 def envelope(data: Any, **meta: Any) -> dict:
@@ -16,11 +16,17 @@ def envelope(data: Any, **meta: Any) -> dict:
 def paged(data: Any, total: int, page: int, size: int, **extra: Any) -> dict:
     return {
         "data": data,
-        "meta": {"total": total, "page": page, "size": size, "pages": (total + size - 1) // size if size else 0, **extra},
+        "meta": {
+            "total": total,
+            "page": page,
+            "size": size,
+            "pages": (total + size - 1) // size if size else 0,
+            **extra,
+        },
     }
 
 
-def parse_date(s: Optional[str]) -> Optional[date]:
+def parse_date(s: str | None) -> date | None:
     if not s:
         return None
     s = s.strip()

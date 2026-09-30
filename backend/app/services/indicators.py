@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -64,7 +64,7 @@ def _tr(df: pd.DataFrame) -> pd.Series:
     return pd.concat([(high - low), (high - pc).abs(), (low - pc).abs()], axis=1).max(axis=1)
 
 
-def _opt_col(df: pd.DataFrame, name: str) -> Optional[pd.Series]:
+def _opt_col(df: pd.DataFrame, name: str) -> pd.Series | None:
     """Optional numeric column, or None when the feed doesn't carry it.
 
     Volume-only sources (Sina ETF/bond bars, index bars) have no 成交额/换手率, so the
@@ -264,7 +264,8 @@ def ind_donchian(df: pd.DataFrame, n: int = 20) -> pd.DataFrame:
 def ind_keltner(df: pd.DataFrame, n: int = 20, k: float = 1.5) -> pd.DataFrame:
     mid = _ema(_col(df, "close"), n)
     atr = _sma_cn(_tr(df), n, 1)
-    return pd.DataFrame({"kelt_mid": mid, "kelt_up": mid + k * atr, "kelt_low": mid - k * atr}, index=df.index)
+    return pd.DataFrame({"kelt_mid": mid, "kelt_up": mid + k * atr,
+                         "kelt_low": mid - k * atr}, index=df.index)
 
 
 def ind_trix(df: pd.DataFrame, n: int = 12, m: int = 9) -> pd.DataFrame:
@@ -382,7 +383,8 @@ def ind_asi(df: pd.DataFrame) -> pd.DataFrame:
     x = close - lc + (close - o) / 2 + lc - o.shift(1)
     k = pd.concat([aa, bb, cc], axis=1).max(axis=1)
     si = 16 * x / pd.Series(r, index=df.index).replace(0, np.nan) * k
-    return pd.DataFrame({"asi": si.fillna(0).cumsum(), "asit": _ma(si.fillna(0).cumsum(), 10)}, index=df.index)
+    cum = si.fillna(0).cumsum()
+    return pd.DataFrame({"asi": cum, "asit": _ma(cum, 10)}, index=df.index)
 
 
 def ind_hv(df: pd.DataFrame, n: int = 24) -> pd.DataFrame:
@@ -765,7 +767,7 @@ INDICATOR_META: dict[str, dict] = {
 }
 
 
-def catalog(groups: Optional[list[str]] = None) -> list[dict]:
+def catalog(groups: list[str] | None = None) -> list[dict]:
     """Indicator catalog for the UI: label, group, pane, formula text, parameters.
 
     Entries are ordered by ``group`` then label so the 指标说明 panel and the chart's
@@ -797,7 +799,7 @@ def _resolve(name: str) -> str:
 
 
 def compute(df: pd.DataFrame, names: list[str] | None = None,
-            params: Optional[dict[str, dict]] = None) -> dict[str, pd.DataFrame]:
+            params: dict[str, dict] | None = None) -> dict[str, pd.DataFrame]:
     """Compute requested indicators over an OHLCV frame.
 
     Unknown names are skipped, and an indicator that raises for any reason (missing
@@ -889,7 +891,7 @@ def _nan_to_none(x: float) -> float | None:
 
 def build_series(df: pd.DataFrame, names: list[str] | None = None,
                  bars: int = 250, code: str = "", freq: str = "daily",
-                 params: Optional[dict[str, dict]] = None) -> dict:
+                 params: dict[str, dict] | None = None) -> dict:
     """Build an ECharts-ready payload. Indicators are computed over the FULL frame
     (so leading values warm up), then every series is trimmed to the last ``bars``.
 
@@ -903,11 +905,14 @@ def build_series(df: pd.DataFrame, names: list[str] | None = None,
     d_full = resample_bars(df, key) if key in _RESAMPLE_RULE else df
     ind_full = compute(d_full, names, params)
     d = d_full.tail(bars).copy() if bars else d_full.copy()
-    o, h, l, c = _col(d, "open"), _col(d, "high"), _col(d, "low"), _col(d, "close")
+    o, high, low, c = _col(d, "open"), _col(d, "high"), _col(d, "low"), _col(d, "close")
     v = _col(d, "volume") if "volume" in d.columns else pd.Series(0.0, index=d.index)
     dates = [str(x) for x in d["date"].tolist()] if "date" in d.columns else [str(i) for i in d.index]
+    # strict=True: all four columns come from the same frame, so a length mismatch would
+    # mean a malformed frame — silently truncating via zip would emit a candle chart whose
+    # open/close and low/high belong to different bars.
     candle = [[_nan_to_none(a), _nan_to_none(b), _nan_to_none(cc), _nan_to_none(dd)]
-              for a, b, cc, dd in zip(o, c, l, h)]
+              for a, b, cc, dd in zip(o, c, low, high, strict=True)]
     volume = [_nan_to_none(x) for x in v]
     ind_payload: dict[str, dict[str, list]] = {}
     for name, frame in ind_full.items():

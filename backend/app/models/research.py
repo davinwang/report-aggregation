@@ -8,7 +8,6 @@ are derived by services (no LLM in MVP — rule-based).
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
 
 from sqlalchemy import JSON, Boolean, Date, Float, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
@@ -29,26 +28,26 @@ class ResearchReport(Base, TimestampMixin):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    security_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    security_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     code: Mapped[str] = mapped_column(String(16), index=True)
-    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     title: Mapped[str] = mapped_column(String(512))
-    org: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)        # 机构
-    analysts: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)   # 分析师(逗号分隔)
-    rating: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)      # 东财评级/投资评级
-    prev_rating: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
-    rating_change: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)  # 上调/下调/维持/首次
+    org: Mapped[str | None] = mapped_column(String(128), nullable=True)        # 机构
+    analysts: Mapped[str | None] = mapped_column(String(256), nullable=True)   # 分析师(逗号分隔)
+    rating: Mapped[str | None] = mapped_column(String(32), nullable=True)      # 东财评级/投资评级
+    prev_rating: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    rating_change: Mapped[str | None] = mapped_column(String(32), nullable=True)  # 上调/下调/维持/首次
     is_first: Mapped[bool] = mapped_column(Boolean, default=False)
-    target_price_low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    target_price_high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    industry: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)    # 申万/东财行业
-    industry_group: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    target_price_low: Mapped[float | None] = mapped_column(Float, nullable=True)
+    target_price_high: Mapped[float | None] = mapped_column(Float, nullable=True)
+    industry: Mapped[str | None] = mapped_column(String(64), nullable=True)    # 申万/东财行业
+    industry_group: Mapped[str | None] = mapped_column(String(32), nullable=True)
     publish_date: Mapped[date] = mapped_column(Date)
-    report_count_1m: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # 近一月个股研报数
-    pdf_url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
-    forecast_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)     # 盈利预测(收益/PE by year)
+    report_count_1m: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 近一月个股研报数
+    pdf_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    forecast_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)     # 盈利预测(收益/PE by year)
     source: Mapped[str] = mapped_column(String(16), default="em")                  # em|cninfo|sina
-    ingested_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    ingested_at: Mapped[date | None] = mapped_column(Date, nullable=True)
 
 
 class RatingEvent(Base):
@@ -66,20 +65,20 @@ class RatingEvent(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    security_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    security_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     code: Mapped[str] = mapped_column(String(16))
-    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     trade_date: Mapped[date] = mapped_column(Date)
-    org: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    analyst: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
-    rating: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
-    rating_norm: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)   # buy/overweight/...
-    prev_rating: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
-    rating_change: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    org: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    analyst: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    rating: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    rating_norm: Mapped[str | None] = mapped_column(String(16), nullable=True)   # buy/overweight/...
+    prev_rating: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    rating_change: Mapped[str | None] = mapped_column(String(32), nullable=True)
     is_first: Mapped[bool] = mapped_column(Boolean, default=False)
-    target_low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    target_high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    industry: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    target_low: Mapped[float | None] = mapped_column(Float, nullable=True)
+    target_high: Mapped[float | None] = mapped_column(Float, nullable=True)
+    industry: Mapped[str | None] = mapped_column(String(64), nullable=True)
     source: Mapped[str] = mapped_column(String(16), default="cninfo")
 
 
@@ -94,17 +93,18 @@ class Signal(Base, TimestampMixin):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    security_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    security_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     code: Mapped[str] = mapped_column(String(16))
-    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     trade_date: Mapped[date] = mapped_column(Date)
-    kind: Mapped[str] = mapped_column(String(32), default="rating")   # rating|upgrade|downgrade|target|consensus
-    direction: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)  # buy/overweight/neutral/...
-    strength: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)     # 弱|中|强
-    score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    reason: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
-    sources_json: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
-    industry_group: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    # rating|upgrade|downgrade|target|consensus
+    kind: Mapped[str] = mapped_column(String(32), default="rating")
+    direction: Mapped[str | None] = mapped_column(String(16), nullable=True)  # buy/overweight/neutral/...
+    strength: Mapped[str | None] = mapped_column(String(8), nullable=True)     # 弱|中|强
+    score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    reason: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    sources_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    industry_group: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
 
 class RecommendPool(Base, TimestampMixin):
@@ -125,21 +125,21 @@ class RecommendPool(Base, TimestampMixin):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    security_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    security_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     code: Mapped[str] = mapped_column(String(16))
-    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     trade_date: Mapped[date] = mapped_column(Date)
     kind: Mapped[str] = mapped_column(String(16))              # upgrade|downgrade|first
-    rating: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)   # 最新评级
-    direction: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
-    strength: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)  # 弱|中|强
-    org: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    analysts: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
-    target_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    industry: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    industry_group: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    rating: Mapped[str | None] = mapped_column(String(32), nullable=True)   # 最新评级
+    direction: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    strength: Mapped[str | None] = mapped_column(String(8), nullable=True)  # 弱|中|强
+    org: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    analysts: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    target_price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    industry: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    industry_group: Mapped[str | None] = mapped_column(String(32), nullable=True)
     source: Mapped[str] = mapped_column(String(16), default="sina")            # sina
-    sources_json: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+    sources_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
 
 class AccuracySnapshot(Base, TimestampMixin):
@@ -147,7 +147,8 @@ class AccuracySnapshot(Base, TimestampMixin):
 
     __tablename__ = "accuracy_snapshot"
     __table_args__ = (
-        UniqueConstraint("period_type", "period_key", "subject_type", "subject", name="uq_acc_period_subject"),
+        UniqueConstraint("period_type", "period_key", "subject_type", "subject",
+                         name="uq_acc_period_subject"),
         Index("ix_acc_period", "period_type", "period_key"),
     )
 
@@ -158,9 +159,9 @@ class AccuracySnapshot(Base, TimestampMixin):
     subject: Mapped[str] = mapped_column(String(256), index=True)
     hits: Mapped[int] = mapped_column(Integer, default=0)
     total: Mapped[int] = mapped_column(Integer, default=0)
-    hit_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    net_skill: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    prev_delta: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    hit_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    net_skill: Mapped[float | None] = mapped_column(Float, nullable=True)
+    prev_delta: Mapped[float | None] = mapped_column(Float, nullable=True)
     horizon_days: Mapped[int] = mapped_column(Integer, default=20)
 
 
@@ -177,7 +178,7 @@ class WeeklyStat(Base, TimestampMixin):
     week_key: Mapped[str] = mapped_column(String(32))     # week-ending date
     org: Mapped[str] = mapped_column(String(128))
     total: Mapped[int] = mapped_column(Integer, default=0)
-    by_group_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)   # {group: count}
+    by_group_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)   # {group: count}
 
 
 class PeerActivity(Base, TimestampMixin):
@@ -189,9 +190,9 @@ class PeerActivity(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     period_key: Mapped[str] = mapped_column(String(32))
     kind: Mapped[str] = mapped_column(String(16), default="report")   # report|event
-    industry_group: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
-    source: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    industry_group: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    source: Mapped[str | None] = mapped_column(String(128), nullable=True)
     title: Mapped[str] = mapped_column(String(512))
-    covered_by_us: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)  # 本公司是否覆盖
-    url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
-    uploaded_by: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    covered_by_us: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # 本公司是否覆盖
+    url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    uploaded_by: Mapped[str | None] = mapped_column(String(64), nullable=True)

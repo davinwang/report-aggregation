@@ -1,8 +1,6 @@
 """衍生品 (derivatives) — 股指期货基差 + 股指期权 T型报价 (Phase 2)."""
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -18,7 +16,7 @@ router = APIRouter(prefix="/api/derivatives", tags=["derivatives"])
 def futures_basis(
     variety: str = Query(default="IF", description="IF|IH|IC|IM"),
     days: int = Query(default=60, ge=5, le=250, description="history window (trading days)"),
-    date_: Optional[str] = Query(default=None, alias="date", description="reference date YYYY-MM-DD"),
+    date_: str | None = Query(default=None, alias="date", description="reference date YYYY-MM-DD"),
     db: Session = Depends(get_db),
 ) -> dict:
     """Term structure + front-month basis trend for one CFFEX equity-index variety."""
@@ -43,9 +41,12 @@ def futures_basis(
 
 @router.get("/options/board")
 def options_board(
-    underlying: str = Query(default="沪深300股指期权", description="沪深300股指期权|中证1000股指期权|上证50股指期权"),
-    month: Optional[str] = Query(default=None, description="合约月份 YYMM (默认主力/最近月)"),
-    date_: Optional[str] = Query(default=None, alias="date", description="reference date YYYY-MM-DD"),
+    underlying: str = Query(
+        default="沪深300股指期权",
+        description="沪深300股指期权|中证1000股指期权|上证50股指期权",
+    ),
+    month: str | None = Query(default=None, description="合约月份 YYMM (默认主力/最近月)"),
+    date_: str | None = Query(default=None, alias="date", description="reference date YYYY-MM-DD"),
     db: Session = Depends(get_db),
 ) -> dict:
     """T型报价: one row per strike with call/put legs + PCR totals."""

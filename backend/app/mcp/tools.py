@@ -8,7 +8,6 @@ the same registry. No tool writes to the database.
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Optional
 
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
@@ -65,13 +64,13 @@ def stock_snapshot(db: Session, code: str) -> dict:
 
 def search_reports(
     db: Session,
-    keyword: Optional[str] = None,
-    code: Optional[str] = None,
-    org: Optional[str] = None,
-    industry: Optional[str] = None,
-    rating: Optional[str] = None,
-    start: Optional[str] = None,
-    end: Optional[str] = None,
+    keyword: str | None = None,
+    code: str | None = None,
+    org: str | None = None,
+    industry: str | None = None,
+    rating: str | None = None,
+    start: str | None = None,
+    end: str | None = None,
     page: int = 1,
     size: int = 20,
 ) -> dict:
@@ -88,9 +87,9 @@ def technical_series(
     db: Session,
     code: str,
     period: str = "1y",
-    indicators: Optional[str] = None,
+    indicators: str | None = None,
     freq: str = "daily",
-    params: Optional[str] = None,
+    params: str | None = None,
 ) -> dict:
     """技术指标序列 (ECharts-ready): MA/EMA/BOLL/MACD/KDJ/RSI... over stored bars.
 
@@ -107,7 +106,7 @@ def technical_series(
                         params=_parse_params(params))
 
 
-def indicator_catalog(group: Optional[str] = None) -> dict:
+def indicator_catalog(group: str | None = None) -> dict:
     """技术指标目录: 每项指标的中文名/分类/主图副图/公式说明/默认参数.
 
     Lets an AI client discover what the platform computes instead of guessing keys —
@@ -120,7 +119,7 @@ def indicator_catalog(group: Optional[str] = None) -> dict:
 def signal_matrix(
     db: Session,
     scope: str = "index",
-    columns: Optional[str] = None,
+    columns: str | None = None,
     freq: str = "daily",
     limit: int = 60,
 ) -> dict:
@@ -153,9 +152,9 @@ def market_matrix(db: Session, scope: str = "index+active", limit: int = 60) -> 
 
 def list_signals(
     db: Session,
-    kind: Optional[str] = None,
+    kind: str | None = None,
     days: int = 30,
-    industry: Optional[str] = None,
+    industry: str | None = None,
     page: int = 1,
     size: int = 50,
 ) -> dict:
@@ -182,7 +181,7 @@ def accuracy_leaderboard(
     return leaderboard(db, horizon=horizon, by=by, min_events=max(1, int(min_events)), limit=limit)
 
 
-def basis_overview(db: Session, variety: Optional[str] = None) -> dict:
+def basis_overview(db: Session, variety: str | None = None) -> dict:
     """股指期货基差: term structure + latest basis snapshot (IF|IH|IC|IM)."""
     v = (variety or "IF").upper()
     if v not in basis_svc.VARIETIES:
@@ -262,9 +261,9 @@ def financial_summary(db: Session, code: str, statement: str = "income", limit: 
 
 def list_news(
     db: Session,
-    q: Optional[str] = None,
-    sentiment: Optional[str] = None,
-    source: Optional[str] = None,
+    q: str | None = None,
+    sentiment: str | None = None,
+    source: str | None = None,
     days: int = 1,
     page: int = 1,
     size: int = 50,

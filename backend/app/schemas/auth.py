@@ -1,8 +1,6 @@
 """Auth schemas (Phase 2)."""
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -15,7 +13,7 @@ class UserOut(BaseModel):
     id: int
     username: str
     role: str
-    display_name: Optional[str] = None
+    display_name: str | None = None
     is_active: bool = True
 
     class Config:

@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import inspect
 import json
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -57,12 +56,12 @@ def _resolve_bars(period: str) -> int:
         return 250
 
 
-def _resolve_freq(freq: Optional[str]) -> str:
+def _resolve_freq(freq: str | None) -> str:
     f = (freq or "daily").strip().lower()
     return f if f in FREQS else "daily"
 
 
-def _parse_params(raw: Optional[str]) -> dict[str, dict]:
+def _parse_params(raw: str | None) -> dict[str, dict]:
     """Decode the ``params`` query into ``{indicator: {kwarg: value}}``.
 
     Two accepted forms:
@@ -127,10 +126,10 @@ def _compact_kwargs(key: str, value: str) -> dict:
 def series(
     code: str = Query(..., description="security code, e.g. 600519 / sh000300 / 510300 / 113050"),
     freq: str = Query(default="daily", description="daily|weekly|monthly"),
-    indicators: Optional[str] = Query(default=None, description="comma-separated, e.g. ma,macd,kdj"),
+    indicators: str | None = Query(default=None, description="comma-separated, e.g. ma,macd,kdj"),
     period: str = Query(default="1y", description="lookback period: 6m|1y|2y|3y|5y"),
-    adjust: Optional[str] = Query(default=None, description="qfq|hfq|raw|none"),
-    params: Optional[str] = Query(default=None, description='indicator overrides, e.g. "ma=5,10,20" or JSON'),
+    adjust: str | None = Query(default=None, description="qfq|hfq|raw|none"),
+    params: str | None = Query(default=None, description='indicator overrides, e.g. "ma=5,10,20" or JSON'),
     db: Session = Depends(get_db),
 ) -> dict:
     names = [x for x in (indicators or "").split(",") if x] or DEFAULT_INDICATORS
@@ -147,7 +146,7 @@ def series(
 
 @router.get("/indicator-catalog")
 def indicator_catalog(
-    group: Optional[str] = Query(default=None, description="filter by 趋势|震荡|动量|量价|波动|衍生品"),
+    group: str | None = Query(default=None, description="filter by 趋势|震荡|动量|量价|波动|衍生品"),
 ) -> dict:
     """Every supported indicator with its Chinese label, pane, formula and parameters.
 
@@ -161,7 +160,7 @@ def indicator_catalog(
 @router.get("/signal-matrix")
 def signal_matrix(
     scope: str = Query(default="index", description="index|index+all|etf|bond|stock|all"),
-    columns: Optional[str] = Query(default=None, description="comma-separated rule keys"),
+    columns: str | None = Query(default=None, description="comma-separated rule keys"),
     freq: str = Query(default="daily", description="daily|weekly|monthly"),
     limit: int = Query(default=60, ge=1, le=500),
     liquidity_floor: float = Query(default=signal_svc.LIQUIDITY_FLOOR, ge=0,

@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import re
 from datetime import date
-from typing import Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -38,7 +37,7 @@ UNDERLYING_NAMES = list(UNDERLYINGS)
 _INSTRUMENT_RE = re.compile(r"^([A-Z]{1,2})(\d{4})-?([CP])-?(\d+(?:\.\d+)?)$")
 
 
-def parse_instrument(instrument: str) -> Optional[dict]:
+def parse_instrument(instrument: str) -> dict | None:
     """Split ``IO2612-C-3900`` into ``{variety, end_month, cp, strike}`` (cp: call|put)."""
     m = _INSTRUMENT_RE.match((instrument or "").strip().upper())
     if not m:
@@ -65,17 +64,17 @@ def months_for_ref(ref: date, count: int = 5) -> list[str]:
     return out
 
 
-def latest_trade_date(session: Session) -> Optional[date]:
+def latest_trade_date(session: Session) -> date | None:
     """Newest stored trade date (used to stamp live option snapshots)."""
     return session.scalar(select(func.max(DailyQuote.trade_date)))
 
 
-def latest_option_date(session: Session) -> Optional[date]:
+def latest_option_date(session: Session) -> date | None:
     """Newest trade date that actually has option quotes stored."""
     return session.scalar(select(func.max(OptionQuote.trade_date)))
 
 
-def index_session_date(session: Session) -> Optional[date]:
+def index_session_date(session: Session) -> date | None:
     """Newest session with an index bar — the anchor for stamping option snapshots.
 
     Index bars only move once a session has closed (``index_daily`` runs in the same
@@ -89,7 +88,7 @@ def index_session_date(session: Session) -> Optional[date]:
     )
 
 
-def snapshot_date(session: Session) -> Optional[date]:
+def snapshot_date(session: Session) -> date | None:
     """Read anchor: newest stored option snapshot, else the newest daily bar.
 
     Falls back to ``latest_trade_date`` only so the response still carries a date
@@ -99,7 +98,7 @@ def snapshot_date(session: Session) -> Optional[date]:
 
 
 # ----------------------------- read helpers (API) -----------------------------
-def _spot(session: Session, under_code: str, ref: Optional[date] = None) -> Optional[float]:
+def _spot(session: Session, under_code: str, ref: date | None = None) -> float | None:
     """Newest index close *up to* the snapshot date.
 
     The index feed can lag one session behind the option snapshot (and vice versa);
@@ -120,7 +119,7 @@ def _spot(session: Session, under_code: str, ref: Optional[date] = None) -> Opti
     )
 
 
-def available_months(session: Session, underlying: str, ref: Optional[date] = None) -> list[str]:
+def available_months(session: Session, underlying: str, ref: date | None = None) -> list[str]:
     """Contract months present in the DB for an underlying, newest first."""
     ref = ref or snapshot_date(session)
     if ref is None:
@@ -133,7 +132,7 @@ def available_months(session: Session, underlying: str, ref: Optional[date] = No
     return sorted({m for m in rows if m}, reverse=True)
 
 
-def board(session: Session, underlying: str, month: Optional[str] = None, ref: Optional[date] = None) -> dict:
+def board(session: Session, underlying: str, month: str | None = None, ref: date | None = None) -> dict:
     """T型报价: one row per strike with call/put legs + PCR totals."""
     ref = ref or snapshot_date(session)
     months = available_months(session, underlying, ref)
@@ -210,7 +209,7 @@ def board(session: Session, underlying: str, month: Optional[str] = None, ref: O
     }
 
 
-def overview(session: Session, ref: Optional[date] = None) -> list[dict]:
+def overview(session: Session, ref: date | None = None) -> list[dict]:
     """Per-underlying snapshot: contracts, PCR by OI/volume, ATM strike."""
     out: list[dict] = []
     for name, (variety, code) in UNDERLYINGS.items():

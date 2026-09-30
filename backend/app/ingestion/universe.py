@@ -14,7 +14,6 @@ import json
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -39,7 +38,7 @@ def _cache_path(name: str) -> Path:
     return CACHE_DIR / f"universe_{name}.json"
 
 
-def _read_cache(name: str) -> Optional[list[str]]:
+def _read_cache(name: str) -> list[str] | None:
     p = _cache_path(name)
     if not p.exists():
         return None
@@ -72,7 +71,8 @@ def _extract_codes(df) -> list[str]:
     # Prioritize columns that specifically hold constituent codes
     # (not the index code column which also matches generic patterns).
     priority_cols = [c for c in df.columns if re.search(r"成分|品种", str(c), re.I)]
-    fallback_cols = [c for c in df.columns if re.search(r"代码|code", str(c), re.I) and c not in priority_cols]
+    fallback_cols = [c for c in df.columns
+                     if re.search(r"代码|code", str(c), re.I) and c not in priority_cols]
     cols = (priority_cols or fallback_cols) or list(df.columns)
     for _, row in df.iterrows():
         for col in cols:
@@ -93,7 +93,7 @@ def _extract_codes(df) -> list[str]:
 def _fetch_index_cons(index_code: str) -> list[str]:
     ak = get_ak()
     throttle.default_throttle.wait()
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     # Try the most stable interfaces first.
     for fn_name, kwargs in (
         ("index_stock_cons_csindex", {"symbol": index_code}),
@@ -139,7 +139,7 @@ def _resolve_token(token: str) -> list[str]:
     return [c] if c else []
 
 
-def resolve_universe(name: Optional[str] = None, session: Optional[Session] = None) -> list[str]:
+def resolve_universe(name: str | None = None, session: Session | None = None) -> list[str]:
     """Resolve a universe spec into a de-duplicated list of stock codes."""
     name = (name or settings.universe or "hs300").strip()
 

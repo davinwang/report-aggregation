@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, timedelta
-from typing import Optional
 
 
 @dataclass
@@ -36,7 +35,7 @@ def _monday(d: date) -> date:
     return d - timedelta(days=d.weekday())
 
 
-def resolve_window(period: str = "week", ref: Optional[date] = None) -> Window:
+def resolve_window(period: str = "week", ref: date | None = None) -> Window:
     ref = ref or date.today()
     p = (period or "week").lower()
     if p == "today":
@@ -53,7 +52,7 @@ def resolve_window(period: str = "week", ref: Optional[date] = None) -> Window:
     return Window(ref - timedelta(days=7), ref, "近7日", _friday(ref).isoformat())
 
 
-def window_from_range(start: Optional[date], end: Optional[date], ref: Optional[date] = None) -> Window:
+def window_from_range(start: date | None, end: date | None, ref: date | None = None) -> Window:
     ref = ref or date.today()
     s = start or _monday(ref)
     e = end or ref

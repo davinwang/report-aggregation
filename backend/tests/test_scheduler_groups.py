@@ -1,6 +1,8 @@
 """Scheduler / feed-group tests — fully offline (no network, no scheduler start)."""
 from __future__ import annotations
 
+from datetime import UTC
+
 import pytest
 
 from app.core.config import parse_cron
@@ -130,7 +132,7 @@ def test_bootstrap_oneoff_is_scheduled_ahead_of_now(monkeypatch):
     scheduler's timezone now. A naive datetime.now() is interpreted in the
     scheduler tz, which in a UTC container put run_date 8h in the past and
     silently discarded the job (empty first-deploy seed never ran)."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from app.core.config import settings
 
@@ -143,7 +145,7 @@ def test_bootstrap_oneoff_is_scheduled_ahead_of_now(monkeypatch):
         assert job is not None
         nrt = job.next_run_time
         assert nrt is not None and nrt.tzinfo is not None
-        ahead = nrt.timestamp() - datetime.now(timezone.utc).timestamp()
+        ahead = nrt.timestamp() - datetime.now(UTC).timestamp()
         assert 0 <= ahead <= 15, f"bootstrap run_date not ~now: {ahead}s"
     finally:
         sched.shutdown_scheduler()

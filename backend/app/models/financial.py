@@ -7,7 +7,6 @@ a curated ``FinancialIndicator`` table backs fast listing/sorting; ``Disclosure`
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
 
 from sqlalchemy import JSON, Date, Float, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
@@ -30,7 +29,7 @@ class FinancialStatement(Base, TimestampMixin):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    security_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    security_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     code: Mapped[str] = mapped_column(String(16))
     report_period: Mapped[str] = mapped_column(String(16))    # e.g. "20240331"
     statement: Mapped[str] = mapped_column(String(16))        # balance|income|cashflow
@@ -48,22 +47,22 @@ class FinancialIndicator(Base, TimestampMixin):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    security_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    security_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     code: Mapped[str] = mapped_column(String(16))
     report_period: Mapped[str] = mapped_column(String(16))
-    eps: Mapped[Optional[float]] = mapped_column(Float, nullable=True)             # 每股收益
-    bps: Mapped[Optional[float]] = mapped_column(Float, nullable=True)             # 每股净资产
-    roe: Mapped[Optional[float]] = mapped_column(Float, nullable=True)             # 净资产收益率
-    roa: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    revenue: Mapped[Optional[float]] = mapped_column(Float, nullable=True)         # 营业收入
-    revenue_yoy: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    net_profit: Mapped[Optional[float]] = mapped_column(Float, nullable=True)      # 净利润
-    net_profit_yoy: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    gross_margin: Mapped[Optional[float]] = mapped_column(Float, nullable=True)    # 毛利率
-    net_margin: Mapped[Optional[float]] = mapped_column(Float, nullable=True)      # 净利率
-    debt_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)      # 资产负债率
-    ocfps: Mapped[Optional[float]] = mapped_column(Float, nullable=True)           # 每股经营现金流
-    extra_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    eps: Mapped[float | None] = mapped_column(Float, nullable=True)             # 每股收益
+    bps: Mapped[float | None] = mapped_column(Float, nullable=True)             # 每股净资产
+    roe: Mapped[float | None] = mapped_column(Float, nullable=True)             # 净资产收益率
+    roa: Mapped[float | None] = mapped_column(Float, nullable=True)
+    revenue: Mapped[float | None] = mapped_column(Float, nullable=True)         # 营业收入
+    revenue_yoy: Mapped[float | None] = mapped_column(Float, nullable=True)
+    net_profit: Mapped[float | None] = mapped_column(Float, nullable=True)      # 净利润
+    net_profit_yoy: Mapped[float | None] = mapped_column(Float, nullable=True)
+    gross_margin: Mapped[float | None] = mapped_column(Float, nullable=True)    # 毛利率
+    net_margin: Mapped[float | None] = mapped_column(Float, nullable=True)      # 净利率
+    debt_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)      # 资产负债率
+    ocfps: Mapped[float | None] = mapped_column(Float, nullable=True)           # 每股经营现金流
+    extra_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
 class EarningsReport(Base, TimestampMixin):
@@ -77,16 +76,16 @@ class EarningsReport(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(16))
-    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     report_period: Mapped[str] = mapped_column(String(16))
-    revenue: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    revenue_yoy: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    net_profit: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    net_profit_yoy: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    eps: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    roe: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    gross_margin: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    disclose_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    revenue: Mapped[float | None] = mapped_column(Float, nullable=True)
+    revenue_yoy: Mapped[float | None] = mapped_column(Float, nullable=True)
+    net_profit: Mapped[float | None] = mapped_column(Float, nullable=True)
+    net_profit_yoy: Mapped[float | None] = mapped_column(Float, nullable=True)
+    eps: Mapped[float | None] = mapped_column(Float, nullable=True)
+    roe: Mapped[float | None] = mapped_column(Float, nullable=True)
+    gross_margin: Mapped[float | None] = mapped_column(Float, nullable=True)
+    disclose_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
 
 class Disclosure(Base, TimestampMixin):
@@ -101,9 +100,9 @@ class Disclosure(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(16))
-    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     ann_date: Mapped[date] = mapped_column(Date)
     title: Mapped[str] = mapped_column(String(512))
-    category: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)   # 财务报告/重大事项/...
-    url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+    category: Mapped[str | None] = mapped_column(String(64), nullable=True)   # 财务报告/重大事项/...
+    url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     source: Mapped[str] = mapped_column(String(16), default="cninfo")            # cninfo|em

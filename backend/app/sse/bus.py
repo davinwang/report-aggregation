@@ -10,16 +10,16 @@ import asyncio
 import json
 import threading
 from collections import deque
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 _lock = threading.Lock()
 _subscribers: set[asyncio.Queue] = set()
 _recent: deque[dict] = deque(maxlen=200)
-_loop: Optional[asyncio.AbstractEventLoop] = None
+_loop: asyncio.AbstractEventLoop | None = None
 
 
-def set_loop(loop: Optional[asyncio.AbstractEventLoop]) -> None:
+def set_loop(loop: asyncio.AbstractEventLoop | None) -> None:
     """Called on app startup/shutdown to bind the running event loop."""
     global _loop
     _loop = loop
@@ -28,7 +28,7 @@ def set_loop(loop: Optional[asyncio.AbstractEventLoop]) -> None:
 def _stamp(event: str, data: Any) -> dict:
     return {
         "event": event,
-        "ts": datetime.now(timezone.utc).isoformat(),
+        "ts": datetime.now(UTC).isoformat(),
         "data": data,
     }
 

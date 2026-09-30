@@ -9,7 +9,7 @@ populated by the upload flow (deferred to Phase 3).
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import delete, desc, func, select
 from sqlalchemy.orm import Session
@@ -74,7 +74,7 @@ def weeks(session: Session, limit: int = 26) -> list[dict[str, Any]]:
     return [{"week_key": wk, "orgs": n, "reports": int(total or 0)} for wk, n, total in rows]
 
 
-def matrix(session: Session, week_key: Optional[str] = None) -> dict[str, Any]:
+def matrix(session: Session, week_key: str | None = None) -> dict[str, Any]:
     """机构×行业 matrix for one week (defaults to the latest *completed* week)."""
     week_list = weeks(session)
     if not week_key and week_list:
@@ -108,7 +108,7 @@ def matrix(session: Session, week_key: Optional[str] = None) -> dict[str, Any]:
     }
 
 
-def peer(session: Session, period_key: Optional[str] = None) -> dict[str, Any]:
+def peer(session: Session, period_key: str | None = None) -> dict[str, Any]:
     """Tab1 友商报告与活动 — uploaded rows (upload flow arrives in Phase 3)."""
     periods = [
         p for (p,) in session.execute(

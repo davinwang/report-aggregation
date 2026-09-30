@@ -9,7 +9,7 @@ Runs after ``index_daily`` in the bulk order so the spot leg is available.
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -30,7 +30,7 @@ VARIETIES = set(basis_svc.VARIETIES)
 DEFAULT_LOOKBACK_DAYS = 60
 
 
-def _parse_ymd(s: Any) -> Optional[date]:
+def _parse_ymd(s: Any) -> date | None:
     if not s:
         return None
     if isinstance(s, date) and not isinstance(s, datetime):
@@ -89,7 +89,8 @@ class IndexFuturesAdapter(BaseAdapter):
             return 0
         # 1) Underlying index closes for the same date range (stored by index_daily, adjust="none").
         dates = {r["trade_date"] for r in rows}
-        codes = {basis_svc.VARIETY_UNDERLYING[r["variety"]][0] for r in rows if r["variety"] in basis_svc.VARIETY_UNDERLYING}
+        codes = {basis_svc.VARIETY_UNDERLYING[r["variety"]][0]
+                 for r in rows if r["variety"] in basis_svc.VARIETY_UNDERLYING}
         spot_map: dict[tuple[str, date], float] = {}
         if codes and dates:
             lo, hi = min(dates), max(dates)

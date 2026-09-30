@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import Any
 
@@ -52,9 +52,14 @@ def verify_password(password: str, stored: str) -> bool:
 
 # ----------------------------- JWT -----------------------------
 def create_access_token(subject: str, role: str = "viewer", expires_minutes: int | None = None) -> str:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     exp = now + timedelta(minutes=expires_minutes or settings.jwt_expire_minutes)
-    payload: dict[str, Any] = {"sub": subject, "role": role, "iat": int(now.timestamp()), "exp": int(exp.timestamp())}
+    payload: dict[str, Any] = {
+        "sub": subject,
+        "role": role,
+        "iat": int(now.timestamp()),
+        "exp": int(exp.timestamp()),
+    }
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 

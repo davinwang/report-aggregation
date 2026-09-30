@@ -125,7 +125,8 @@ def test_execute_prewarm_path_invokes_derived_refresh(monkeypatch, session):
     # name lives in sched's namespace — patch sched.run_all, not the pipeline module.
     monkeypatch.setattr(sched, "run_all", lambda s, universe=None, trade_date=None: [])
     monkeypatch.setattr(sched, "session_scope", lambda: _FakeScope())
-    monkeypatch.setattr(sched, "_prewarm_after_ingest", lambda: ran.__setitem__("prewarm", ran["prewarm"] + 1))
+    monkeypatch.setattr(sched, "_prewarm_after_ingest",
+                        lambda: ran.__setitem__("prewarm", ran["prewarm"] + 1))
 
     def fake_refresh(s):
         ran["derived"] += 1

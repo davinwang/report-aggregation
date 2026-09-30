@@ -33,7 +33,6 @@ import math
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Optional
 
 import pandas as pd
 from sqlalchemy import func, select
@@ -100,11 +99,11 @@ class MatrixResult:
     columns: list[dict]
     summary: dict
     freq: str = "daily"
-    as_of: Optional[str] = None
+    as_of: str | None = None
     meta: dict = field(default_factory=dict)
 
 
-def _last(frame: Optional[pd.DataFrame], col: str) -> Optional[float]:
+def _last(frame: pd.DataFrame | None, col: str) -> float | None:
     if frame is None or col not in frame.columns or frame.empty:
         return None
     try:
@@ -114,7 +113,7 @@ def _last(frame: Optional[pd.DataFrame], col: str) -> Optional[float]:
         return None
 
 
-def _prev(frame: Optional[pd.DataFrame], col: str) -> Optional[float]:
+def _prev(frame: pd.DataFrame | None, col: str) -> float | None:
     if frame is None or col not in frame.columns or len(frame) < 2:
         return None
     try:
@@ -124,7 +123,7 @@ def _prev(frame: Optional[pd.DataFrame], col: str) -> Optional[float]:
         return None
 
 
-def _v(*vals: Optional[float]) -> bool:
+def _v(*vals: float | None) -> bool:
     """True only when every argument is a usable number."""
     return all(v is not None and not (isinstance(v, float) and math.isnan(v)) for v in vals)
 
@@ -457,7 +456,7 @@ def resolve_codes(session: Session, scope: str = "index", limit: int = 120) -> l
 
 # ------------------------------ matrix ------------------------------
 
-def build(session: Session, scope: str = "index", columns: Optional[list[str]] = None,
+def build(session: Session, scope: str = "index", columns: list[str] | None = None,
           freq: str = "daily", limit: int = 120, bars: int = DEFAULT_BARS,
           liquidity_floor: float = LIQUIDITY_FLOOR) -> MatrixResult:
     """Compute the signal matrix (uncached — see :func:`snapshot` for the cached read)."""
@@ -542,7 +541,7 @@ def build(session: Session, scope: str = "index", columns: Optional[list[str]] =
     return payload
 
 
-def snapshot(session: Session, scope: str = "index", columns: Optional[list[str]] = None,
+def snapshot(session: Session, scope: str = "index", columns: list[str] | None = None,
              freq: str = "daily", limit: int = 120,
              liquidity_floor: float = LIQUIDITY_FLOOR) -> dict:
     """Cached :func:`build`, keyed on everything that changes the result.
@@ -562,7 +561,7 @@ def snapshot(session: Session, scope: str = "index", columns: Optional[list[str]
     return payload
 
 
-def cache_key_for(scope: str = "index", columns: Optional[list[str]] = None,
+def cache_key_for(scope: str = "index", columns: list[str] | None = None,
                   freq: str = "daily", limit: int = 120,
                   liquidity_floor: float = LIQUIDITY_FLOOR) -> str:
     """The cache key for one parameter set.
@@ -575,7 +574,7 @@ def cache_key_for(scope: str = "index", columns: Optional[list[str]] = None,
             f":{int(liquidity_floor)}")
 
 
-def _resolve_rules(columns: Optional[list[str]]) -> list[Rule]:
+def _resolve_rules(columns: list[str] | None) -> list[Rule]:
     if not columns:
         return list(DEFAULT_RULES)
     out: list[Rule] = []
@@ -586,7 +585,7 @@ def _resolve_rules(columns: Optional[list[str]]) -> list[Rule]:
     return out or list(DEFAULT_RULES)
 
 
-def _column_key(columns: Optional[list[str]]) -> str:
+def _column_key(columns: list[str] | None) -> str:
     """Cache-key fragment for the requested column set (resolved, so order/aliases
     that select the same rules share one entry)."""
     return ",".join(r.key for r in _resolve_rules(columns)) or "default"
@@ -628,7 +627,7 @@ def _vote(df: pd.DataFrame, rules: list[Rule], close: float) -> tuple[dict, int,
     return votes, bull, bear, neutral, abstain
 
 
-def _turnover(df: pd.DataFrame) -> Optional[float]:
+def _turnover(df: pd.DataFrame) -> float | None:
     """Latest 成交额, or a volume×close proxy for feeds without it.
 
     可转债 and index bars carry no 成交额, but a liquidity gate that silently returned
@@ -645,7 +644,7 @@ def _turnover(df: pd.DataFrame) -> Optional[float]:
     return None
 
 
-def _is_stale(df: pd.DataFrame, ref: Optional[date]) -> bool:
+def _is_stale(df: pd.DataFrame, ref: date | None) -> bool:
     """Whether the last bar sits too far behind the market's latest session.
 
     Compared in calendar days with a 2× session allowance, because a run of  holidays
@@ -662,7 +661,7 @@ def _is_stale(df: pd.DataFrame, ref: Optional[date]) -> bool:
     return (ref - d).days > STALE_SESSIONS * 2
 
 
-def _change_pct(df: pd.DataFrame) -> Optional[float]:
+def _change_pct(df: pd.DataFrame) -> float | None:
     if len(df) < 2:
         return None
     prev, now = float(df["close"].iloc[-2]), float(df["close"].iloc[-1])
@@ -738,7 +737,7 @@ def _summarize(rows: list[dict], rules: list[Rule], excluded: dict) -> dict:
     }
 
 
-def _round(v: Optional[float], digits: int = 4) -> Optional[float]:
+def _round(v: float | None, digits: int = 4) -> float | None:
     if v is None:
         return None
     try:

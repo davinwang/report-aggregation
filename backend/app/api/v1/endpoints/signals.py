@@ -5,8 +5,6 @@ endpoints page/filter the stored signals. No LLM involved (AI deferred).
 """
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -19,10 +17,10 @@ router = APIRouter(prefix="/api/signals", tags=["signals"])
 
 @router.get("")
 def signals_list(
-    action: Optional[str] = Query(default=None, description="upgrade|downgrade|first|consensus"),
-    industry: Optional[str] = None,
+    action: str | None = Query(default=None, description="upgrade|downgrade|first|consensus"),
+    industry: str | None = None,
     days: int = Query(default=30, ge=1, le=365),
-    date_: Optional[str] = Query(default=None, alias="date", description="exact session YYYY-MM-DD"),
+    date_: str | None = Query(default=None, alias="date", description="exact session YYYY-MM-DD"),
     page: int = Query(default=1, ge=1),
     size: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),

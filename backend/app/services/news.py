@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -13,18 +13,18 @@ from app.models.system import DataFreshness
 SENTIMENTS = ("利好", "中性", "利空")
 
 
-def latest_news_date(session: Session) -> Optional[date]:
+def latest_news_date(session: Session) -> date | None:
     """Newest stored publish date (the reference for relative windows)."""
     return session.scalar(select(func.max(NewsItem.publish_date)))
 
 
 def list_news(
     session: Session,
-    q: Optional[str] = None,
-    sentiment: Optional[str] = None,
-    source: Optional[str] = None,
-    start: Optional[date] = None,
-    end: Optional[date] = None,
+    q: str | None = None,
+    sentiment: str | None = None,
+    source: str | None = None,
+    start: date | None = None,
+    end: date | None = None,
     page: int = 1,
     size: int = 20,
 ) -> tuple[list[dict[str, Any]], int]:
@@ -102,7 +102,7 @@ def _row(r: NewsItem) -> dict[str, Any]:
     }
 
 
-def _freshness(session: Session) -> Optional[dict[str, Any]]:
+def _freshness(session: Session) -> dict[str, Any] | None:
     f = session.scalar(select(DataFreshness).where(DataFreshness.feed == "news_flash"))
     if f is None:
         return None

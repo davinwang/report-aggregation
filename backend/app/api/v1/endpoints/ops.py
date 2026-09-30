@@ -5,8 +5,6 @@ This is where the header "扫描/刷新" action lands.
 """
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
@@ -87,7 +85,7 @@ def mcp_status() -> dict:
 @router.post("/ingest")
 def trigger_ingest(
     scope: str = Query(default="all", description="frequency group | all|bulk|per_symbol | <feed_name>"),
-    universe: Optional[str] = Query(default=None),
+    universe: str | None = Query(default=None),
     _admin=Depends(require_admin),
 ) -> dict:
     if scope not in scheduler.VALID_SCOPES:

@@ -10,7 +10,7 @@ hits first, content fills up, capped at 5).
 from __future__ import annotations
 
 from datetime import date, datetime, time
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -145,15 +145,15 @@ class NewsFlashAdapter(BaseAdapter):
         )
 
 
-def _to_dt(primary: Any, secondary: Any = None) -> Optional[datetime]:
+def _to_dt(primary: Any, secondary: Any = None) -> datetime | None:
     """Parse the publish timestamp from either source shape.
 
     EM: a datetime string ("2026-09-16 14:30:00") as ``primary``.
     CLS: ``time`` as primary + ``date`` as secondary.
     """
-    t_part: Optional[time] = None
-    d_part: Optional[date] = None
-    dt_part: Optional[datetime] = None
+    t_part: time | None = None
+    d_part: date | None = None
+    dt_part: datetime | None = None
 
     def feed(v: Any) -> None:
         nonlocal t_part, d_part, dt_part

@@ -50,7 +50,11 @@ class IndustryConstituentsAdapter(BaseAdapter):
                 code = norm_code(get(r, "代码", "股票代码"))
                 if not code:
                     continue
-                rows.append({"board_name": board, "code": code, "name": clean_text(get(r, "名称", "股票名称"))})
+                rows.append({
+                    "board_name": board,
+                    "code": code,
+                    "name": clean_text(get(r, "名称", "股票名称")),
+                })
         return rows
 
     def persist(self, session: Session, rows: list[dict[str, Any]], **kwargs) -> int:

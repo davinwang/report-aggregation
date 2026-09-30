@@ -7,7 +7,8 @@ Multiple frequency-based cron jobs (all Asia/Shanghai), one per FEED_GROUPS entr
 - ``daily_evening``      晚间日频数据 — 工作日 19:00 (两融/龙虎榜/评级/研报/公告)
 - ``weekly_master``      周度主数据 — 周一 08:00 (证券主档/行业成分)
 - ``weekly_financials``  周度财报 — 周六 12:00 (业绩/财务指标/三大报表)
-- ``news_refresh``       资讯舆情·快讯 — 每日 07:00-23:00 每20分钟 (东财快讯/财联社; 分钟取 :02/:22/:42, 避开 intraday 的 */10 网格以免锁竞争饿死)
+- ``news_refresh``       资讯舆情·快讯 — 每日 07:00-23:00 每20分钟 (东财快讯/财联社;
+  分钟取 :02/:22/:42, 避开 intraday 的 */10 网格以免锁竞争饿死)
 
 Crons are configurable via ``SCHEDULER_CRON_*`` settings (5-field cron; day-of-week
 uses APScheduler names like ``mon-fri`` because APScheduler maps 0→Monday, unlike
@@ -24,7 +25,6 @@ from __future__ import annotations
 import threading
 import time
 from datetime import date, datetime, timedelta
-from typing import Optional
 from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -39,7 +39,7 @@ from app.ingestion.pipeline import run_all, run_bulk, run_feed, run_group, run_p
 
 logger = get_logger(__name__)
 
-_scheduler: Optional[BackgroundScheduler] = None
+_scheduler: BackgroundScheduler | None = None
 
 #: Market timezone for one-off job run dates. Always pass timezone-aware datetimes
 #: to APScheduler: a naive ``datetime.now()`` is interpreted in the scheduler's
@@ -87,7 +87,8 @@ _JOB_SPECS: list[tuple[str, str, str, str, int]] = [
     (DAILY_CLOSE_JOB_ID, "daily_close", "scheduler_cron_daily_close", "30 16 * * mon-fri", 6 * 3600),
     (DAILY_EVENING_JOB_ID, "daily_evening", "scheduler_cron_daily_evening", "0 19 * * mon-fri", 6 * 3600),
     (WEEKLY_MASTER_JOB_ID, "weekly_master", "scheduler_cron_weekly_master", "0 8 * * mon", 12 * 3600),
-    (WEEKLY_FINANCIALS_JOB_ID, "weekly_financials", "scheduler_cron_weekly_financials", "0 12 * * sat", 48 * 3600),
+    (WEEKLY_FINANCIALS_JOB_ID, "weekly_financials", "scheduler_cron_weekly_financials",
+     "0 12 * * sat", 48 * 3600),
     (NEWS_JOB_ID, "news_refresh", "scheduler_cron_news", "*/20 7-23 * * *", 600),
 ]
 
@@ -95,7 +96,7 @@ _JOB_SPECS: list[tuple[str, str, str, str, int]] = [
 VALID_SCOPES: set[str] = set(FEED_GROUPS) | set(LEGACY_SCOPES) | set(REGISTRY)
 
 
-def _execute(scope: str, universe: Optional[str] = None, prewarm: bool = True) -> None:
+def _execute(scope: str, universe: str | None = None, prewarm: bool = True) -> None:
     """Run one ingestion scope in the caller's thread (used by all jobs).
 
     Valid scopes: a FEED_GROUPS key, 'all' | 'bulk' | 'per_symbol', or a single
@@ -115,7 +116,7 @@ def _execute(scope: str, universe: Optional[str] = None, prewarm: bool = True) -
         _INGEST_LOCK.release()
 
 
-def _run_scope(scope: str, universe: Optional[str] = None, prewarm: bool = True) -> None:
+def _run_scope(scope: str, universe: str | None = None, prewarm: bool = True) -> None:
     """Execute one ingestion scope; caller must hold ``_INGEST_LOCK``."""
     started = datetime.now()
     logger.info("Ingestion started (scope=%s, universe=%s)", scope, universe or settings.universe)
@@ -131,7 +132,8 @@ def _run_scope(scope: str, universe: Optional[str] = None, prewarm: bool = True)
                 run_all(session, universe=universe)
             else:  # single feed
                 run_feed(scope, session, universe=universe)
-        logger.info("Ingestion finished (scope=%s) in %.1fs", scope, (datetime.now() - started).total_seconds())
+        logger.info("Ingestion finished (scope=%s) in %.1fs", scope,
+                    (datetime.now() - started).total_seconds())
         if prewarm:
             _refresh_derived_after_ingest(scope)
             _prewarm_after_ingest()
@@ -159,7 +161,8 @@ def _refresh_derived_after_ingest(group: str) -> None:
             stats = refresh_derived(session)
         logger.info(
             "Derived read models refreshed after '%s': %s", group,
-            {k: ("ERROR" if "error" in v else v.get("total", "ok")) for k, v in stats.items() if k != "accuracy"},
+            {k: ("ERROR" if "error" in v else v.get("total", "ok"))
+             for k, v in stats.items() if k != "accuracy"},
         )
     except Exception:  # noqa: BLE001 - ingestion itself already committed; never propagate
         logger.exception("Derived read-model refresh after '%s' failed", group)
@@ -194,7 +197,7 @@ def _add_group_job(sched: BackgroundScheduler, job_id: str, group: str,
     logger.info("Scheduled job %-20s group=%-18s cron=%s", job_id, group, cron)
 
 
-def start_scheduler() -> Optional[BackgroundScheduler]:
+def start_scheduler() -> BackgroundScheduler | None:
     """Start the background scheduler and register all frequency jobs. Idempotent."""
     global _scheduler
     if not settings.scheduler_enabled:
@@ -221,7 +224,7 @@ def shutdown_scheduler() -> None:
         logger.info("Scheduler shut down")
 
 
-def trigger_now(scope: str = "all", universe: Optional[str] = None) -> bool:
+def trigger_now(scope: str = "all", universe: str | None = None) -> bool:
     """Enqueue an immediate one-off ingestion run (non-blocking).
 
     Returns True if scheduled. Accepts any VALID_SCOPES entry (frequency group,
@@ -314,7 +317,8 @@ def _bootstrap_job() -> None:
             _execute("daily_close", prewarm=False)
             _execute("daily_evening", prewarm=False)
         else:
-            logger.info("Bootstrap: data current (latest trade date %s); scheduled jobs will maintain it", ltd)
+            logger.info("Bootstrap: data current (latest trade date %s); "
+                        "scheduled jobs will maintain it", ltd)
         if n_news == 0:
             # News lives outside the market-data staleness check: a fresh deploy
             # over a current DB (e.g. redeploy between cron ticks) leaves the

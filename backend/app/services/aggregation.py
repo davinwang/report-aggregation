@@ -6,7 +6,7 @@ is the single place where cross-table aggregation lives, keeping endpoints thin.
 from __future__ import annotations
 
 from datetime import date
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import desc, func, or_, select
 from sqlalchemy.orm import Session
@@ -24,7 +24,7 @@ _RATING_LABEL = {
 }
 
 
-def latest_trade_date(session: Session) -> Optional[date]:
+def latest_trade_date(session: Session) -> date | None:
     return session.scalar(select(func.max(DailyQuote.trade_date)))
 
 
@@ -66,7 +66,7 @@ def _index_quotes(session: Session) -> list[dict]:
     return out
 
 
-def _sector_heatmap(session: Session, sector: Optional[str] = None, limit: int = 90) -> list[dict]:
+def _sector_heatmap(session: Session, sector: str | None = None, limit: int = 90) -> list[dict]:
     q = select(IndustryBoard).where(IndustryBoard.source == "em")
     if sector:
         q = q.where(IndustryBoard.group == sector)
@@ -78,7 +78,7 @@ def _sector_heatmap(session: Session, sector: Optional[str] = None, limit: int =
     ]
 
 
-def _rating_summary(session: Session, w: Window, sector: Optional[str] = None) -> dict[str, Any]:
+def _rating_summary(session: Session, w: Window, sector: str | None = None) -> dict[str, Any]:
     q = (select(RatingEvent.rating_norm, func.count())
          .where(RatingEvent.trade_date.between(w.start, w.end)))
     if sector:
@@ -93,7 +93,8 @@ def _rating_summary(session: Session, w: Window, sector: Optional[str] = None) -
     return {"total": total, "by_rating": counts, "orgs": orgs}
 
 
-def _top_signals(session: Session, w: Window, kind: str, sector: Optional[str] = None, limit: int = 10) -> list[dict]:
+def _top_signals(session: Session, w: Window, kind: str, sector: str | None = None,
+                 limit: int = 10) -> list[dict]:
     q = select(Signal).where(Signal.kind == kind, Signal.trade_date.between(w.start, w.end))
     if sector:
         q = q.where(Signal.industry_group == sector)
@@ -105,7 +106,7 @@ def _top_signals(session: Session, w: Window, kind: str, sector: Optional[str] =
     ]
 
 
-def _latest_reports(session: Session, w: Window, sector: Optional[str] = None, limit: int = 20) -> list[dict]:
+def _latest_reports(session: Session, w: Window, sector: str | None = None, limit: int = 20) -> list[dict]:
     q = select(ResearchReport).where(ResearchReport.publish_date.between(w.start, w.end))
     if sector:
         q = q.where(or_(ResearchReport.industry_group == sector, ResearchReport.industry == sector))
@@ -125,8 +126,8 @@ def _report_brief(r: ResearchReport) -> dict:
     }
 
 
-def market_dashboard(session: Session, period: str = "week", ref: Optional[date] = None,
-                     sector: Optional[str] = None) -> dict[str, Any]:
+def market_dashboard(session: Session, period: str = "week", ref: date | None = None,
+                     sector: str | None = None) -> dict[str, Any]:
     w = resolve_window(period, ref)
     return {
         "window": w.to_dict(),
@@ -143,13 +144,13 @@ def market_dashboard(session: Session, period: str = "week", ref: Optional[date]
 
 def research_reports_query(
     session: Session,
-    keyword: Optional[str] = None,
-    org: Optional[str] = None,
-    industry: Optional[str] = None,
-    rating: Optional[str] = None,
-    code: Optional[str] = None,
-    start: Optional[date] = None,
-    end: Optional[date] = None,
+    keyword: str | None = None,
+    org: str | None = None,
+    industry: str | None = None,
+    rating: str | None = None,
+    code: str | None = None,
+    start: date | None = None,
+    end: date | None = None,
     page: int = 1,
     size: int = 20,
     sort: str = "-publish_date",
@@ -195,7 +196,7 @@ def research_facets(session: Session) -> dict[str, Any]:
     return {"orgs": orgs, "industries": industries, "ratings": ratings}
 
 
-def stock_detail(session: Session, code: str) -> Optional[dict[str, Any]]:
+def stock_detail(session: Session, code: str) -> dict[str, Any] | None:
     sec = session.scalar(select(Security).where(Security.code == code))
     if sec is None:
         return None
@@ -240,7 +241,7 @@ def stock_detail(session: Session, code: str) -> Optional[dict[str, Any]]:
     }
 
 
-def rating_norm_label(norm: Optional[str]) -> str:
+def rating_norm_label(norm: str | None) -> str:
     for cn, en in _RATING_LABEL.items():
         if en == norm:
             return cn

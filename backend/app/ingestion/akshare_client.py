@@ -9,15 +9,14 @@ from __future__ import annotations
 
 import threading
 from types import ModuleType
-from typing import Optional
 
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
 _lock = threading.Lock()
-_ak: Optional[ModuleType] = None
-_import_error: Optional[str] = None
+_ak: ModuleType | None = None
+_import_error: str | None = None
 
 
 class AkShareUnavailable(RuntimeError):
@@ -46,7 +45,7 @@ def get_ak() -> ModuleType:
             ) from exc
 
 
-def akshare_version() -> Optional[str]:
+def akshare_version() -> str | None:
     """Installed akshare version without importing the (heavy) package.
 
     Importing akshare costs seconds, and /health/deep is a read endpoint — probing
@@ -63,7 +62,7 @@ def akshare_version() -> Optional[str]:
         return None
 
 
-def set_fake_ak(fake: Optional[ModuleType]) -> None:
+def set_fake_ak(fake: ModuleType | None) -> None:
     """Test hook: inject a fake akshare module (or None to reset)."""
     global _ak, _import_error
     with _lock:

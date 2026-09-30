@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 from datetime import date, datetime
-from typing import Optional
 
 from sqlalchemy.orm import Session
 
@@ -30,7 +29,7 @@ def _configure_throttle() -> None:
     throttle.configure(settings.akshare_throttle_seconds)
 
 
-def _parse_date(s: Optional[str]) -> Optional[date]:
+def _parse_date(s: str | None) -> date | None:
     if not s:
         return None
     return datetime.strptime(s, "%Y-%m-%d").date()
@@ -45,7 +44,8 @@ def run_feed(name: str, session: Session, **kwargs) -> FeedResult:
     return adapter.run(session, **kwargs)
 
 
-def run_bulk(session: Session, trade_date: Optional[date] = None, feeds: Optional[list[str]] = None) -> list[FeedResult]:
+def run_bulk(session: Session, trade_date: date | None = None,
+             feeds: list[str] | None = None) -> list[FeedResult]:
     results: list[FeedResult] = []
     for name in feeds or BULK_ORDER:
         kwargs: dict = {}
@@ -57,13 +57,14 @@ def run_bulk(session: Session, trade_date: Optional[date] = None, feeds: Optiona
 
 def run_per_symbol(
     session: Session,
-    universe: Optional[str] = None,
-    feeds: Optional[list[str]] = None,
+    universe: str | None = None,
+    feeds: list[str] | None = None,
     **kwargs,
 ) -> list[FeedResult]:
     codes = resolve_universe(universe, session=session)
     if not codes:
-        logger.warning("Universe '%s' resolved to 0 codes; skipping per-symbol feeds.", universe or settings.universe)
+        logger.warning("Universe '%s' resolved to 0 codes; skipping per-symbol feeds.",
+                       universe or settings.universe)
         return []
     logger.info("Per-symbol universe: %d codes", len(codes))
     results: list[FeedResult] = []
@@ -72,7 +73,8 @@ def run_per_symbol(
     return results
 
 
-def run_all(session: Session, universe: Optional[str] = None, trade_date: Optional[date] = None) -> list[FeedResult]:
+def run_all(session: Session, universe: str | None = None,
+            trade_date: date | None = None) -> list[FeedResult]:
     results = run_bulk(session, trade_date=trade_date)
     results += run_per_symbol(session, universe=universe)
     ok = sum(1 for r in results if r.status in ("ok", "empty"))
@@ -80,7 +82,7 @@ def run_all(session: Session, universe: Optional[str] = None, trade_date: Option
     return results
 
 
-def run_group(session: Session, group: str, universe: Optional[str] = None) -> list[FeedResult]:
+def run_group(session: Session, group: str, universe: str | None = None) -> list[FeedResult]:
     """Run one frequency group (see adapters.FEED_GROUPS) in its defined order."""
     feeds = FEED_GROUPS.get(group)
     if feeds is None:
@@ -94,7 +96,7 @@ def run_group(session: Session, group: str, universe: Optional[str] = None) -> l
     return results
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     configure_logging()
     p = argparse.ArgumentParser(description="股票研报聚合平台 ingestion pipeline")
     p.add_argument("--feed", help="run a single feed by name")

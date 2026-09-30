@@ -11,7 +11,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -20,8 +20,8 @@ from app.core.config import settings
 from app.core.logging import get_logger
 from app.ingestion import throttle
 from app.ingestion.db_utils import bulk_upsert  # re-export for adapters
-from app.models.system import DataFreshness, IngestionLog
 from app.models.base import utcnow
+from app.models.system import DataFreshness, IngestionLog
 
 logger = get_logger(__name__)
 
@@ -32,11 +32,11 @@ class FeedResult:
     status: str = "ok"                     # ok|error|partial|empty
     rows_seen: int = 0
     rows_upserted: int = 0
-    started_at: Optional[Any] = None
-    finished_at: Optional[Any] = None
+    started_at: Any | None = None
+    finished_at: Any | None = None
     latency_ms: int = 0
-    error: Optional[str] = None
-    latest_data_date: Optional[date] = None
+    error: str | None = None
+    latest_data_date: date | None = None
     detail: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -77,7 +77,7 @@ class BaseAdapter(ABC):
     def persist(self, session: Session, rows: list[dict[str, Any]], **kwargs) -> int:
         """Write normalized rows; return count inserted+updated."""
 
-    def latest_date(self, rows: list[dict[str, Any]]) -> Optional[date]:
+    def latest_date(self, rows: list[dict[str, Any]]) -> date | None:
         """Best-effort newest data date in the batch (for freshness)."""
         for key in ("trade_date", "publish_date", "ann_date", "date"):
             vals = [r.get(key) for r in rows if isinstance(r.get(key), date)]
@@ -87,7 +87,7 @@ class BaseAdapter(ABC):
 
     # ---- orchestration ----
     def fetch_with_retry(self, **kwargs) -> Any:
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         attempts = max(1, settings.akshare_max_retries)
         for i in range(attempts):
             throttle.default_throttle.wait()
@@ -203,7 +203,8 @@ class SymbolLoopAdapter(BaseAdapter):
     def normalize_symbol(self, code: str, raw: Any, **kwargs) -> list[dict[str, Any]]:  # pragma: no cover
         raise NotImplementedError
 
-    def fetch(self, codes: Optional[list[str]] = None, per_code_retries: int = 2, **kwargs) -> list[tuple[str, Any]]:
+    def fetch(self, codes: list[str] | None = None, per_code_retries: int = 2,
+              **kwargs) -> list[tuple[str, Any]]:
         codes = codes or []
         out: list[tuple[str, Any]] = []
         failures = 0

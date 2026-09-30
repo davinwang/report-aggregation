@@ -10,7 +10,6 @@ instantly while data still comes from the local DB.
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Optional
 
 import pandas as pd
 from sqlalchemy import bindparam, func, select, text
@@ -86,8 +85,8 @@ def _recent_active_codes(session: Session, exclude: list[str], limit: int) -> li
     return [c for (c,) in rows]
 
 
-def _state(row_close: Optional[float], ma20: Optional[float], dif: Optional[float],
-           dea: Optional[float], rsi: Optional[float]) -> dict:
+def _state(row_close: float | None, ma20: float | None, dif: float | None,
+           dea: float | None, rsi: float | None) -> dict:
     trend = "多" if (ma20 is not None and row_close is not None and row_close >= ma20) else "空"
     macd_state = "金叉" if (dif is not None and dea is not None and dif >= dea) else "死叉"
     rsi_state = "强" if (rsi is not None and rsi >= 60) else (
@@ -95,7 +94,7 @@ def _state(row_close: Optional[float], ma20: Optional[float], dif: Optional[floa
     return {"trend": trend, "macd": macd_state, "rsi": rsi_state}
 
 
-def _last(frame: Optional[pd.DataFrame], col: str) -> Optional[float]:
+def _last(frame: pd.DataFrame | None, col: str) -> float | None:
     if frame is None or col not in frame.columns or frame.empty:
         return None
     v = frame[col].iloc[-1]

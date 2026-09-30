@@ -11,7 +11,6 @@ Shapes the three stored flow feeds for the /flow page:
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Optional
 
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
@@ -41,10 +40,9 @@ def northbound_history(session: Session, days: int = 30) -> dict:
     dates = sorted({r.trade_date for r in rows})
     if len(dates) > days:
         dates = dates[-days:]
-    keep = set(dates)
     boards = _sorted_boards({r.board for r in rows})
 
-    def series(board: str, pick) -> list[Optional[float]]:
+    def series(board: str, pick) -> list[float | None]:
         by_date = {r.trade_date: r for r in rows if r.board == board}
         return [pick(by_date[d]) if d in by_date else None for d in dates]
 
@@ -110,7 +108,7 @@ def margin_history(session: Session, days: int = 60) -> dict:
     dates, sse_rows = _margin_series(session, "SSE", days)
     _szse_dates, szse_rows = _margin_series(session, "SZSE", 1)
 
-    def col(rows: list[MarginData], field: str) -> list[Optional[float]]:
+    def col(rows: list[MarginData], field: str) -> list[float | None]:
         return [getattr(r, field) for r in rows]
 
     sse_latest = sse_rows[-1] if sse_rows else None
@@ -150,14 +148,14 @@ def margin_history(session: Session, days: int = 60) -> dict:
 
 
 # ----------------------------- 龙虎榜 -----------------------------
-def latest_lhb_date(session: Session) -> Optional[date]:
+def latest_lhb_date(session: Session) -> date | None:
     return session.scalar(select(func.max(LhbRecord.trade_date)))
 
 
 def lhb_query(
     session: Session,
-    ref: Optional[date] = None,
-    direction: Optional[str] = None,
+    ref: date | None = None,
+    direction: str | None = None,
     page: int = 1,
     size: int = 50,
 ) -> dict:
@@ -177,7 +175,8 @@ def lhb_query(
 
     total = session.scalar(select(func.count()).select_from(LhbRecord).where(*where)) or 0
     rows = session.scalars(
-        select(LhbRecord).where(*where).order_by(desc(LhbRecord.net_amt)).offset((page - 1) * size).limit(size)
+        select(LhbRecord).where(*where).order_by(desc(LhbRecord.net_amt))
+        .offset((page - 1) * size).limit(size)
     ).all()
 
     all_net = session.scalar(

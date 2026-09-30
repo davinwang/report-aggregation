@@ -5,8 +5,6 @@ snapshot (raw), and indices (none) without callers knowing the storage detail.
 """
 from __future__ import annotations
 
-from typing import Optional
-
 import pandas as pd
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
@@ -17,7 +15,7 @@ from app.models.security import Security
 ADJUST_PRIORITY = ["qfq", "raw", "none", "hfq", ""]
 
 
-def _pick_adjust(session: Session, code: str, prefer: Optional[str]) -> Optional[str]:
+def _pick_adjust(session: Session, code: str, prefer: str | None) -> str | None:
     available = [
         a for (a,) in session.execute(
             select(DailyQuote.adjust).where(DailyQuote.code == code).group_by(DailyQuote.adjust)
@@ -34,7 +32,7 @@ def _pick_adjust(session: Session, code: str, prefer: Optional[str]) -> Optional
 
 
 def load_bars(session: Session, code: str, limit: int = 400,
-              prefer_adjust: Optional[str] = None) -> pd.DataFrame:
+              prefer_adjust: str | None = None) -> pd.DataFrame:
     """Load the most recent ``limit`` bars for ``code`` as an OHLCV DataFrame.
 
     Columns: date, open, high, low, close, volume, amount, turnover_rate (+ oi if present).
@@ -66,7 +64,7 @@ _BARS_COLUMNS = (
 
 
 def load_bars_bulk(session: Session, codes: list[str], limit: int = 400,
-                   prefer_adjust: Optional[str] = None) -> dict[str, pd.DataFrame]:
+                   prefer_adjust: str | None = None) -> dict[str, pd.DataFrame]:
     """Tail-load many symbols in one pass, mirroring :func:`load_bars` per code.
 
     Resolves the adjust per code with a single grouped query, then reads each
@@ -106,7 +104,7 @@ def load_bars_bulk(session: Session, codes: list[str], limit: int = 400,
     return out
 
 
-def _choose_adjust(available: list[str], prefer: Optional[str]) -> Optional[str]:
+def _choose_adjust(available: list[str], prefer: str | None) -> str | None:
     """Same precedence as :func:`_pick_adjust`, over a pre-fetched list."""
     if not available:
         return None
@@ -118,11 +116,11 @@ def _choose_adjust(available: list[str], prefer: Optional[str]) -> Optional[str]
     return available[0]
 
 
-def get_security(session: Session, code: str) -> Optional[Security]:
+def get_security(session: Session, code: str) -> Security | None:
     return session.scalar(select(Security).where(Security.code == code))
 
 
-def latest_quote(session: Session, code: str) -> Optional[DailyQuote]:
+def latest_quote(session: Session, code: str) -> DailyQuote | None:
     return session.scalar(
         select(DailyQuote).where(DailyQuote.code == code)
         .order_by(desc(DailyQuote.trade_date)).limit(1)

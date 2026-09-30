@@ -34,7 +34,7 @@ async def stream(request: Request) -> StreamingResponse:
                 try:
                     msg = await asyncio.wait_for(q.get(), timeout=15.0)
                     yield bus.format_sse(msg)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     yield ": keep-alive\n\n"
         finally:
             bus.unsubscribe(q)

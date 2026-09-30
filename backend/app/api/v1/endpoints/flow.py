@@ -1,8 +1,6 @@
 """资金流向 (capital flow) — 沪深港通 / 融资融券 / 龙虎榜 (Phase 2)."""
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -38,8 +36,8 @@ def margin(
 
 @router.get("/lhb")
 def lhb(
-    date_: Optional[str] = Query(default=None, alias="date", description="session YYYY-MM-DD"),
-    direction: Optional[str] = Query(default=None, description="buy|sell"),
+    date_: str | None = Query(default=None, alias="date", description="session YYYY-MM-DD"),
+    direction: str | None = Query(default=None, description="buy|sell"),
     page: int = Query(default=1, ge=1),
     size: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),

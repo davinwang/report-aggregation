@@ -10,7 +10,7 @@ from __future__ import annotations
 import math
 import re
 from datetime import date, datetime
-from typing import Any, Optional
+from typing import Any
 
 from app.models.base import RatingDirection
 
@@ -23,7 +23,8 @@ _RATING_MAP: dict[str, RatingDirection] = {
     "买入": RatingDirection.buy, "强烈推荐": RatingDirection.buy, "推荐": RatingDirection.buy,
     "强推": RatingDirection.buy, "优于大市": RatingDirection.buy, "跑赢行业": RatingDirection.buy,
     "谨慎推荐": RatingDirection.buy, "审慎推荐": RatingDirection.buy, "buy": RatingDirection.buy,
-    "增持": RatingDirection.overweight, "增持评级": RatingDirection.overweight, "谨慎增持": RatingDirection.overweight,
+    "增持": RatingDirection.overweight, "增持评级": RatingDirection.overweight,
+    "谨慎增持": RatingDirection.overweight,
     "outperform": RatingDirection.overweight, "增持(上一评级": RatingDirection.overweight,
     "中性": RatingDirection.neutral, "持有": RatingDirection.neutral, "观望": RatingDirection.neutral,
     "同步大市": RatingDirection.neutral, "标配": RatingDirection.neutral, "neutral": RatingDirection.neutral,
@@ -45,7 +46,7 @@ def _is_missing(v: Any) -> bool:
     return False
 
 
-def to_float(v: Any, default: Optional[float] = None) -> Optional[float]:
+def to_float(v: Any, default: float | None = None) -> float | None:
     """Parse a numeric value that may carry 万/亿/%/, suffixes or be missing."""
     if _is_missing(v):
         return default
@@ -71,7 +72,7 @@ def to_float(v: Any, default: Optional[float] = None) -> Optional[float]:
         return default
 
 
-def to_int(v: Any, default: Optional[int] = None) -> Optional[int]:
+def to_int(v: Any, default: int | None = None) -> int | None:
     f = to_float(v, None)
     if f is None:
         return default
@@ -81,7 +82,7 @@ def to_int(v: Any, default: Optional[int] = None) -> Optional[int]:
         return default
 
 
-def to_date(v: Any) -> Optional[date]:
+def to_date(v: Any) -> date | None:
     """Parse dates from str/date/datetime in common CN formats (2024-01-01, 20240101, 2024/1/1)."""
     if _is_missing(v):
         return None
@@ -107,7 +108,7 @@ def to_date(v: Any) -> Optional[date]:
     return None
 
 
-def to_period_str(v: Any) -> Optional[str]:
+def to_period_str(v: Any) -> str | None:
     """Normalize a report period to YYYYMMDD string (e.g. 20240331)."""
     d = to_date(v)
     if d is not None:
@@ -116,13 +117,13 @@ def to_period_str(v: Any) -> Optional[str]:
     return s[:8] if re.match(r"^\d{8}", s) else None
 
 
-def clean_text(v: Any, default: Optional[str] = None) -> Optional[str]:
+def clean_text(v: Any, default: str | None = None) -> str | None:
     if _is_missing(v):
         return default
     return re.sub(r"\s+", " ", str(v)).strip()
 
 
-def norm_code(v: Any) -> Optional[str]:
+def norm_code(v: Any) -> str | None:
     """Normalize a security code to a bare digit string (6-digit A-share) when possible."""
     s = clean_text(v, "")
     if not s:

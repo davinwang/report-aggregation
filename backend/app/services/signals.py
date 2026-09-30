@@ -15,7 +15,7 @@ Computes ``Signal`` rows from ``research_report`` (东财个股研报):
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import delete, desc, func, select
 from sqlalchemy.orm import Session
@@ -67,10 +67,10 @@ def refresh_signals(
         ).all()
     }
 
-    name_of: dict[str, Optional[str]] = {}
-    grp_of: dict[str, Optional[str]] = {}
+    name_of: dict[str, str | None] = {}
+    grp_of: dict[str, str | None] = {}
     signals: list[dict[str, Any]] = []
-    prev_map: dict[tuple[str, str], tuple[Optional[str], date]] = {}
+    prev_map: dict[tuple[str, str], tuple[str | None, date]] = {}
 
     for code, name, org, rating, pub, grp, ind in rows:
         name_of.setdefault(code, name)
@@ -132,11 +132,11 @@ def refresh_signals(
 
 def _consensus_signals(
     session: Session, ref: date, consensus_days: int,
-    name_of: dict[str, Optional[str]], grp_of: dict[str, Optional[str]],
+    name_of: dict[str, str | None], grp_of: dict[str, str | None],
 ) -> list[dict[str, Any]]:
     """一致评级 — latest stance per institution over the consensus window."""
     c_since = ref - timedelta(days=consensus_days)
-    latest: dict[str, dict[str, Optional[str]]] = {}
+    latest: dict[str, dict[str, str | None]] = {}
     for code, org, rating in session.execute(
         select(ResearchReport.code, ResearchReport.org, ResearchReport.rating)
         .where(ResearchReport.publish_date >= c_since, ResearchReport.org.isnot(None))
@@ -186,13 +186,13 @@ def _consensus_signals(
 # ---------------------------- read path (API) ----------------------------
 def list_signals(
     session: Session,
-    action: Optional[str] = None,
-    industry: Optional[str] = None,
+    action: str | None = None,
+    industry: str | None = None,
     days: int = 30,
-    date_: Optional[date] = None,
+    date_: date | None = None,
     page: int = 1,
     size: int = 50,
-) -> tuple[list[dict[str, Any]], int, Optional[date]]:
+) -> tuple[list[dict[str, Any]], int, date | None]:
     where = []
     if date_:
         where.append(Signal.trade_date == date_)

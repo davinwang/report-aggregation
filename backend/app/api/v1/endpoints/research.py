@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import desc, func, select
@@ -18,13 +17,13 @@ router = APIRouter(prefix="/api/research", tags=["research"])
 
 @router.get("/reports")
 def reports(
-    keyword: Optional[str] = None,
-    org: Optional[str] = None,
-    industry: Optional[str] = None,
-    rating: Optional[str] = None,
-    code: Optional[str] = None,
-    start: Optional[str] = None,
-    end: Optional[str] = None,
+    keyword: str | None = None,
+    org: str | None = None,
+    industry: str | None = None,
+    rating: str | None = None,
+    code: str | None = None,
+    start: str | None = None,
+    end: str | None = None,
     page: int = Query(default=1, ge=1),
     size: int = Query(default=20, ge=1, le=200),
     sort: str = Query(default="-publish_date"),
@@ -45,16 +44,16 @@ def facets(db: Session = Depends(get_db)) -> dict:
 
 @router.get("/ratings")
 def ratings(
-    date_: Optional[str] = Query(default=None, alias="date"),
-    org: Optional[str] = None,
-    code: Optional[str] = None,
+    date_: str | None = Query(default=None, alias="date"),
+    org: str | None = None,
+    code: str | None = None,
     page: int = Query(default=1, ge=1),
     size: int = Query(default=50, ge=1, le=500),
     db: Session = Depends(get_db),
 ) -> dict:
     page, size = clamp_page(page, size)
     q = select(RatingEvent)
-    d: Optional[date] = parse_date(date_)
+    d: date | None = parse_date(date_)
     if d:
         q = q.where(RatingEvent.trade_date == d)
     if org:

@@ -1,8 +1,6 @@
 """财务数据 (financials) endpoints — a NEW module for the stock version."""
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
@@ -71,7 +69,7 @@ def earnings(code: str, limit: int = Query(default=12, ge=1, le=40), db: Session
 @router.get("/{code}/disclosures")
 def disclosures(
     code: str,
-    category: Optional[str] = None,
+    category: str | None = None,
     page: int = Query(default=1, ge=1),
     size: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db),

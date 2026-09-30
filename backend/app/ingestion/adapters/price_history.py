@@ -99,7 +99,8 @@ class PriceHistoryAdapter(SymbolLoopAdapter):
         codes = list({r["code"] for r in rows})
         adjust = rows[0]["adjust"] if rows else "qfq"
         scope = select(DailyQuote).where(DailyQuote.code.in_(codes), DailyQuote.adjust == adjust)
-        return bulk_upsert(session, DailyQuote, rows, key_fields=["code", "trade_date", "adjust"], scope=scope)
+        return bulk_upsert(session, DailyQuote, rows,
+                           key_fields=["code", "trade_date", "adjust"], scope=scope)
 
 
 adapter = PriceHistoryAdapter()

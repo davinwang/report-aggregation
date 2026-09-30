@@ -14,7 +14,7 @@ step is logged and skipped so the rest still run.
 """
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.orm import Session
 

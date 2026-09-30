@@ -1,8 +1,6 @@
 """Meta endpoints: securities search, industry taxonomy, period windows, indicator aliases."""
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
@@ -23,8 +21,8 @@ SECURITY_TYPES: tuple[str, ...] = ("stock", "index", "etf", "bond", "future", "o
 
 @router.get("/securities")
 def securities(
-    keyword: Optional[str] = None,
-    type: Optional[str] = Query(default=None, description="|".join(SECURITY_TYPES)),
+    keyword: str | None = None,
+    type: str | None = Query(default=None, description="|".join(SECURITY_TYPES)),
     limit: int = Query(default=50, le=500),
     db: Session = Depends(get_db),
 ) -> dict:

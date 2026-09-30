@@ -12,7 +12,7 @@ updown column).
 from __future__ import annotations
 
 from datetime import date
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -36,7 +36,7 @@ class IndexOptionsAdapter(BaseAdapter):
     name = "index_options"
     description = "沪深300/中证1000/上证50 股指期权 T型报价 (IO/MO/HO)"
 
-    def fetch(self, ref: Optional[date] = None, **kwargs) -> Any:
+    def fetch(self, ref: date | None = None, **kwargs) -> Any:
         ak = get_ak()
         ref = ref if isinstance(ref, date) else date.today()
         out: list[tuple[str, Any]] = []
@@ -71,7 +71,8 @@ class IndexOptionsAdapter(BaseAdapter):
                     "cp": parsed["cp"],
                     "close": last,
                     # 涨跌 = 最新价 − 昨结算价 → recover 昨结算价 for the model.
-                    "pre_settle": (round(last - updown, 4) if (last is not None and updown is not None) else None),
+                    "pre_settle": (round(last - updown, 4)
+                                   if (last is not None and updown is not None) else None),
                     "volume": to_float(get(r, "volume", "成交量")),
                     "oi": to_float(get(r, "position", "持仓量")),
                 })

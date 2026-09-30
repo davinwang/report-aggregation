@@ -12,7 +12,7 @@ All computations are read-only over ``daily_quote``; no snapshots are stored.
 from __future__ import annotations
 
 from datetime import date
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from sqlalchemy import desc, func, select
@@ -71,7 +71,7 @@ def correlation_matrix(
         return {"ref": None, "window": window, "codes": [], "names": [], "matrix": [], "pairs": []}
 
     # Align on common dates (most indices share the trading calendar).
-    common: Optional[set[date]] = None
+    common: set[date] | None = None
     for dates, _r in series.values():
         common = set(dates) if common is None else (common & set(dates))
     common_dates = sorted(common or [])
@@ -86,9 +86,9 @@ def correlation_matrix(
         stacked[code] = [float(rets[idx[d]]) for d in common_dates]
 
     n = len(kept)
-    matrix: list[list[Optional[float]]] = []
+    matrix: list[list[float | None]] = []
     for i in range(n):
-        row: list[Optional[float]] = []
+        row: list[float | None] = []
         a = np.array(stacked[kept[i]])
         for j in range(n):
             b = np.array(stacked[kept[j]])
@@ -130,7 +130,10 @@ def beta_table(
 ) -> dict[str, Any]:
     """β / ρ² of stocks versus the benchmark over the rolling window."""
     b_dates, b_closes = _load_series(session, benchmark, window)
-    b_rets_map = dict(zip(*_returns(b_dates, b_closes)))
+    # strict=True: _returns pairs dates[i+1] with rets[i], so a length mismatch means a
+    # corrupt series — zip's default truncation would build a dict keyed by the wrong
+    # dates and silently shift the whole beta computation.
+    b_rets_map = dict(zip(*_returns(b_dates, b_closes), strict=True))
     if not b_rets_map:
         return {"ref": None, "benchmark": benchmark, "window": window, "rows": []}
 
@@ -150,10 +153,10 @@ def beta_table(
     }
 
     rows: list[dict[str, Any]] = []
-    ref: Optional[date] = None
+    ref: date | None = None
     for code in codes:
         s_dates, s_closes = _load_series(session, code, window)
-        rets = dict(zip(*_returns(s_dates, s_closes)))
+        rets = dict(zip(*_returns(s_dates, s_closes), strict=True))
         common = sorted(set(rets) & set(b_rets_map))
         if len(common) < 20:
             continue
@@ -178,7 +181,8 @@ def beta_table(
     return {
         "ref": ref.isoformat() if ref else None,
         "benchmark": benchmark,
-        "benchmark_name": (session.scalar(select(Security.name).where(Security.code == benchmark)) or benchmark),
+        "benchmark_name": (session.scalar(
+            select(Security.name).where(Security.code == benchmark)) or benchmark),
         "window": window,
         "rows": rows,
     }

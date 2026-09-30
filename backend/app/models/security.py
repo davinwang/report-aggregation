@@ -6,7 +6,6 @@ Industry uses 申万一级 (``industry_sw``) plus a coarse sidebar group (``indu
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
 
 from sqlalchemy import Boolean, Date, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
@@ -82,7 +81,7 @@ INDUSTRY_SUB_GROUPS: dict[str, str] = {
 _INDUSTRY_SUFFIX = ("Ⅱ", "III", "II")
 
 
-def group_of(industry_sw: Optional[str]) -> str:
+def group_of(industry_sw: str | None) -> str:
     if not industry_sw:
         return "未分类"
     key = industry_sw.strip()
@@ -102,9 +101,9 @@ class Security(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(64), default="")
     type: Mapped[str] = mapped_column(String(16), default="stock", index=True)  # stock|index|future|option
     exchange: Mapped[str] = mapped_column(String(16), default="")      # SSE|SZSE|BSE|CFFEX|...
-    industry_sw: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)   # 申万一级
-    industry_group: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, index=True)
-    list_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    industry_sw: Mapped[str | None] = mapped_column(String(32), nullable=True)   # 申万一级
+    industry_group: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    list_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     def __repr__(self) -> str:  # pragma: no cover
@@ -119,12 +118,12 @@ class IndustryBoard(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(64), index=True)
-    code: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    code: Mapped[str | None] = mapped_column(String(32), nullable=True)
     source: Mapped[str] = mapped_column(String(16), default="em")      # em|sw
-    group: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
-    change_pct: Mapped[Optional[float]] = mapped_column(nullable=True)  # latest board move
-    turnover: Mapped[Optional[float]] = mapped_column(nullable=True)
-    company_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    group: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    change_pct: Mapped[float | None] = mapped_column(nullable=True)  # latest board move
+    turnover: Mapped[float | None] = mapped_column(nullable=True)
+    company_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class IndustryConstituent(Base):
@@ -139,4 +138,4 @@ class IndustryConstituent(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     board_name: Mapped[str] = mapped_column(String(64))
     code: Mapped[str] = mapped_column(String(16))
-    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(64), nullable=True)

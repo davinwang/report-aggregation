@@ -1,8 +1,6 @@
 """周统计 (weekly statistics) — 机构×行业 matrix + 友商报告与活动 (Phase 2)."""
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -24,7 +22,7 @@ def weeks(
 
 @router.get("/matrix")
 def matrix(
-    week: Optional[str] = Query(default=None, description="week-ending date YYYY-MM-DD"),
+    week: str | None = Query(default=None, description="week-ending date YYYY-MM-DD"),
     db: Session = Depends(get_db),
 ) -> dict:
     """Tab2 — 机构×行业 report-count matrix for one week."""
@@ -33,7 +31,7 @@ def matrix(
 
 @router.get("/peer")
 def peer(
-    period: Optional[str] = Query(default=None, description="period key YYYY-MM-DD"),
+    period: str | None = Query(default=None, description="period key YYYY-MM-DD"),
     db: Session = Depends(get_db),
 ) -> dict:
     """Tab1 — 友商报告与活动 (upload-driven; upload flow arrives in Phase 3)."""

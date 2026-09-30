@@ -1,8 +1,6 @@
 """资讯舆情 (news) — whole-market flash news list + summary."""
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -15,11 +13,11 @@ router = APIRouter(prefix="/api/news", tags=["news"])
 
 @router.get("")
 def list_news(
-    q: Optional[str] = None,
-    sentiment: Optional[str] = Query(default=None, description="利好|中性|利空"),
-    source: Optional[str] = Query(default=None, description="em|cls"),
-    start: Optional[str] = None,
-    end: Optional[str] = None,
+    q: str | None = None,
+    sentiment: str | None = Query(default=None, description="利好|中性|利空"),
+    source: str | None = Query(default=None, description="em|cls"),
+    start: str | None = None,
+    end: str | None = None,
     page: int = Query(default=1, ge=1),
     size: int = Query(default=20, ge=1, le=200),
     db: Session = Depends(get_db),

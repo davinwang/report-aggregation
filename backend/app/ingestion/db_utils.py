@@ -8,7 +8,7 @@ key, then update-or-insert in memory and flush in batches.
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
@@ -29,8 +29,8 @@ def bulk_upsert(
     model: type,
     rows: Iterable[dict[str, Any]],
     key_fields: Sequence[str],
-    scope: Optional[Select] = None,
-    mutable_fields: Optional[Sequence[str]] = None,
+    scope: Select | None = None,
+    mutable_fields: Sequence[str] | None = None,
 ) -> int:
     """Upsert ``rows`` into ``model`` keyed by ``key_fields``.
 

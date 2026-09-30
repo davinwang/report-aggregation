@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import re
 from datetime import date, timedelta
-from typing import Optional
 
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
@@ -33,13 +32,13 @@ VARIETIES = list(VARIETY_UNDERLYING)
 _SYMBOL_RE = re.compile(r"^([A-Z]{1,2})(\d{4})$")
 
 
-def underlying_of(symbol: str) -> Optional[tuple[str, str]]:
+def underlying_of(symbol: str) -> tuple[str, str] | None:
     """Return ``(sina_code, display_name)`` for a contract symbol, or None."""
     m = _SYMBOL_RE.match((symbol or "").strip().upper())
     return VARIETY_UNDERLYING.get(m.group(1)) if m else None
 
 
-def variety_of(symbol: str) -> Optional[str]:
+def variety_of(symbol: str) -> str | None:
     m = _SYMBOL_RE.match((symbol or "").strip().upper())
     return m.group(1) if m else None
 
@@ -51,7 +50,7 @@ def third_friday(year: int, month: int) -> date:
     return first_friday + timedelta(days=14)
 
 
-def contract_expiry(symbol: str) -> Optional[date]:
+def contract_expiry(symbol: str) -> date | None:
     """Parse the expiry date from a CFFEX contract symbol (e.g. ``IF2412`` → 2024-12-20)."""
     m = _SYMBOL_RE.match((symbol or "").strip().upper())
     if not m:
@@ -62,17 +61,17 @@ def contract_expiry(symbol: str) -> Optional[date]:
     return third_friday(2000 + yy, mm)
 
 
-def days_to_expiry(symbol: str, ref: date) -> Optional[int]:
+def days_to_expiry(symbol: str, ref: date) -> int | None:
     exp = contract_expiry(symbol)
     return (exp - ref).days if exp else None
 
 
 def compute_basis(
-    settle: Optional[float],
-    spot: Optional[float],
+    settle: float | None,
+    spot: float | None,
     symbol: str,
     ref: date,
-) -> tuple[Optional[float], Optional[float], Optional[date], Optional[int]]:
+) -> tuple[float | None, float | None, date | None, int | None]:
     """Return ``(basis, basis_annualized_pct, expiry, days_to_expiry)``.
 
     Any missing input degrades gracefully to ``None`` for the derived values.
@@ -82,14 +81,14 @@ def compute_basis(
     if settle is None or spot is None:
         return None, None, expiry, dte
     basis = settle - spot
-    annualized: Optional[float] = None
+    annualized: float | None = None
     if spot and dte and dte > 0:
         annualized = round(basis / spot * (365.0 / dte) * 100.0, 3)
     return round(basis, 3), annualized, expiry, dte
 
 
 # ----------------------------- read helpers (API) -----------------------------
-def latest_date(session: Session, variety: Optional[str] = None) -> Optional[date]:
+def latest_date(session: Session, variety: str | None = None) -> date | None:
     q = select(IndexFutureDaily.trade_date).order_by(desc(IndexFutureDaily.trade_date)).limit(1)
     if variety:
         q = select(IndexFutureDaily.trade_date).where(IndexFutureDaily.variety == variety).order_by(
@@ -98,7 +97,7 @@ def latest_date(session: Session, variety: Optional[str] = None) -> Optional[dat
     return session.scalar(q)
 
 
-def term_structure(session: Session, variety: str, ref: Optional[date] = None) -> dict:
+def term_structure(session: Session, variety: str, ref: date | None = None) -> dict:
     """All contracts of ``variety`` on the reference date, ordered by expiry."""
     ref = ref or latest_date(session, variety)
     if ref is None:
@@ -126,7 +125,7 @@ def term_structure(session: Session, variety: str, ref: Optional[date] = None) -
     return {"trade_date": ref.isoformat(), "spot": spot, "contracts": contracts}
 
 
-def main_contract(contracts: list[dict]) -> Optional[dict]:
+def main_contract(contracts: list[dict]) -> dict | None:
     """The near-month contract with the largest open interest (front-month proxy)."""
     live = [c for c in contracts if (c.get("days_to_expiry") or 9999) >= 0 and (c.get("oi") or 0) > 0]
     pool = live or contracts
@@ -156,11 +155,13 @@ def history(session: Session, variety: str, days: int = 60) -> dict:
         spot.append(pick.underlying_index_close)
         symbols.append(pick.symbol)
     if len(dates) > days:
-        dates, basis, ann, spot, symbols = dates[-days:], basis[-days:], ann[-days:], spot[-days:], symbols[-days:]
+        dates, basis, ann, spot, symbols = (
+            dates[-days:], basis[-days:], ann[-days:], spot[-days:], symbols[-days:]
+        )
     return {"dates": dates, "basis": basis, "basis_annualized": ann, "spot": spot, "symbols": symbols}
 
 
-def overview(session: Session, ref: Optional[date] = None) -> list[dict]:
+def overview(session: Session, ref: date | None = None) -> list[dict]:
     """Per-variety front-month basis snapshot for the dashboard."""
     out: list[dict] = []
     for v in VARIETIES:
