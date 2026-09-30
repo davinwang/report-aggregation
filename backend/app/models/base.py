@@ -36,8 +36,17 @@ class TimestampMixin:
 
 
 class SecurityType(str, enum.Enum):
+    """Tradable/quotable instrument kinds.
+
+    ``etf`` and ``bond`` (可转债) share the ``daily_quote`` table with stocks and
+    indices — they are only distinguished for the sidebar/universe filters, so
+    widening this enum needs no schema migration (``security.type`` is a plain string).
+    """
+
     stock = "stock"
     index = "index"
+    etf = "etf"
+    bond = "bond"
     future = "future"
     option = "option"
 

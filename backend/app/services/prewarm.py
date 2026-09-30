@@ -1,10 +1,11 @@
 """Prewarm the hot read caches so first page visits never pay a cold computation.
 
-The heavy read endpoints (全市场速览 ``quant.matrix``, 板块联动 ``linkage.*``) cache
-their computed payloads; without a warm cache the first visitor after a container
-restart / ingestion run pays the full computation over the bind-mounted SQLite
-file. Warming the default parameter sets at boot and after each ingestion keeps
-first visits fast — data still comes from the local DB, the cache only mirrors it.
+The heavy read endpoints (全市场速览 ``quant.matrix``, 技术信号矩阵 ``quant.signal``,
+板块联动 ``linkage.*``) cache their computed payloads; without a warm cache the first
+visitor after a container restart / ingestion run pays the full computation over the
+bind-mounted SQLite file. Warming the default parameter sets at boot and after each
+ingestion keeps first visits fast — data still comes from the local DB, the cache only
+mirrors it.
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ from app.api.v1.endpoints import quant as quant_ep
 from app.core.cache import cache_get
 from app.core.db import session_scope
 from app.core.logging import get_logger
+from app.services import signal_matrix as signal_svc
 
 logger = get_logger(__name__)
 
@@ -25,6 +27,14 @@ _MATRIX_KEYS: tuple[tuple[str, int], ...] = (
     ("index+active", 60),
     ("index+active", 120),
     ("index+active", 30),
+)
+#: 技术信号矩阵 — the 技术指标 page's default tab. Scoped per universe because each one
+#: is a separate compute over a separate set of bars.
+_SIGNAL_KEYS: tuple[tuple[str, str, int], ...] = (
+    ("index", "daily", 60),
+    ("etf", "daily", 60),
+    ("bond", "daily", 50),
+    ("stock", "daily", 60),
 )
 _BETA_KEYS: tuple[tuple[str, int, int], ...] = (
     ("sh000300", 120, 100),
@@ -48,6 +58,12 @@ def prewarm_hot_caches() -> None:
                 jobs.append((
                     f"quant.matrix:{scope}:{limit}",
                     partial(quant_ep.matrix, freq="daily", limit=limit, scope=scope, db=db),
+                ))
+            for scope, freq, limit in _SIGNAL_KEYS:
+                jobs.append((
+                    signal_svc.cache_key_for(scope=scope, freq=freq, limit=limit),
+                    partial(quant_ep.signal_matrix, scope=scope, freq=freq, limit=limit,
+                            columns=None, liquidity_floor=signal_svc.LIQUIDITY_FLOOR, db=db),
                 ))
             for benchmark, window, limit in _BETA_KEYS:
                 jobs.append((

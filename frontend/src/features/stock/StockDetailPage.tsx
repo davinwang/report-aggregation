@@ -98,7 +98,12 @@ export default function StockDetailPage() {
         <Col xs={24} lg={14}>
           <Card size="small" title="走势 (前复权)" style={{ marginBottom: 12 }} loading={series.isFetching && !series.data}>
             {series.data && series.data.dates.length > 0 ? (
-              <KLineChart series={series.data} sub="macd" height={420} />
+              <KLineChart
+                series={series.data}
+                overlays={["ma", "boll"]}
+                subs={["vol", "macd"]}
+                height={460}
+              />
             ) : (
               <Typography.Text type="secondary">暂无行情数据（请运行 price_history 采集）。</Typography.Text>
             )}

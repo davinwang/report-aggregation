@@ -114,10 +114,35 @@ def build_server() -> Any:
         )
 
     @mcp.tool()
-    async def technical_series(code: str, period: str = "1y", indicators: Optional[str] = None) -> dict:
-        """技术指标序列 (ECharts-ready). period: 6m|1y|2y|3y|5y;
-        indicators: 逗号分隔 (ma,macd,kdj,rsi,boll...)."""
-        return await _call(tools.technical_series, code, period=period, indicators=indicators)
+    async def technical_series(
+        code: str,
+        period: str = "1y",
+        indicators: Optional[str] = None,
+        freq: str = "daily",
+        params: Optional[str] = None,
+    ) -> dict:
+        """技术指标序列 (ECharts-ready). period: 6m|1y|2y|3y|5y; freq: daily|weekly|monthly;
+        indicators: 逗号分隔 (ma,macd,kdj,rsi,boll...); params: 指标参数覆盖, 如 "ma=5,10,20"."""
+        return await _call(tools.technical_series, code, period=period, indicators=indicators,
+                           freq=freq, params=params)
+
+    @mcp.tool()
+    async def indicator_catalog(group: Optional[str] = None) -> dict:
+        """技术指标目录: 每项指标的中文名/分类/主图副图/公式说明/默认参数;
+        group 过滤: 趋势|震荡|动量|量价|波动|衍生品."""
+        return tools.indicator_catalog(group)
+
+    @mcp.tool()
+    async def signal_matrix(
+        scope: str = "index",
+        columns: Optional[str] = None,
+        freq: str = "daily",
+        limit: int = 60,
+    ) -> dict:
+        """技术信号矩阵: 品种 × 指标的 偏多/偏空/中性/弃权 表决 + 净方向排序.
+        scope: index(宽基)|index+all(含行业)|etf|bond|stock|all; columns: 逗号分隔列 key."""
+        return await _call(tools.signal_matrix, scope=scope, columns=columns, freq=freq,
+                           limit=limit)
 
     @mcp.tool()
     async def market_matrix(scope: str = "index+active", limit: int = 60) -> dict:

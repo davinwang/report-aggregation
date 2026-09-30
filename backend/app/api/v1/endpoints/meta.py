@@ -11,15 +11,20 @@ from app.api.common import envelope
 from app.core.db import get_db
 from app.models.security import INDUSTRY_GROUPS, IndustryBoard, Security
 from app.services.aggregation import latest_trade_date
-from app.services.indicators import ALIASES, INDICATORS
+from app.services.indicators import ALIASES, FREQS, INDICATORS, catalog
+from app.services.signal_matrix import SCOPES, STATE_LABELS
 
 router = APIRouter(prefix="/api/meta", tags=["meta"])
+
+#: Security kinds the search box can filter by. ``etf``/``bond`` were added with the
+#: 场内基金/可转债 technical feeds; they share ``daily_quote`` with stocks and indices.
+SECURITY_TYPES: tuple[str, ...] = ("stock", "index", "etf", "bond", "future", "option")
 
 
 @router.get("/securities")
 def securities(
     keyword: Optional[str] = None,
-    type: Optional[str] = Query(default=None, description="stock|index|future|option"),
+    type: Optional[str] = Query(default=None, description="|".join(SECURITY_TYPES)),
     limit: int = Query(default=50, le=500),
     db: Session = Depends(get_db),
 ) -> dict:
@@ -68,4 +73,23 @@ def indicator_aliases() -> dict:
     return envelope({
         "indicators": sorted(INDICATORS.keys()),
         "aliases": ALIASES,
+    })
+
+
+@router.get("/indicator-catalog")
+def indicator_catalog() -> dict:
+    """Same catalog as ``/api/quant/indicator-catalog``, with the raw key registries.
+
+    Duplicated here on purpose: ``/api/meta`` is the page that answers "what does this
+    platform know", and the header's indicator search shouldn't need the quant client.
+    """
+    items = catalog()
+    return envelope({
+        "items": items,
+        "indicators": sorted(INDICATORS.keys()),
+        "aliases": ALIASES,
+        "freqs": list(FREQS),
+        "groups": sorted({i["group"] for i in items}),
+        "signal_states": STATE_LABELS,
+        "signal_scopes": list(SCOPES),
     })

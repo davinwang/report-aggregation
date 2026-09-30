@@ -14,7 +14,7 @@ from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.api.common import clamp_page, parse_date
-from app.api.v1.endpoints.quant import WARMUP, _resolve_bars
+from app.api.v1.endpoints.quant import WARMUP, _parse_params, _resolve_bars, _resolve_freq
 from app.models.financial import FinancialIndicator, FinancialStatement
 from app.services import basis as basis_svc
 from app.services import flow as flow_svc
@@ -22,18 +22,22 @@ from app.services import linkage as linkage_svc
 from app.services import matrix as matrix_svc
 from app.services import news as news_svc
 from app.services import options as options_svc
+from app.services import signal_matrix as signal_svc
 from app.services import signals as signals_svc
 from app.services.accuracy import leaderboard
 from app.services.aggregation import market_dashboard as market_dashboard_svc
 from app.services.aggregation import research_reports_query, stock_detail
-from app.services.indicators import DEFAULT_INDICATORS, build_series
+from app.services.indicators import DEFAULT_INDICATORS, FREQ_BARS, build_series, catalog
 from app.services.quotes import load_bars
+from app.services.signal_matrix import SCOPES
 
 __all__ = [
     "market_dashboard",
     "stock_snapshot",
     "search_reports",
     "technical_series",
+    "indicator_catalog",
+    "signal_matrix",
     "market_matrix",
     "list_signals",
     "accuracy_leaderboard",
@@ -85,16 +89,58 @@ def technical_series(
     code: str,
     period: str = "1y",
     indicators: Optional[str] = None,
+    freq: str = "daily",
+    params: Optional[str] = None,
 ) -> dict:
     """技术指标序列 (ECharts-ready): MA/EMA/BOLL/MACD/KDJ/RSI... over stored bars.
 
     ``period``: 6m|1y|2y|3y|5y (or a bar count, capped at 1500). ``indicators``:
     comma-separated (e.g. "ma,macd,kdj"); defaults to the platform 6-indicator set.
+    ``freq``: daily|weekly|monthly (weekly/monthly are resampled from daily bars).
+    ``params``: indicator overrides, e.g. "ma=5,10,20;rsi=6,12".
     """
     names = [x.strip() for x in (indicators or "").split(",") if x.strip()] or DEFAULT_INDICATORS
     bars = _resolve_bars(period)
-    df = load_bars(db, code, limit=bars + WARMUP)
-    return build_series(df, names=names, bars=bars, code=code)
+    key = _resolve_freq(freq)
+    df = load_bars(db, code, limit=bars * FREQ_BARS[key] + WARMUP)
+    return build_series(df, names=names, bars=bars, code=code, freq=key,
+                        params=_parse_params(params))
+
+
+def indicator_catalog(group: Optional[str] = None) -> dict:
+    """技术指标目录: 每项指标的中文名/分类/主图副图/公式说明/默认参数.
+
+    Lets an AI client discover what the platform computes instead of guessing keys —
+    the same list the 技术指标 page renders in 指标说明.
+    """
+    items = catalog([group] if group else None)
+    return {"groups": sorted({i["group"] for i in items}), "count": len(items), "items": items}
+
+
+def signal_matrix(
+    db: Session,
+    scope: str = "index",
+    columns: Optional[str] = None,
+    freq: str = "daily",
+    limit: int = 60,
+) -> dict:
+    """技术信号矩阵: 品种 × 指标 的方向表决 (偏多/偏空/中性/弃权) + 净方向排序.
+
+    ``scope``: index (宽基) | index+all (含行业指数) | etf | bond | stock | all.
+    Every row carries the per-column readings with the 口径 note for each, the signed
+    ``net`` tally, and — when the data is stale or too thinly traded to trust — the
+    reason it was excluded from the market tally.
+    """
+    scope = scope if scope in SCOPES else "index"
+    limit = max(1, min(int(limit), 500))
+    payload = signal_svc.snapshot(
+        db,
+        scope=scope,
+        columns=[x.strip() for x in (columns or "").split(",") if x.strip()] or None,
+        freq=_resolve_freq(freq),
+        limit=limit,
+    )
+    return {"count": len(payload["rows"]), **payload}
 
 
 def market_matrix(db: Session, scope: str = "index+active", limit: int = 60) -> dict:

@@ -13,6 +13,7 @@ import type {
   FreshnessRow,
   HealthDeep,
   IngestionRow,
+  IndicatorMeta,
   LhbRow,
   LinkageMatrix,
   MarginPayload,
@@ -28,7 +29,9 @@ import type {
   QuantSeries,
   ReportBrief,
   SecurityMeta,
+  SignalMatrixPayload,
   SignalRow,
+  SignalRule,
   SignalSummary,
   StockDetail,
   StockFlowRow,
@@ -74,10 +77,28 @@ export const getResearchFacets = () =>
 export const getOrgs = () => getData<{ org: string; count: number }[]>("/api/research/orgs");
 
 // ---- quant / technical ----
-export const getSeries = (params: { code: string; indicators?: string; period?: string; freq?: string; adjust?: string }) =>
-  getData<QuantSeries>("/api/quant/series", params as Record<string, unknown>);
+export interface SeriesQuery {
+  code: string;
+  indicators?: string;
+  period?: string;
+  freq?: string;
+  adjust?: string;
+  params?: string;
+}
+export const getSeries = (params: SeriesQuery) =>
+  getData<QuantSeries>("/api/quant/series", { ...params } as Record<string, unknown>);
 export const getMatrix = (params?: { limit?: number; scope?: string }) =>
   getData<QuantMatrixRow[]>("/api/quant/matrix", params);
+export const getIndicatorCatalog = (group?: string) =>
+  getData<IndicatorMeta[]>("/api/quant/indicator-catalog", group ? { group } : undefined);
+export const getSignalRules = () => getData<SignalRule[]>("/api/quant/signal-rules");
+export const getSignalMatrix = (params: {
+  scope: string;
+  columns?: string;
+  freq?: string;
+  limit?: number;
+  liquidity_floor?: number;
+}) => getData<SignalMatrixPayload>("/api/quant/signal-matrix", params);
 
 // ---- financials ----
 export const getStatements = (code: string, type: string, source = "em", limit = 12) =>

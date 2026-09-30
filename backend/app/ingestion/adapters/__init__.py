@@ -5,8 +5,12 @@ look them up uniformly. Add new adapters here (and to the ordering lists) as the
 """
 from __future__ import annotations
 
+from app.ingestion.adapters.cov_bond_daily import adapter as cov_bond_daily
+from app.ingestion.adapters.cov_bond_daily import universe_adapter as cov_bond_universe
 from app.ingestion.adapters.disclosures import adapter as disclosures
 from app.ingestion.adapters.earnings import adapter as earnings
+from app.ingestion.adapters.etf_daily import adapter as etf_daily
+from app.ingestion.adapters.etf_daily import universe_adapter as etf_universe
 from app.ingestion.adapters.fin_indicators import adapter as fin_indicators
 from app.ingestion.adapters.financials_em import adapter as financials_em
 from app.ingestion.adapters.index_daily import adapter as index_daily
@@ -31,12 +35,16 @@ REGISTRY: dict[str, BaseAdapter] = {a.name: a for a in (
     security_master,
     spot_snapshot,
     index_daily,
+    etf_universe,
+    cov_bond_universe,
     ratings_daily,
     recommend_pool,
     industry_boards,
     industry_constituents,
     earnings,
     price_history,
+    etf_daily,
+    cov_bond_daily,
     research_reports,
     financials_em,
     fin_indicators,
@@ -62,6 +70,8 @@ BULK_ORDER = [
     "index_daily",
     "index_futures",
     "index_options",
+    "etf_daily",
+    "cov_bond_daily",
     "northbound",
     "margin",
     "lhb",
@@ -87,14 +97,15 @@ PER_SYMBOL_ORDER = [
 # placeholder row once the evening clearing finishes (~16:30 CST) — the post-close
 # intraday runs (15:10-15:50) are what persist the frozen closing 涨跌家数.
 #   intraday          实时/盘中: 交易时段每10分钟 (市场看板/全市场速览/板块热力/沪深港通涨跌家数)
-#   daily_close       日频·收盘后: 工作日 16:30 (技术指标/基差/期权)
+#   daily_close       日频·收盘后: 工作日 16:30 (技术指标/基差/期权/ETF/可转债)
 #   daily_evening     日频·晚间: 工作日 19:00 (两融/龙虎榜/研报库/信号/公告)
-#   weekly_master     周度主数据: 周一 (证券主档/行业成分)
+#   weekly_master     周度主数据: 周一 (证券主档/行业成分/ETF与可转债代码表)
 #   weekly_financials 周期·财报: 周六 (业绩/财务指标/三大报表)
 #   news_refresh      资讯舆情·快讯: 每日 07:00-23:00 每20分钟 (东财快讯/财联社)
 FEED_GROUPS: dict[str, list[str]] = {
     "intraday": ["northbound", "spot_snapshot", "industry_boards"],
-    "daily_close": ["index_daily", "index_futures", "index_options", "price_history"],
+    "daily_close": ["index_daily", "index_futures", "index_options", "price_history",
+                    "etf_daily", "cov_bond_daily"],
     "daily_evening": [
         "margin",
         "lhb",
@@ -104,7 +115,8 @@ FEED_GROUPS: dict[str, list[str]] = {
         "stock_flow",
         "disclosures",
     ],
-    "weekly_master": ["security_master", "industry_constituents"],
+    "weekly_master": ["security_master", "industry_constituents", "etf_universe",
+                      "cov_bond_universe"],
     "weekly_financials": ["earnings", "fin_indicators", "financials_em"],
     "news_refresh": ["news_flash"],
 }

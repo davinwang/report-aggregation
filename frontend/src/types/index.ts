@@ -10,7 +10,7 @@ export interface Paged<T> {
   meta: { total: number; page: number; size: number; pages: number; [k: string]: unknown };
 }
 
-export type SecurityType = "stock" | "index" | "future" | "option";
+export type SecurityType = "stock" | "index" | "etf" | "bond" | "future" | "option";
 
 export interface SecurityMeta {
   code: string;
@@ -102,11 +102,120 @@ export interface Freshness {
 
 export interface QuantSeries {
   code: string;
+  freq?: BarFreq;
   dates: string[];
   candle: [number | null, number | null, number | null, number | null][]; // [open, close, low, high]
   volume: (number | null)[];
   indicators: Record<string, Record<string, (number | null)[]>>;
 }
+
+// ---- 技术指标 (richer surface) ----
+
+/** Bar frequency. Weekly/monthly are resampled server-side from the daily bars. */
+export type BarFreq = "daily" | "weekly" | "monthly";
+
+/** One indicator as the backend describes it (drives the picker + 指标说明 panel). */
+export interface IndicatorMeta {
+  key: string;
+  label: string;
+  group: "趋势" | "震荡" | "动量" | "量价" | "波动" | "衍生品" | string;
+  /** main = overlays the price grid; sub = gets its own grid below. */
+  pane: "main" | "sub";
+  desc: string;
+  /** Default parameter values, keyed by the implementation's keyword names. */
+  params: Record<string, number | number[] | string>;
+  columns: string[];
+  /** Optional feed columns this indicator degrades without (amount/turnover_rate/oi). */
+  needs: string[];
+  aliases: string[];
+}
+
+/** A matrix column's direction rule (see /api/quant/signal-rules). */
+export interface SignalRule {
+  key: string;
+  label: string;
+  needs: string[];
+  doc: string;
+}
+
+/** 偏多 / 偏空 / 中性 / 弃权 / 无数据 — 弃权 and 无数据 never count toward the net tally. */
+export type SignalState = "bull" | "bear" | "neutral" | "abstain" | "na";
+
+export interface SignalCell {
+  state: SignalState;
+  label: string;
+  /** Signed vote weight (-2..+2); 0 for 中性/弃权/无数据. */
+  score: number;
+  voted: boolean;
+  /** One-line 口径 explanation, shown on hover. */
+  note: string;
+}
+
+export interface SignalMatrixRow {
+  code: string;
+  name: string;
+  type: SecurityType | string;
+  exchange: string;
+  date: string | null;
+  close: number | null;
+  change_pct: number | null;
+  /** Latest 成交额 (元), or a volume×close proxy for feeds that lack it. */
+  turnover: number | null;
+  signals: Record<string, SignalCell>;
+  bulls: number;
+  bears: number;
+  neutrals: number;
+  abstains: number;
+  /** How many columns actually voted — the denominator behind `net`. */
+  voted: number;
+  net: number;
+  verdict: "偏多" | "偏空" | "分歧" | "无方向" | "无数据";
+  /** Why this row doesn't count toward the market tally, if it doesn't. */
+  excluded: string | null;
+}
+
+export interface SignalColumnTally {
+  bull: number;
+  bear: number;
+  neutral: number;
+  abstain: number;
+  na: number;
+  bull_pct: number;
+  bear_pct: number;
+  abstain_pct: number;
+  decided: number;
+  /** bull − bear, across participating rows only. */
+  net: number;
+}
+
+export interface SignalMatrixPayload {
+  rows: SignalMatrixRow[];
+  columns: { key: string; label: string }[];
+  summary: {
+    total: number;
+    participating: number;
+    excluded: Record<string, number>;
+    excluded_total: number;
+    columns: Record<string, SignalColumnTally>;
+    market_net: number;
+    market_verdict: string;
+    breadth: { bull: number; bear: number; split: number; flat: number };
+    no_vote: number;
+  };
+  freq: BarFreq;
+  as_of: string | null;
+  meta: {
+    scope: string;
+    limit: number;
+    bars: number;
+    liquidity_floor: number;
+    universe: number;
+    excluded: Record<string, number>;
+  };
+}
+
+/** Scopes offered by the signal-matrix tab. `index` is the 宽基-only default. */
+export type SignalScope = "index" | "index+all" | "etf" | "bond" | "stock" | "all";
 
 export interface FinancialIndicatorRow {
   report_period: string;
