@@ -21,6 +21,7 @@ const FlowPage = lazy(() => import("@/features/flow/FlowPage"));
 const SignalsPage = lazy(() => import("@/features/signals/SignalsPage"));
 const PoolPage = lazy(() => import("@/features/pool/PoolPage"));
 const AccuracyPage = lazy(() => import("@/features/accuracy/AccuracyPage"));
+const InsightsPage = lazy(() => import("@/features/insights/InsightsPage"));
 const WeeklyPage = lazy(() => import("@/features/weekly/WeeklyPage"));
 const MarketOverviewPage = lazy(() => import("@/features/market/MarketOverviewPage"));
 const LinkagePage = lazy(() => import("@/features/linkage/LinkagePage"));
@@ -70,6 +71,7 @@ export default function AppRoutes(): ReactElement {
           <Route path="/signals" element={<SignalsPage />} />
           <Route path="/pool" element={<PoolPage />} />
           <Route path="/accuracy" element={<AccuracyPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
           <Route path="/weekly" element={<WeeklyPage />} />
           <Route path="/market-overview" element={<MarketOverviewPage />} />
           <Route path="/linkage" element={<LinkagePage />} />

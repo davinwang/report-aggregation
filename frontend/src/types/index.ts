@@ -687,3 +687,81 @@ export interface AdminConfig {
   };
   database: { kind: string; url: string };
 }
+
+// ---- Phase 3: 研报洞察 (research insights) ----
+export interface SentimentRow {
+  code: string;
+  name: string | null;
+  reports: number;
+  orgs: number;
+  bull: number;
+  bear: number;
+  neutral: number;
+  consensus: number;
+  dispersion: number;
+  label: string;
+}
+
+export interface SentimentPayload {
+  ref: string | null;
+  days: number;
+  rows: SentimentRow[];
+  market: {
+    stocks: number;
+    reports: number;
+    avg_consensus: number | null;
+    high_dispersion: number;
+  };
+}
+
+export interface ReplayRow {
+  code: string;
+  name: string | null;
+  trade_date: string;
+  kind: string;
+  direction: string | null;
+  strength: string | null;
+  reason: string | null;
+  entry: number;
+  exit: number;
+  stock_ret: number;
+  bench_ret: number;
+  excess: number;
+  hit: boolean;
+  bullish: boolean;
+}
+
+export interface ReplayPayload {
+  ref: string | null;
+  horizon: number;
+  rows: ReplayRow[];
+  summary: {
+    evaluated: number;
+    hits: number;
+    win_rate: number | null;
+    avg_excess: number | null;
+    best: ReplayRow | null;
+    worst: ReplayRow | null;
+  };
+}
+
+export interface LhbResearchRow {
+  code: string;
+  name: string | null;
+  lhb_events: number;
+  last_lhb_date: string;
+  net_amt: number;
+  reasons: string[];
+  coverage: { reports: number; orgs: number; first: string; last: string } | null;
+}
+
+export interface LhbResearchPayload {
+  ref: string | null;
+  rows: LhbResearchRow[];
+  summary: {
+    lhb_stocks: number;
+    dual_signal: number;
+    covered_ratio: number | null;
+    net_total: number;
+  };
+}

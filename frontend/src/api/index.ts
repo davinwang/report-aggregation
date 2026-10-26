@@ -14,6 +14,7 @@ import type {
   HealthDeep,
   IngestionRow,
   IndicatorMeta,
+  LhbResearchPayload,
   LhbRow,
   LinkageMatrix,
   MarginPayload,
@@ -27,8 +28,10 @@ import type {
   PoolSummary,
   QuantMatrixRow,
   QuantSeries,
+  ReplayPayload,
   ReportBrief,
   SecurityMeta,
+  SentimentPayload,
   SignalMatrixPayload,
   SignalRow,
   SignalRule,
@@ -197,6 +200,14 @@ export const getAccuracyLeaderboard = (params?: {
 }) => getData<AccuracyPayload>("/api/accuracy/leaderboard", params as Record<string, unknown>);
 export const refreshAccuracy = (lookbackDays = 180) =>
   http.post("/api/accuracy/refresh", null, { params: { lookback_days: lookbackDays } }).then((r) => r.data);
+
+// ---- insights (研报洞察) ----
+export const getSentiment = (params?: { days?: number; min_reports?: number; order?: string; limit?: number }) =>
+  getData<SentimentPayload>("/api/insights/sentiment", params as Record<string, unknown>);
+export const getReplay = (params?: { horizon?: number; days?: number; kind?: string; limit?: number }) =>
+  getData<ReplayPayload>("/api/insights/replay", params as Record<string, unknown>);
+export const getLhbResearch = (params?: { lhb_days?: number; window_days?: number; direction?: string; limit?: number }) =>
+  getData<LhbResearchPayload>("/api/insights/lhb-research", params as Record<string, unknown>);
 
 // ---- weekly (周统计) ----
 export const getWeeklyMatrix = (week?: string) =>
