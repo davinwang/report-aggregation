@@ -87,9 +87,15 @@ export default function KLineChart({
     const GAP_PCT = 0.6;
     const PRICE_PCT = 46;
     const VOL_PCT = 11;
+    // Below the last grid sits a pixel-sized chrome strip: the dataZoom slider
+    // (bottom 6 + height 16) and the bottom grid's date labels (~15). Grid geometry is
+    // percentage-based while those are pixels, so reserve the strip as a percentage of
+    // the known container height — otherwise the slider draws over the bottom pane.
+    const CHROME_PX = 46;
+    const USABLE_PCT = 100 - (CHROME_PX / height) * 100;
     const SUB_PCT = Math.max(
       8,
-      (100 - TOP_PCT - PRICE_PCT - VOL_PCT - GAP_PCT * (subPaneKeys.length + 2)) / subPaneKeys.length,
+      (USABLE_PCT - TOP_PCT - PRICE_PCT - VOL_PCT - GAP_PCT * (subPaneKeys.length + 2)) / subPaneKeys.length,
     );
     const gridCount = subPaneKeys.length + 2;
     const gridIndexOf = (key: string) => (key === VOLUME_PANE ? 1 : 2 + subPaneKeys.indexOf(key));
