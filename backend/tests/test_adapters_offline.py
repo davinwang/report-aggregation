@@ -141,3 +141,93 @@ def test_stock_flow_per_symbol(session, fake_ak):
     res2 = StockFlowAdapter().run(session, codes=["600519"])
     assert res2.status == "ok", res2.error
     assert len(session.scalars(select(FundFlowDaily)).all()) == 1
+
+
+# ---------------------------------------------------------------------------
+# industry_boards — 行业热力图数值回归 (change_pct 曾被写成 行业指数/最新价 点位,
+# 页面上出现 "10000%"). 核心约束: 按列名取数 + 涨跌幅合理性守卫.
+# ---------------------------------------------------------------------------
+from app.ingestion.adapters.industry_boards import IndustryBoardsAdapter  # noqa: E402
+from app.models.security import IndustryBoard  # noqa: E402
+
+
+def _ths_fund_flow_frame() -> pd.DataFrame:
+    """同花顺 stock_fund_flow_industry 即时榜布局 (akshare 1.18 实测)."""
+    return pd.DataFrame(
+        {
+            "序号": [1, 2],
+            "行业": ["自动化设备", "半导体"],
+            "行业指数": [26748.1, 13498.8],  # 点位 — 绝不能进 change_pct
+            "行业-涨跌幅": [4.99, -0.42],
+            "流入资金": [144.64, 531.85],
+            "流出资金": [111.26, 450.83],
+            "净额": [33.38, 81.02],
+            "公司家数": [99, 190],
+            "领涨股": ["田中精机", "富瀚微"],
+            "领涨股-涨跌幅": [20.00, 16.75],
+            "当前价": [40.32, 72.48],
+        }
+    )
+
+
+def _em_name_frame_old_layout() -> pd.DataFrame:
+    """东方财富 stock_board_industry_name_em 旧版布局 — 板块名称在 iloc[1],
+    最新价(点位)在 iloc[3], 曾被误按资金流布局读成 name+change_pct."""
+    return pd.DataFrame(
+        {
+            "排名": [1, 2],
+            "板块名称": ["半导体", "酿酒行业"],
+            "板块代码": ["BK1036", "BK0477"],
+            "最新价": [13498.80, 8123.45],
+            "涨跌额": [42.1, -12.3],
+            "涨跌幅": [1.23, -0.56],
+            "主力净流入": [1.5e9, -8e8],
+            "主力净比": [8.1, -3.2],
+            "上涨家数": [100, 30],
+            "下跌家数": [80, 150],
+            "换手率": [2.31, 1.02],
+        }
+    )
+
+
+def test_industry_boards_ths_frame_ignores_index_level(session, fake_ak):
+    """涨跌幅取 行业-涨跌幅 列; 行业指数 点位 (万级) 不得进入 change_pct."""
+    def _no_fallback():
+        raise AssertionError("should not fall back")
+
+    fake_ak.stock_fund_flow_industry = lambda symbol="即时": _ths_fund_flow_frame()
+    fake_ak.stock_board_industry_name_em = _no_fallback
+    res = IndustryBoardsAdapter().run(session)
+    assert res.status == "ok", res.error
+    rows = {r.name: r for r in session.scalars(select(IndustryBoard)).all()}
+    assert set(rows) == {"自动化设备", "半导体"}
+    assert rows["自动化设备"].change_pct == 4.99
+    assert rows["半导体"].change_pct == -0.42
+    assert rows["半导体"].company_count == 190
+
+
+def test_industry_boards_em_fallback_reads_by_name(session, fake_ak):
+    """主源不可用回退 EM: 即使帧列数 >= 10 (旧判定 len>=10 会误入资金流分支),
+    也必须按列名取 涨跌幅, 而不是把 iloc[3]=最新价 点位当涨跌幅."""
+    fake_ak.stock_fund_flow_industry = lambda symbol="即时": pd.DataFrame(columns=["X"])  # 空 → 回退
+    fake_ak.stock_board_industry_name_em = lambda: _em_name_frame_old_layout()
+    res = IndustryBoardsAdapter().run(session)
+    assert res.status == "ok", res.error
+    rows = {r.name: r for r in session.scalars(select(IndustryBoard)).all()}
+    assert set(rows) == {"半导体", "酿酒行业"}
+    assert rows["半导体"].change_pct == 1.23  # 不是 13498.80
+    assert rows["半导体"].code == "BK1036"
+    assert rows["酿酒行业"].change_pct == -0.56
+    assert rows["酿酒行业"].turnover == 1.02
+
+
+def test_industry_boards_sanity_guard_drops_absurd_pct(session, fake_ak):
+    """上游列再错位 (涨跌幅列本身是点位) 时置空, 而不是把 13498.8% 写进库."""
+    frame = _ths_fund_flow_frame()
+    frame["行业-涨跌幅"] = [13498.8, 0.42]  # 模拟更彻底的列漂移
+    fake_ak.stock_fund_flow_industry = lambda symbol="即时": frame
+    res = IndustryBoardsAdapter().run(session)
+    assert res.status == "ok", res.error
+    rows = {r.name: r for r in session.scalars(select(IndustryBoard)).all()}
+    assert rows["自动化设备"].change_pct is None  # dropped, 热力图显示灰色
+    assert rows["半导体"].change_pct == 0.42
